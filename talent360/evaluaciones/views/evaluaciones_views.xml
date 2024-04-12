@@ -37,6 +37,7 @@
                 <field name="pregunta_ids"/>
                 <field name="competencia_ids"/>
                 <field name="usuario_ids"/>
+                <button name="enviar_evaluacion" string="Enviar Evaluación" type="object" class="btn-primary" />
             </tree>
         </field>
     </record>

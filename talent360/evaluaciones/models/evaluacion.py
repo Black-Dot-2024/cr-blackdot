@@ -58,3 +58,30 @@ class Evaluacion(models.Model):
                         partner_ids=[partner_id],
                     )
         return res
+    
+    
+    def enviar_evaluacion(self):
+        # Creamos una lista para almacenar los nombres de los usuarios
+        users = []
+
+        # Enviamos un mensaje a cada usuario asignado
+        for usuario in self.usuario_ids:
+            self.message_post(
+                body=f"Se te ha asignado la evaluación: {self.nombre}",
+                partner_ids=[usuario.partner_id.id],
+            )
+            users.append(usuario.partner_id.name)
+        
+        self.estado = "publicado"
+
+        # Mostrar una notificación con los usuarios a los que se les ha asignado la evaluación
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            'params': {
+                'title': '¡Has enviado una evaluación!',
+                'type': 'success',
+                'message': f"Se ha asignado la evaluación {self.nombre} a {', '.join(users)}",
+                'sticky': False,
+            }
+        }
