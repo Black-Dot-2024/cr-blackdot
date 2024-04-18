@@ -1,15 +1,16 @@
 from odoo.tests.common import TransactionCase
 
 # Creamos una clase para realizar las pruebas de la RF02
-class TestRF02(TransactionCase):
+class TestAsignacionEvaluaciones(TransactionCase):
 
     # Método para inicializar las variables de la clase
     def setUp(self):
-        super(TestRF02, self).setUp()
+        super(TestAsignacionEvaluaciones, self).setUp()
         
     # Método para finalizar las pruebas
     def tearDowm(self):
-        super(TestRF02, self).tearDown()
+        super(TestAsignacionEvaluaciones, self).tearDown()
+        return
 
     # Método para probar la asignación de usuarios a una evaluación
     def test_01_asignar_usuarios_a_evaluacion(self):
