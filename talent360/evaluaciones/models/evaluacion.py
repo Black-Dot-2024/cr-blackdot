@@ -1,6 +1,5 @@
 from odoo import models, fields
 
-
 class Evaluacion(models.Model):
     _name = "evaluacion"
     _description = "Evaluacion de pesonal"
@@ -39,25 +38,6 @@ class Evaluacion(models.Model):
         "usuario_id",
         string="Asignados",
     )
-
-    # do something on new usuario assigned
-
-    def write(self, vals):
-        res = super(Evaluacion, self).write(vals)
-        if "usuario_ids" in vals:
-            for user_change in vals["usuario_ids"]:
-                action, user_id = user_change
-                user = self.env["res.users"].browse(user_id)
-                partner_id = user.partner_id.id
-                if action == 4:
-                    print(f"Se ha asignado la evaluación {self.nombre} a {partner_id}")
-                    # Send email to assigned user
-                    self.message_post(
-                        body=f"Se te ha asignado la evaluación {self.nombre}",
-                        partner_ids=[partner_id],
-                    )
-        return res
-    
     
     def enviar_evaluacion(self):
         # Creamos una lista para almacenar los nombres de los usuarios
