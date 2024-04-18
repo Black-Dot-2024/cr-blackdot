@@ -61,4 +61,3 @@ class TestRF02(TransactionCase):
         # Eliminar el colaborador 
         evaluacion.write({'usuario_ids': [(3, colaborador.id)]})
         self.assertNotIn(colaborador, evaluacion.usuario_ids, "El colaborador no se eliminó correctamente de la evaluación.")
-

@@ -4,7 +4,6 @@ from odoo import models, fields
 class Evaluacion(models.Model):
     _name = "evaluacion"
     _description = "Evaluacion de pesonal"
-    _inherit = ["mail.thread"]
 
     nombre = fields.Char(required=True)
     estado = fields.Selection(
