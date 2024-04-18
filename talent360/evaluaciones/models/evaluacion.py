@@ -1,9 +1,14 @@
 from odoo import models, fields
 
+# Creamos el modelo de la evaluación
 class Evaluacion(models.Model):
+
+    # Definimos el nombre de la tabla
     _name = "evaluacion"
     _description = "Evaluacion de pesonal"
+    _inherit = "mail.thread"
 
+    # Definimos los campos de la tabla
     nombre = fields.Char(required=True)
     estado = fields.Selection(
         [
@@ -15,6 +20,8 @@ class Evaluacion(models.Model):
         required=True,
     )
 
+    # Relaciones con otros modelos
+    # Definimos una relación muchos a muchos con el modelo pregunta
     pregunta_ids = fields.Many2many(
         "pregunta",
         "pregunta_evaluacion_rel",
@@ -23,6 +30,7 @@ class Evaluacion(models.Model):
         string="Preguntas",
     )
 
+    # Definimos una relación muchos a muchos con el modelo competencia
     competencia_ids = fields.Many2many(
         "competencia",
         "competencia_evaluacion_rel",
@@ -31,6 +39,7 @@ class Evaluacion(models.Model):
         string="Competencias",
     )
 
+    # Definimos una relación muchos a muchos con el modelo usuario
     usuario_ids = fields.Many2many(
         "res.users",
         "usuario_evaluacion_rel",
@@ -39,6 +48,7 @@ class Evaluacion(models.Model):
         string="Asignados",
     )
     
+    # Método para enviar la evaluación a los usuarios asignados
     def enviar_evaluacion(self):
         # Creamos una lista para almacenar los nombres de los usuarios
         users = []
