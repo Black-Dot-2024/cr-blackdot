@@ -3,12 +3,14 @@ from odoo import models, fields
 # Creamos el modelo de la evaluación
 class Evaluacion(models.Model):
 
-    # Definimos el nombre de la tabla
+    # Definimos el nombre y la descripción de la tabla
     _name = "evaluacion"
     _description = "Evaluacion de pesonal"
+
+    # Heredamos el modelo mail.thread para poder enviar mensajes
     _inherit = "mail.thread"
 
-    # Definimos los campos de la tabla
+    # Definimos el nombre y el estado de la evaluación
     nombre = fields.Char(required=True)
     estado = fields.Selection(
         [
@@ -51,7 +53,7 @@ class Evaluacion(models.Model):
     # Método para enviar la evaluación a los usuarios asignados
     def enviar_evaluacion(self):
         # Creamos una lista para almacenar los nombres de los usuarios
-        users = []
+        usuarios = []
 
         # Enviamos un mensaje a cada usuario asignado
         for usuario in self.usuario_ids:
@@ -59,7 +61,7 @@ class Evaluacion(models.Model):
                 body=f"Se te ha asignado la evaluación: {self.nombre}",
                 partner_ids=[usuario.partner_id.id],
             )
-            users.append(usuario.partner_id.name)
+            usuarios.append(usuario.partner_id.name)
         
         self.estado = "publicado"
 
@@ -70,7 +72,7 @@ class Evaluacion(models.Model):
             'params': {
                 'title': '¡Has enviado una evaluación!',
                 'type': 'success',
-                'message': f"Se ha asignado la evaluación {self.nombre} a {', '.join(users)}",
+                'message': f"Se ha asignado la evaluación {self.nombre} a {', '.join(usuarios)}",
                 'sticky': False,
             }
         }
