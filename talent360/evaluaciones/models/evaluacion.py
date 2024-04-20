@@ -69,10 +69,10 @@ class Evaluacion(models.Model):
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
-            'params': {
-                'title': '¡Has enviado una evaluación!',
-                'type': 'success',
-                'message': f"Se ha asignado la evaluación {self.nombre} a {', '.join(usuarios)}",
-                'sticky': False,
+            "params": {
+                "title": "¡Has enviado una evaluación!",
+                "type": "success",
+                "message": f"Se ha asignado la evaluación {self.nombre} a {', '.join(usuarios)}",
+                "sticky": False,
             }
         }
