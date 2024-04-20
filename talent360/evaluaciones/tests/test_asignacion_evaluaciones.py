@@ -1,83 +1,40 @@
 from odoo.tests.common import TransactionCase
 
-# Creamos una clase para realizar las pruebas de la RF02
 class TestAsignacionEvaluaciones(TransactionCase):
 
-    # Método para inicializar las variables de la clase
     def setUp(self):
         super(TestAsignacionEvaluaciones, self).setUp()
-        
-    # Método para finalizar las pruebas
-    def tearDowm(self):
+        # Preparación de datos comunes para usar en todos los tests
+        self.evaluacion = self.env['evaluacion'].create({
+            'nombre': 'Evaluación Base',
+            'estado': 'borrador',
+        })
+
+    def tearDown(self):
         super(TestAsignacionEvaluaciones, self).tearDown()
-        return
 
-    # Método para probar la asignación de usuarios a una evaluación
+    def crear_usuario(self, nombre, login):
+        # Crear un usuario de prueba
+        return self.env['res.users'].create({
+            'name': nombre,
+            'login': login,
+        })
+
     def test_01_asignar_usuarios_a_evaluacion(self):
-        # Creamos una evaluación
-        evaluacion = self.env['evaluacion'].create({
-            'nombre': 'Evaluación para asignar usuarios',
-            'estado': 'borrador',
-        })
-        
-        # Creamos un usuario
-        usuario = self.env['res.users'].create({
-            'name': 'Usuario de prueba',
-            'login': 'usuario_prueba@gmail.com',
-        })
+        usuario = self.crear_usuario('Usuario de prueba', 'usuario_prueba@gmail.com')
+        self.evaluacion.write({'usuario_ids': [(4, usuario.id)]})
+        self.assertIn(usuario, self.evaluacion.usuario_ids, "El usuario no se ha asignado a la evaluación correctamente")
 
-        # Asignamos el usuario a la evaluación
-        evaluacion.write({'usuario_ids': [(4, usuario.id)]})
-
-        # Verificamos que el usuario se haya asignado correctamente
-        usuarios_asignados = evaluacion.usuario_ids
-        self.assertTrue(usuario in usuarios_asignados, "El usuario no se ha asignado a la evaluación correctamente")
-
-    # Método para probar la eliminación de usuarios asignados a una evaluación
     def test_02_mostrar_usuarios_asignados(self):
-
-        # Creamos una evaluación
-        evaluacion = self.env['evaluacion'].create({
-            'nombre': 'Evaluación con colaboradores',
-            'estado': 'borrador',
-        })
-        
-        # Creamos dos colaboradores
-        colaborador1 = self.env['res.users'].create({
-            'name': 'Colaborador 1',
-            'login': 'colaborador1',
-        })
-        colaborador2 = self.env['res.users'].create({
-            'name': 'Colaborador 2',
-            'login': 'colaborador2',
-        })
-
-        # Asignamos los colaboradores a la evaluación
-        evaluacion.write({'usuario_ids': [(4, colaborador1.id), (4, colaborador2.id)]})
-
-        # Verificamos que los colaboradores se hayan asignado correctamente
-        colaboradores_asignados = evaluacion.usuario_ids
+        colaborador1 = self.crear_usuario('Colaborador 1', 'colaborador1')
+        colaborador2 = self.crear_usuario('Colaborador 2', 'colaborador2')
+        self.evaluacion.write({'usuario_ids': [(4, colaborador1.id), (4, colaborador2.id)]})
         for colaborador in [colaborador1, colaborador2]:
-            self.assertIn(colaborador, colaboradores_asignados, f"El colaborador {colaborador.name} no se mostró correctamente en la evaluación.")
+            self.assertIn(colaborador, self.evaluacion.usuario_ids, f"El colaborador {colaborador.name} no se mostró correctamente en la evaluación.")
 
-    # Método para probar la eliminación de usuarios asignados a una evaluación
     def test_03_quitar_usuarios_asignados(self):
-        # Creamos una evaluación
-        evaluacion = self.env['evaluacion'].create({
-            'nombre': 'Evaluación con colaboradores',
-            'estado': 'borrador',
-        })
-
-        # Creamos un colaborador
-        colaborador = self.env['res.users'].create({
-            'name': 'Colaborador de prueba',
-            'login': 'colaborador_prueba',
-        })
-        
-        # Asignamos el colaborador a la evaluación
-        evaluacion.write({'usuario_ids': [(4, colaborador.id)]})
-        self.assertIn(colaborador, evaluacion.usuario_ids, "El colaborador no está asignado a la evaluación antes de eliminarlo.")
-        
-        # Eliminar el colaborador 
-        evaluacion.write({'usuario_ids': [(3, colaborador.id)]})
-        self.assertNotIn(colaborador, evaluacion.usuario_ids, "El colaborador no se eliminó correctamente de la evaluación.")
+        colaborador = self.crear_usuario('Colaborador de prueba', 'colaborador_prueba')
+        self.evaluacion.write({'usuario_ids': [(4, colaborador.id)]})
+        self.assertIn(colaborador, self.evaluacion.usuario_ids, "El colaborador no está asignado a la evaluación antes de eliminarlo.")
+        self.evaluacion.write({'usuario_ids': [(3, colaborador.id)]})
+        self.assertNotIn(colaborador, self.evaluacion.usuario_ids, "El colaborador no se eliminó correctamente de la evaluación.")
