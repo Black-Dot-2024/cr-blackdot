@@ -4,7 +4,6 @@
     "data": [
         "security/security.xml",
         "security/ir.model.access.csv",
-        "security/security.xml",
         "views/evaluaciones_views.xml",
         "views/evaluaciones_menus.xml",
         "data/pregunta.csv",
