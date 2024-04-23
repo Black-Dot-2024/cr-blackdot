@@ -2,6 +2,7 @@
     "name": "Evaluaciones",
     "application": True,
     "data": [
+        "security/security.xml",
         "security/ir.model.access.csv",
         "security/security.xml",
         "views/evaluaciones_views.xml",
@@ -9,8 +10,7 @@
         "data/pregunta.csv",
         "data/competencia.csv",
         "data/opcion.csv",
-        "data/template.csv",
-        
+        "data/template.csv",      
     ],
     "depends": ["base", "mail"],
 }
