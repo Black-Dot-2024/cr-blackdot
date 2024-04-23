@@ -2,6 +2,7 @@ from odoo import api, models, fields
 
 
 class Evaluacion(models.Model):
+    """""
     Modelo para representar una evaluación de personal en Odoo.
 
     :param _name (str): Nombre del modelo en Odoo.
@@ -79,6 +80,7 @@ class Evaluacion(models.Model):
                 "message": f"Se ha asignado la evaluación {self.nombre} a {', '.join(usuarios)}",
                 "sticky": False,
             }
+        }
 
     # Método para copiar preguntas de la plantilla a la evaluación
     def copiar_preguntas_de_template(self):

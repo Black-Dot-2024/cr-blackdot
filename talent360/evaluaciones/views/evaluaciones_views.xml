@@ -37,26 +37,8 @@
                 <field name="pregunta_ids"/>
                 <field name="competencia_ids"/>
                 <field name="usuario_ids"/>
+                <button name="enviar_evaluacion" string="Enviar Evaluación" type="object" class="btn-primary" />
             </tree>
-        </field>
-    </record>
-
-    <record id="evaluacion_form" model="ir.ui.view">
-        <field name="name">evaluacion.form</field>
-        <field name="model">evaluacion</field>
-        <field name="arch" type="xml">
-            <form string="Evaluación">
-                <sheet>
-                    <group>
-                        <field name="nombre"/>
-                        <field name="estado"/>
-                        <field name="pregunta_ids"/>
-                        <field name="competencia_ids"/>
-                        <field name="usuario_ids"/>
-                    </group>
-                    <button name="enviar_evaluacion" string="Enviar Evaluación" type="object" class="btn-primary" />
-                </sheet>
-            </form>
         </field>
     </record>
 
