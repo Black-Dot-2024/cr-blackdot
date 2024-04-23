@@ -1,16 +1,23 @@
 from odoo import models, fields
 
-# Creamos el modelo de la evaluación
-class Evaluacion(models.Model):
 
-    # Definimos el nombre y la descripción de la tabla
+class Evaluacion(models.Model):
+    """ 
+    Modelo para representar una evaluación de personal en Odoo.
+
+    :param _name (str): Nombre del modelo en Odoo.
+    :param _description (str): Descripción del modelo en Odoo.
+    :param nombre (fields.Char): Nombre de la evaluación. Es un campo obligatorio.
+    :param estado (fields.Selection): Estado de la evaluación con opciones 'borrador', 'publicado' y 'finalizado'. Por defecto, es 'borrador'.
+    :param pregunta_ids (fields.Many2many): Relación de muchos a muchos con el modelo 'pregunta' para almacenar las preguntas asociadas a la evaluación.
+    :param competencia_ids (fields.Many2many): Relación de muchos a muchos con el modelo 'competencia' para almacenar las competencias asociadas a la evaluación.
+    :param usuario_ids (fields.Many2many): Relación de muchos a muchos con el modelo 'res.users' para asignar usuarios a la evaluación.
+    """
+
     _name = "evaluacion"
     _description = "Evaluacion de pesonal"
-
-    # Heredamos el modelo mail.thread para poder enviar mensajes
     _inherit = "mail.thread"
 
-    # Definimos el nombre y el estado de la evaluación
     nombre = fields.Char(required=True)
     estado = fields.Selection(
         [
@@ -22,8 +29,6 @@ class Evaluacion(models.Model):
         required=True,
     )
 
-    # Relaciones con otros modelos
-    # Definimos una relación muchos a muchos con el modelo pregunta
     pregunta_ids = fields.Many2many(
         "pregunta",
         "pregunta_evaluacion_rel",
@@ -32,7 +37,6 @@ class Evaluacion(models.Model):
         string="Preguntas",
     )
 
-    # Definimos una relación muchos a muchos con el modelo competencia
     competencia_ids = fields.Many2many(
         "competencia",
         "competencia_evaluacion_rel",
@@ -41,7 +45,6 @@ class Evaluacion(models.Model):
         string="Competencias",
     )
 
-    # Definimos una relación muchos a muchos con el modelo usuario
     usuario_ids = fields.Many2many(
         "res.users",
         "usuario_evaluacion_rel",
@@ -50,12 +53,14 @@ class Evaluacion(models.Model):
         string="Asignados",
     )
     
-    # Método para enviar la evaluación a los usuarios asignados
     def enviar_evaluacion(self):
-        # Creamos una lista para almacenar los nombres de los usuarios
+        """
+        Envía la evaluación a los usuarios asignados y cambia el estado de la evaluación a 'publicado'.
+
+        Este método se encarga de iterar por el campo 'usuario_ids' y enviar un mensaje a cada usuario asignado con la evaluación que se ha asignado. Además, cambia el estado de la evaluación a 'publicado'. El mensaje enviado contiene los detalles de la evaluación asignada y los usuarios que fueron asignados.
+        """
         usuarios = []
 
-        # Enviamos un mensaje a cada usuario asignado
         for usuario in self.usuario_ids:
             self.message_post(
                 body=f"Se te ha asignado la evaluación: {self.nombre}",
@@ -65,7 +70,6 @@ class Evaluacion(models.Model):
         
         self.estado = "publicado"
 
-        # Mostrar una notificación con los usuarios a los que se les ha asignado la evaluación
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
