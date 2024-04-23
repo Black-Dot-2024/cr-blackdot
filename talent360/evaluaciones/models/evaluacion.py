@@ -2,7 +2,7 @@ from odoo import api, models, fields
 
 
 class Evaluacion(models.Model):
-    """"
+    """
     Modelo para representar una evaluación de personal en Odoo.
 
     :param _name (str): Nombre del modelo en Odoo.
