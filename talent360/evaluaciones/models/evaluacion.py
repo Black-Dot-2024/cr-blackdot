@@ -699,6 +699,6 @@ class Evaluacion(models.Model):
         """
         resultado = super(Evaluacion, self).write(vals)
         if 'usuario_ids' in vals or self.usuario_ids:
-            self.action_enviar_evaluacion()
+            self.enviar_evaluacion_action()
         return resultado
 
