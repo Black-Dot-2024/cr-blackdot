@@ -27,6 +27,7 @@
             <kanban class="o_kanban_mobile" default_group_by="contestada" quick_create="false" create="false" records_draggable="false">
                 <field name="evaluacion_id"/>
                 <field name="token"/>
+                <field name="contestada"/>
                 <templates>
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click">
@@ -40,16 +41,16 @@
                                 </div>
                                 <div class="oe_kanban_card_content">
                                     <div>
-                                        <strong>Tipo:</strong>
+                                        <strong>Tipo: </strong>
                                         <field name="evaluacion_tipo"/>
                                     </div>
                                     <div>
-                                        <strong>Estado:</strong>
+                                        <strong>Estado: </strong>
                                         <field name="evaluacion_estado"/>
                                     </div>
                                 </div>
-                                <div class="oe_kanban_card_footer">
-                                    <a t-att-href="'http://localhost:8069/evaluacion/responder/' + record.evaluacion_id.raw_value + '/' + record.token.raw_value" class="btn btn-primary" role="button" target="_blank">Responder</a>
+                                <div t-if="record.contestada.raw_value == 'pendiente'" class="oe_kanban_card_footer">
+                                    <a t-att-href="'evaluacion/responder/' + record.evaluacion_id.raw_value + '/' + record.token.raw_value" class="btn btn-primary" role="button" target="_blank">Responder</a>
                                 </div>
                             </div>
                         </div>
@@ -64,7 +65,7 @@
         <field name="name">Mis Evaluaciones</field>
         <field name="res_model">usuario.evaluacion.rel</field>
         <field name="view_mode">kanban</field>
-        <field name="domain">[('usuario_id', '=', uid)]</field>
+        <field name="domain">[('usuario_id', '=', uid), ('evaluacion_id.estado', '=', 'publicado'), ('contestada', '!=', False)]</field>
     </record>
 
     <!-- EVALUACIONES ACTION TREE -->
@@ -104,9 +105,9 @@
         <field name="arch" type="xml">
             <form>
                 <field name="tipo"/>
-
                 <header>
                     <!-- Generación de reporte de una evaluación-->
+                    <button name="evaluacion_action_tree" string="Guardar" type="object" class="btn-primary my-3"/>
                     <button class="btn btn-primary" name="action_reporte_generico" string="Reporte" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
                 </header>
                 <sheet string="Evaluacion de personal">
@@ -123,6 +124,10 @@
                         <field name="fecha_final">
                             <widget name="date"/>
                         </field>
+                        <field name="incluir_demograficos"/>
+                    </group>
+                    <group>
+                        <field name="mensaje"/>
                     </group>
                     <group>
                         <group>
@@ -146,10 +151,6 @@
                                         <button class="btn btn-outline-primary btn-lg px-4 lh-m" name="ver_respuestas_usuario" string="Detalle" type="object"/>
                                     </tree>
                                 </field>
-                                <div>
-                                    <button name="enviar_evaluacion_action" string="Enviar Correo" type="object" class="btn-primary mx-3" confirm="¿Estás seguro de enviar la encuesta?"/>
-                                    <button name="evaluacion_action_tree" string="Finalizar" type="object" class="btn-primary mx-3 my-3" invisible="tipo != 'NOM_035'"/>
-                                </div>
                             </page>
                             <page string="Semaforización" invisible="tipo != 'CLIMA'">
                                 <style>
@@ -279,9 +280,6 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                                <div>
-                                    <button name="evaluacion_action_tree" string="Finalizar" type="object" class="btn-primary mx-3 my-3"/>
-                                </div>
                             </page>
                         </notebook>
                     </group>
@@ -298,7 +296,7 @@
         <field name="arch" type="xml">
             <tree create="false">
                 <field class="text-primary font-weight-bold" name="pregunta_texto" string="Pregunta"/>
-                <field name="respuesta_texto" string="Respuesta"/>
+                <field name="respuesta_mostrar" string="Respuesta"/>
             </tree>
         </field>
     </record>
@@ -368,7 +366,6 @@
             <tree>
                 <field name="nombre"/>
                 <field name="descripcion"/>
-                <field name="company_id"/>
                 <field name="pregunta_ids"/>
             </tree>
         </field>
@@ -378,22 +375,69 @@
         <field name="name">Asignación</field>
         <field name="model">usuario.evaluacion.rel</field>
         <field name="arch" type="xml">
-            <form string="Evaluation Assignment">
-                <!-- Your other fields here -->
+            <form string="Asignar Evaluacion">
                 <field name="evaluacion_id"/>
                 <field name="usuario_id"/>
             </form>
         </field>
     </record>
 
+    <!-- CLIMA -->
+    <record id="evaluacion_clima_view_form" model="ir.ui.view">
+        <field name="name">evaluacion.clima.form</field>
+        <field name="model">evaluacion</field>
+        <field name="arch" type="xml">
+            <form string="Clima" create="false">
+                <sheet>
+                    <h1>Evaluación Clima</h1>
+                    <br></br>
+                    <group>
+                        <field name="nombre"/>
+                    </group>
+                    <group>
+                        <field name="descripcion"/>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="estado"/>
+                        </group>
+                        <notebook>
+                            <page string="Preguntas">
+                                <field name="pregunta_ids">
+                                    <tree string="Preguntas" editable="bottom">
+                                        <field name="pregunta_texto"/>
+                                    
+                        </tree>
+                    </field>
+                            </page>
+                            <page string="Asignados">
+                                <field name="usuario_ids"/>
+                            </page>
+                        </notebook>
+                    </group>
+
+                    <div>
+                        <button name="enviar_evaluacion_action" string="Enviar Correo" type="object" class="btn-primary mx-3" confirm="¿Estás seguro de enviar la encuesta?"/>
+                        <button name="evaluacion_action_tree" string="Finalizar" type="object" class="btn-primary mx-3"/>
+                    
+                    </div>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+  
     <!-- NOM035 -->
     <record id="evaluacion_nom035_view_form" model="ir.ui.view">
         <field name="name">evaluacion.nom035.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
             <form string="NOM035" create="false">
+                <header>
+                    <button name="evaluacion_action_tree" string="Guardar" type="object" class="btn-primary my-3"/>
+                </header>
                 <sheet>
-                    <h1>Evaluación 035</h1>
+                    <h1>Evaluación NOM 035</h1>
                     <br></br>
                     <group>
                         <field name="nombre"/>
@@ -408,6 +452,10 @@
                         <field name="fecha_final">
                             <widget name="date"/>
                         </field>
+                        <field name="incluir_demograficos"/>
+                    </group>
+                    <group>
+                        <field name="mensaje"/>
                     </group>
                     <group>
                         <group>
@@ -419,10 +467,6 @@
                             </page>
                         </notebook>
                     </group>
-                    <div>
-                        <button name="enviar_evaluacion_action" string="Enviar Correo" type="object" class="btn-primary mx-3" confirm="¿Estás seguro de enviar la encuesta?"/>
-                        <button name="evaluacion_action_tree" string="Finalizar" type="object" class="btn-primary"/>
-                    </div>
                 </sheet>
             </form>
         </field>
