@@ -2,15 +2,31 @@ from odoo import models, fields
 
 
 class Respuesta(models.Model):
+    """
+    Modelo para representar las respuestas a las preguntas
+    
+    :param _name (str): Nombre del modelo en Odoo
+    :param _description (str): Descripción del modelo en Odoo
+    :param pregunta_id (int): Identificador de la pregunta
+    :param usuario_id (int): Identificador del usuario
+    :param evaluacion_id (int): Identificador de la evaluación
+    :param pregunta_texto (str): Texto de la pregunta
+    :param respuesta_texto (str): Texto de la respuesta
+    :param token (str): Token de la respuesta
+    :param opcion_id (int): Identificador de la opción
+    :param respuesta_mostrar (str): Respuesta a mostrar
+    """
+    
     _name = "respuesta"
     _description = "Respuesta a una pregunta"
+    _rec_name = "respuesta_mostrar"
 
     pregunta_id = fields.Many2one("pregunta", string="Preguntas")
     usuario_id = fields.Many2one("res.users", string="Usuario")
     evaluacion_id = fields.Many2one("evaluacion", string="Evaluacion")
     pregunta_texto = fields.Char(related="pregunta_id.pregunta_texto")
     respuesta_texto = fields.Char("Respuesta")
-    token = fields.Char(string="Token")
+    token = fields.Char()
     opcion_id = fields.Many2one("opcion", string="Opción")
 
     respuesta_mostrar = fields.Char(
