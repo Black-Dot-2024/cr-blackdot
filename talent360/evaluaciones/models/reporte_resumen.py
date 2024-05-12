@@ -2,6 +2,14 @@ from odoo import api, models, fields
 
 
 class ReporteResumen(models.Model):
+    """ 
+    Modelo para representar el reporte resumen de una evaluación
+    
+    :param _name (str): Nombre del modelo en Odoo
+    :param _description (str): Descripción del modelo en Odoo
+    :param conteo_asignados (str): Conteo de usuarios asignados a la evaluación
+    :param porcentaje_respuestas (float): Porcentaje de respuestas de los usuarios asignados
+    """
 
     _name = "evaluacion"
     _description = "Reporte Resumen"
@@ -17,8 +25,6 @@ class ReporteResumen(models.Model):
         store="False",
     )
 
-
-
     @api.depends("usuario_ids")
     def _compute_conteo_asignados(self):
         for record in self:
@@ -33,7 +39,7 @@ class ReporteResumen(models.Model):
     @api.depends("usuario_ids")
     def _compute_porcentaje_respuestas(self):
         for record in self:
-            conteo = len(record.usuario_ids)
+            conteo = len(record.usuario_ids) + len(record.usuario_externo_ids)
             if conteo == 0:
                 record.porcentaje_respuestas = 0
             else:
