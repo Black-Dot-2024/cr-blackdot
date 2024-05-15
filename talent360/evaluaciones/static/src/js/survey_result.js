@@ -5,9 +5,11 @@ import { loadBundle } from "@web/core/assets";
 import publicWidget from "@web/legacy/js/public/public_widget";
 
 // The given colors are the same as those used by D3
-var D3_COLORS = ["#1f77b4","#ff7f0e","#aec7e8","#ffbb78","#2ca02c","#98df8a","#d62728",
-                    "#ff9896","#9467bd","#c5b0d5","#8c564b","#c49c94","#e377c2","#f7b6d2",
-                    "#7f7f7f","#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"];
+var D3_COLORS = [
+    "#1f77b4","#ff7f0e","#aec7e8","#ffbb78","#2ca02c","#98df8a","#d62728",
+    "#ff9896","#9467bd","#c5b0d5","#8c564b","#c49c94","#e377c2","#f7b6d2",
+    "#7f7f7f","#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
+];
 
 // TODO awa: this widget loads all records and only hides some based on page
 // -> this is ugly / not efficient, needs to be refactored
@@ -101,61 +103,62 @@ publicWidget.registry.SurveyResultChart = publicWidget.Widget.extend({
      */
     start: function () {
         var self = this;
-
         return this._super.apply(this, arguments).then(function () {
             self.graphData = self.$el.data("graphData");
+            self.label = self.$el.data("label") || 'Data';
 
-            self.labels = self.graphData.map(function (respuesta) {
-                return respuesta.texto;
-            });
-    
-            self.counts = self.graphData.map(function (respuesta) {
-                return respuesta.conteo;
-            });
-    
 
-            if (self.graphData && self.graphData.length !== 0) {
-                switch (self.$el.data("graphType")) {
-                    case 'bar':
-                        self.chartConfig = self._getBarChartConfig();
-                        break;
-                    case 'col':
-                        self.chartConfig = self._getColChartConfig();
-                        break;
-                    case 'pie':
-                        self.chartConfig = self._getPieChartConfig();
-                        break;
-                }
-                window.addEventListener("afterprint", self._onAfterPrint.bind(self));
-                window.addEventListener("beforeprint", self._onBeforePrint.bind(self));
-                self.chart = self._loadChart();
+            
+            // Asegurarse de que graphData es un array de objetos
+            if (typeof self.graphData === 'string') {
+                self.graphData = JSON.parse(self.graphData.replace(/'/g, '"'));
             }
+            
+            console.log("Label", self.label)
+            console.log("Graph Data", self.graphData)
+            
+            // Verifica que graphData es un array
+            if (Array.isArray(self.graphData)) {
+                self.labels = self.graphData.map(function (categoria) {
+                    return categoria.nombre;
+                });
+
+                self.counts = self.graphData.map(function (categoria) {
+                    return categoria.valor;
+                });
+
+                self.color = self.graphData.map(function (categoria) {
+                    return categoria.color;
+                });
+
+                if (self.graphData && self.graphData.length !== 0) {
+                    switch (self.$el.data("graphType")) {
+                        case 'bar':
+                            self.chartConfig = self._getBarChartConfig();
+                            break;
+                        case 'col':
+                            self.chartConfig = self._getColChartConfig();
+                            break;
+                        case 'pie':
+                            self.chartConfig = self._getPieChartConfig();
+                            break;
+                        case 'radar':
+                            self.chartConfig = self._getRadarChartConfig();
+                            break;
+                        case 'doughnut': 
+                            self.chartConfig = self._getDoughnutChartConfig();
+                            break;
+                    }
+                }
+            } else {
+                console.error("graphData is not an array:", self.graphData);
+            }
+            self._loadChart();
         });
     },
 
     willStart: async function () {
         await loadBundle("web.chartjs_lib");
-    },
-
-    // -------------------------------------------------------------------------
-    // Handlers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Prepare chart for media print
-     * @private
-     */
-    _onBeforePrint: function () {
-        const printWidth = 630; // Value to fit any graphic into the width of an A4 portrait page
-        this.chart.resize(printWidth, Math.floor(printWidth / this.chart.aspectRatio));
-    },
-
-    /**
-     * Turn back chart to original size, for media screen
-     * @private
-     */
-    _onAfterPrint: function () {
-        this.chart.resize();
     },
 
     // -------------------------------------------------------------------------
@@ -168,19 +171,21 @@ publicWidget.registry.SurveyResultChart = publicWidget.Widget.extend({
      * @private
      */
     _getBarChartConfig: function () {
+        self = this;
         return {
             type: 'bar',
             data: {
                 labels: this.labels,
                 datasets:[{
-                    label: "Conteo",
+                    label: this.label,
                     data: this.counts,
                     backgroundColor: this.counts.map(function (val, index) {
-                        return D3_COLORS[index % 20];
+                        return self.color[index] || D3_COLORS[index % 20];
                     }),
                 }]
             },
             options: {
+                responsive: true,
                 plugins: {
                     legend: {
                         display: false,
@@ -214,6 +219,7 @@ publicWidget.registry.SurveyResultChart = publicWidget.Widget.extend({
     },
 
     _getColChartConfig: function () {
+        self = this;
         return {
             type: 'bar',
             data: {
@@ -222,7 +228,7 @@ publicWidget.registry.SurveyResultChart = publicWidget.Widget.extend({
                     label: "Conteo",
                     data: this.counts,
                     backgroundColor: this.counts.map(function (val, index) {
-                        return D3_COLORS[index % 20];
+                        return self.color[index] || D3_COLORS[index % 20];
                     }),
                 }]
             },
@@ -259,14 +265,15 @@ publicWidget.registry.SurveyResultChart = publicWidget.Widget.extend({
             },
         };
     },
-
+    
     /**
      * Returns a standard pie chart configuration.
      *
      * @private
      */
     _getPieChartConfig: function () {
-        var ans = {
+        self = this;
+        return {
             type: 'pie',
             data: {
                 labels: this.labels,
@@ -274,7 +281,7 @@ publicWidget.registry.SurveyResultChart = publicWidget.Widget.extend({
                     label: '',
                     data: this.counts,
                     backgroundColor: this.counts.map(function (val, index) {
-                        return D3_COLORS[index % 20];
+                        return self.color[index] || D3_COLORS[index % 20];
                     }),
                 }]
             },
@@ -282,10 +289,101 @@ publicWidget.registry.SurveyResultChart = publicWidget.Widget.extend({
                 aspectRatio: 2,
             },
         };
-        console.log(ans);
-        return ans;
     },
 
+    /**
+     * Returns a standard radar chart configuration.
+     *
+     * @private
+     */
+    _getRadarChartConfig: function () {
+        return {
+            type: 'radar',
+            data: {
+                labels: this.labels,
+                datasets: [
+                {
+                    label: this.label,
+                    data: this.counts,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    pointBackgroundColor: 'rgb(255, 99, 132)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(255, 99, 132)'
+                }],
+            },
+            options: {
+                responsive: true,
+                elements: {
+                    line: {
+                        borderWidth: 3
+                    }
+                }
+            },
+        };
+    },
+
+    /**
+     * Returns a standard doughnut chart configuration.
+     *
+     * @private
+     */
+    _getDoughnutChartConfig: function () {
+        self = this;
+        return {
+            type: 'doughnut',
+            data: {
+                labels: this.labels,
+                datasets: [{
+                    label: '',
+                    data: this.counts,
+                    backgroundColor: this.counts.map(function (val, index) {
+                        return self.color[index] || D3_COLORS[index % 20];
+                    }),
+                }]
+            },
+            options: {
+                responsive: true,
+                aspectRatio: 2,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                    tooltip: {
+                        enabled: false,
+                    },
+                    centerText: {
+                        display: true,
+                        text: this.counts[0].toFixed(2) + '%',
+                        font: {
+                            size: '20'
+                        }
+                    },
+                }
+            },
+            plugins: [{
+                beforeDraw: function(chart) {
+                    if (chart.config.options.plugins.centerText) {
+                        const width = chart.width,
+                            height = chart.height,
+                            ctx = chart.ctx;
+                        ctx.restore();
+                        const fontSize = (height / 114).toFixed(2);
+                        ctx.font = fontSize + "em sans-serif";
+                        ctx.textBaseline = "middle";
+                        const text = chart.config.options.plugins.centerText.text,
+                            textX = Math.round((width - ctx.measureText(text).width) / 2),
+                            textY = height / 2;
+                        ctx.fillText(text, textX, textY);
+                        ctx.save();
+                    }
+                }
+            }]
+        };
+    },
+    
     /**
      * Loads the chart using the provided Chart library.
      *
@@ -295,9 +393,15 @@ publicWidget.registry.SurveyResultChart = publicWidget.Widget.extend({
         this.$el.css({position: 'relative'});
         var $canvas = this.$('canvas');
         var ctx = $canvas.get(0).getContext('2d');
-        return new Chart(ctx, this.chartConfig);
+        this.chart = new Chart(ctx, this.chartConfig);
     },
 
+    _reloadChart: function () {
+        if (this.chart !== undefined) {
+            this.chart.destroy();
+        }
+        this._loadChart();
+    }
 });
 
 publicWidget.registry.SurveyResultWidget = publicWidget.Widget.extend({
@@ -325,14 +429,21 @@ publicWidget.registry.SurveyResultWidget = publicWidget.Widget.extend({
             });
 
             self.charts = [];
+            self.other_charts = [];
             self.$('.survey_graph').each(function () {
                 var chartWidget = new publicWidget.registry.SurveyResultChart(self);
                 allPromises.push(chartWidget.attachTo($(this)));
-                self.charts.push(chartWidget);
+                // atriibuto role is tabpane
+                if ($(this).attr("role") === "tabpanel") {
+                    self.charts.push(chartWidget);
+                }
+                else {
+                    self.other_charts.push(chartWidget);
+                }
             }); 
 
             if (allPromises.length !== 0) {
-                return Promise.all(allPromises).finally(seleccionarTab);
+                return Promise.all(allPromises).finally(() => self._attach_listener(self));
             } else {
                 return Promise.resolve();
             }
@@ -343,53 +454,30 @@ publicWidget.registry.SurveyResultWidget = publicWidget.Widget.extend({
      * Call print dialog
      * @private
      */
-    _onPrintResultsClick: function () {
-        // Force a reflow on each chart
-        this.charts.forEach(function(chart) {
-            chart.chart.resize();
-        });
-        
-        // Print the page
+    _onPrintResultsClick: function () {  
         window.print();
     },
-});
-
-
-function seleccionarTab(){
-    var tabs = $('.nav-tabs');
     
-    tabs.each(function() {
-        var children = $(this).find('a');
-        var default_tab = undefined;
+    _attach_listener: function (self){
+        console.log("attatching listeners")
 
-        children.each(function() {
-            var child = $(this);
-            var done = false;
-
-            if (done) {
-                return;
-            }
-
-            if (default_tab) {
-                child.tab('show');
-                done = true
-            }
-
-            if (child.hasClass('default')) {
-                default_tab = child;
-            }
-        });
-
-        if (default_tab === undefined) {
-            default_tab = $(children[0]);
+        for (let chart of self.charts) {
+            chart._reloadChart();
         }
 
-        
-        default_tab.tab('show');
+        for (let chart of self.other_charts) {
+            chart._reloadChart();
+        }
 
-
-    });
-}
+        const tabEls = document.querySelectorAll('a[data-bs-toggle="tab"][data-chart="1"]');
+        tabEls.forEach(function (tabEl) {
+            tabEl.addEventListener("shown.bs.tab", function (event) {
+                const index = Array.from(tabEls).indexOf(event.target);
+                self.charts[index]._reloadChart();
+            });
+        });
+    }
+});
 
 export default {
     resultWidget: publicWidget.registry.SurveyResultWidget,

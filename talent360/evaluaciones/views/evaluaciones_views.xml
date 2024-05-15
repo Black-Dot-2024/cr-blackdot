@@ -1,87 +1,347 @@
 <?xml version="1.0"?>
 <odoo>
 
-    <!-- PREGUNTA -->
-    <record id="pregunta_action" model="ir.actions.act_window">
-        <field name="name">pregunta.action</field>
-        <field name="res_model">pregunta</field>
-        <field name="view_mode">tree,form</field>
-    </record>
-
-    <record id="pregunta_tree" model="ir.ui.view">
-        <field name="name">pregunta.tree</field>
+    <!-- PREGUNTA
+    <record id="pregunta_view_form" model="ir.ui.view">
+        <field name="name">pregunta.form</field>
         <field name="model">pregunta</field>
         <field name="arch" type="xml">
-            <tree>
-                <field name="pregunta_texto"/>
-                <field name="tipo"/>
-            </tree>
+            <form>
+                <group>
+                    <field name="pregunta_texto"/>
+                    <field name="tipo"/>
+                </group>
+            </form>
+        </field>
+    </record> -->
+
+    <!-- MIS EVALUACIONES KANBAN VIEW -->
+    <record id="usuario_evaluacion_rel_view_kanban" model="ir.ui.view">
+        <field name="name">usuario.evaluacion.rel.view.kanban</field>
+        <field name="model">usuario.evaluacion.rel</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" default_group_by="contestada" quick_create="false" create="false" records_draggable="false">
+                <field name="evaluacion_id"/>
+                <field name="token"/>
+                <field name="contestada"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="oe_kanban_card">
+                                <div class="oe_kanban_card_header">
+                                    <div class="oe_kanban_card_header_title">
+                                        <h3>
+                                            <field name="evaluacion_nombre" class="d-block text-truncate"/>
+                                        </h3>
+                                    </div>
+                                </div>
+                                <div class="oe_kanban_card_content">
+                                    <div>
+                                        <strong>Tipo: </strong>
+                                        <field name="evaluacion_tipo"/>
+                                    </div>
+                                    <div>
+                                        <strong>Estado: </strong>
+                                        <field name="evaluacion_estado"/>
+                                    </div>
+                                </div>
+                                <div t-if="record.contestada.raw_value == 'pendiente'" class="oe_kanban_card_footer">
+                                    <a t-att-href="'evaluacion/responder/' + record.evaluacion_id.raw_value + '/' + record.token.raw_value" class="btn btn-primary" role="button" target="_blank">Responder</a>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 
-    <!-- EVALUACION -->
+    <!-- MIS EVALUACIONES KANBAN ACTION -->
+    <record id="usuario_evaluacion_rel_kanban_action" model="ir.actions.act_window">
+        <field name="name">Mis Evaluaciones</field>
+        <field name="res_model">usuario.evaluacion.rel</field>
+        <field name="view_mode">kanban</field>
+        <field name="domain">[('usuario_id', '=', uid), ('evaluacion_id.estado', '=', 'publicado'), ('contestada', '!=', False)]</field>
+    </record>
 
+    <!-- EVALUACIONES ACTION TREE -->
     <record id="evaluacion_action" model="ir.actions.act_window">
         <field name="name">Evaluaciones</field>
         <field name="res_model">evaluacion</field>
         <field name="view_mode">tree</field>
     </record>
+
     <!-- Vista de lista de todas las evaluaciones-->
     <record id="evaluacion_view_tree" model="ir.ui.view">
         <field name="name">evaluacion.tree</field>
         <field name="model">evaluacion</field>
 
         <field name="arch" type="xml">
-            <tree create="false">
+            <tree create="false" duplicate="0">
                 <field class="text-primary font-weight-bold h5 align-middle" name="nombre" readonly="1"/>
-                <field name="descripcion" readonly="1"/>
+                <field name="descripcion" class="text-nowrap" readonly="1"/>
                 <field name="estado" readonly="1"/>
                 <field name="tipo" readonly="1"/>
-                <button class="btn btn-outline-primary btn-lg px-4 lh-m" name="abrir_evaluacion_form" string="Detalle" type="object" readonly="1"/>
+                <field name="porcentaje_respuestas" widget="percentage" readonly="1"/>
+                <button class="btn btn-outline-primary btn-lg px-4 lh-m" name="abrir_evaluacion_action_form" string="Detalle" type="object" readonly="1"/>
             </tree>
         </field>
     </record>
 
+    <record id="evaluacion_action" model="ir.actions.act_window">
+        <field name="name">Evaluaciones</field>
+        <field name="res_model">evaluacion</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="evaluacion_view_tree"/>
+    </record>
+
     <!-- Vista de lista de todas las preguntas de una evaluación-->
-    <record id="evaluacion_reporte_form" model="ir.ui.view">
+    <record id="evaluacion_generica_view_form" model="ir.ui.view">
         <field name="name">evaluacion.form</field>
         <field name="model">evaluacion</field>
-
         <field name="arch" type="xml">
-            <form>
+            <form create="false" duplicate="0">
+                <field name="tipo" invisible="1" readonly="1"/>
+                <header>
+                    <!-- Generación de reporte de una evaluación-->
+                    <button name="evaluacion_action_tree" string="Guardar" type="object" class="btn-primary my-3"/>
+                    <button class="btn btn-primary" name="reporte_generico_action" string="Reporte" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
+                    <button class="btn btn-primary" name="action_asignar_usuarios_externos" string="Asignar usuarios externos" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
+                </header>
                 <sheet string="Evaluacion de personal">
-                    <h1>
-                        <field class="text-primary font-weight-bold" name="nombre"/>
-                    </h1>
-                    <p>
-                        <field name="descripcion"/>
-                    </p>
+                    <h1 invisible="tipo != 'CLIMA'">Editar evaluación Clima Laboral</h1>
+                    <h1 invisible="tipo != 'NOM_035'">Editar evaluación NOM 035</h1>
+                    <br></br>
                     <group>
-                        <group>
-                            <field name="estado"/>
-                        </group>
+                        <field name="nombre"/>
+                    </group>
+                    <group>
+                        <field name="estado"/>
+                    </group>
+                     <group>
+                        <field name="descripcion"/>
+                    </group>
+                    <group>
+                        <field name="fecha_inicio">
+                            <widget name="date"/>
+                        </field>
+                        <field name="fecha_final">
+                            <widget name="date"/>
+                        </field>
+                        <field name="incluir_demograficos"/>
+                    </group>
+                    <group>
+                     <group>
+                        <field name="mensaje"/>
+                    </group>
                         <notebook>
                             <page string="Preguntas">
-                                <field class="lh-lg w-100" colspan="2" name="pregunta_ids" can_create="True" can_write="True" nolabel="1" field_id="pregunta_ids_0" context="{'current_evaluacion_id': active_id}">
-                                    <tree>
-                                        <field class="lh-m" name="pregunta_texto"/>
-                                        <field class="lh-m" name="tipo"/>
+                                <field class="lh-lg w-100" colspan="2" name="pregunta_ids" readonly="1" nolabel="1" context="{'current_evaluacion_id': active_id}">
+                                    <tree editable="bottom" create="0">
+                                        <field class="lh-m" name="pregunta_texto" readonly="1"/>
+                                        <field class="lh-m" name="tipo" readonly="1"/>
                                         <!-- Métricas de una sola pregunta-->
-                                        <button class="btn btn-outline-primary btn-lg px-4 lh-m" name="ver_respuestas" string="Detalle" type="object"/>
+                                        <!-- <button class="btn btn-outline-primary btn-lg px-4 lh-m" name="ver_respuestas" string="Detalle" type="object"/> -->
                                     </tree>
                                 </field>
                             </page>
                             <page string="Asignados">
-                                <field name="usuario_ids"/>
+                                <field class="lh-lg w-100" colspan="2" name="usuario_ids" nolabel="1" context="{'current_evaluacion_id': active_id}">
+                                    <tree editable="bottom">
+                                        <field class="lh-m" name="name" readonly="1"/>
+                                        <button class="btn btn-outline-primary btn-lg px-4 lh-m" name="ver_respuestas_usuario" string="Ver respuestas" type="object"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Asignados Externos">
+                                <field class="lh-lg w-100" colspan="2" name="usuario_externo_ids" nolabel="1" context="{'current_evaluacion_id': active_id}" options="{'link':false}">
+                                    <tree editable="top">
+                                        <field class="lh-m" name="nombre" readonly="1"/>
+                                        <button class="btn btn-outline-primary btn-lg px-4 lh-m" name="ver_respuestas_usuario_externo" string="Respuestas" type="object"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Semaforización" invisible="tipo != 'CLIMA'">
+                                <style>
+                                    .my_table th {
+                                        text-align: left;
+                                        padding: 8px;
+                                        border-bottom: 1px solid #ddd;
+                                    }
+
+                                    .my_table td {
+                                        padding: 8px;
+                                        border-bottom: 1px solid #ddd;
+                                    }
+
+                                    .my_table td:nth-child(1) {
+                                        width: 10%;
+                                    }
+
+                                    .my_table td:nth-child(2),
+                                    .my_table td:nth-child(3) {
+                                        width: 20%;
+                                    }
+
+                                    .my_table td:nth-child(4) {
+                                        width: 60%;
+                                    }
+
+                                   .color-pill {
+                                        display: inline-block;
+                                        width: 50px;
+                                        height: 25px;
+                                        border-radius: 10%;
+                                        background-color: inherit; 
+                                        margin-top : 20%;
+                                        margin-left : 20%;
+                                    }
+
+                                    .rojo { background-color: #E46053; }
+                                    .naranja { background-color: #FBBD40; }
+                                    .amarillo { background-color: #FFD93B; }
+                                    .verde { background-color: #BDD261; }
+                                    .azul { background-color: #36BCC2; }
+
+                                </style>
+                                <table class="my_table">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Piso</th>
+                                            <th>Techo</th>
+                                            <th>Descripción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <div class="color-pill rojo"></div>
+                                            </td>
+                                            <td style="padding-top:4%;">
+                                                <field name="piso_rojo" string="Piso Rojo" class="o_input  text-secondary" readonly="1"/>
+                                            </td>
+                                            <td style="padding-top:3.5%;">
+                                                <field name="techo_rojo" string="Techo Rojo" class="o_input"/>
+                                            </td>
+                                            <td>
+                                                <field name="descripcion_rojo" string="Descripción Rojo" class="o_input "/>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>
+                                                <div class="color-pill naranja"></div>
+                                            </td>
+                                            <td style="padding-top:4%;">
+                                                <field name="techo_rojo" string="Piso Naranja" placeholder="Piso Naranja" class="o_input text-secondary" readonly="1"/>
+                                            </td>
+                                            <td style="padding-top:3.5%;">
+                                                <field name="techo_naranja" string="Techo Naranja" placeholder="Techo Naranja" class="o_input"/>
+                                            </td>
+                                            <td>
+                                                <field name="descripcion_naranja" string="Descripción Naranja" class="o_input"/>
+                                            </td>
+
+                                        </tr>
+
+                                        <tr>
+                                            <td>
+                                                <div class="color-pill amarillo"></div>
+                                            </td>
+                                            <td style="padding-top:4%%;">
+                                                <field name="techo_naranja" string="Piso Amarillo" placeholder="Piso Amarillo" class="o_input text-secondary" readonly="1"/>
+                                            </td>
+                                            <td style="padding-top:3.5%;">
+                                                <field name="techo_amarillo" string="Techo Amarillo" placeholder="Techo Amarillo" class="o_input"/>
+                                            </td>
+                                            <td>
+                                                <field name="descripcion_amarillo" string="Descripción Amarillo" class="o_input"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="color-pill verde"></div>
+                                            </td>
+                                            <td style="padding-top:4%;">
+                                                <field name="techo_amarillo" string="Piso Verde" placeholder="Piso Verde" class="o_input text-secondary" readonly="1"/>
+                                            </td>
+                                            <td style="padding-top:3.5%;">
+                                                <field name="techo_verde" string="Techo Verde" placeholder="Techo Verde" class="o_input"/>
+                                            </td>
+                                            <td>
+                                                <field name="descripcion_verde" string="Descripción Verde" class="o_input"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="color-pill azul"></div>
+                                            </td>
+                                            <td style="padding-top:4%;">
+                                                <field name="techo_verde" string="Piso Azul" placeholder="Piso Azul" class="o_input text-secondary" readonly="1"/>
+                                            </td>
+                                            <td style="padding-top:3.5%;">
+                                                <field name="techo_azul" string="Techo Azul" placeholder="Techo Azul" class="o_input"/>
+                                            </td>
+                                            <td>
+                                                <field name="descripcion_azul" string="Descripción Azul" class="o_input"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </page>
                         </notebook>
                     </group>
-                    <!-- Generación de reporte de una evaluación-->
-                    <button class="btn btn-primary btn-lg px-4 font-weight-bold lh-m my-2" name="action_reporte_generico" string="Reporte" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
                 </sheet>
             </form>
         </field>
     </record>
+
+    <!-- Vista de lista de todas las respuestas de un usuario a determinada evaluación -->
+
+    <record id="respuesta_tree_view" model="ir.ui.view">
+        <field name="name">respuesta.tree</field>
+        <field name="model">respuesta</field>
+        <field name="arch" type="xml">
+            <tree create="false">
+                <field class="text-primary font-weight-bold" name="pregunta_texto" string="Pregunta"/>
+                <field name="respuesta_mostrar" string="Respuesta"/>
+            </tree>
+        </field>
+    </record>
+
+
+    <record id="evaluacion_generica_action" model="ir.actions.act_window">
+        <field name="name">Evaluaciones</field>
+        <field name="res_model">evaluacion</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="evaluacion_generica_view_form"/>
+    </record>
+
+    <!-- Reportes-->
+    <record id="reportes_view_tree" model="ir.ui.view">
+        <field name="name">reporte.form</field>
+        <field name="model">evaluacion</field>
+        <field name="arch" type="xml">
+            <tree create="false" delete="false" duplicate="0">
+                <field class="text-primary font-weight-bold h5 align-middle" name="nombre" readonly="1"/>
+                <field name="estado" readonly="1"/>
+                <field name="tipo" readonly="1"/>
+                <field name="conteo_asignados" readonly="1"/>
+                <field name="porcentaje_respuestas" widget="percentage" readonly="1"/>
+                <button class="btn btn-primary" name="reporte_generico_action" string="Reporte" type="object"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="reporte_action" model="ir.actions.act_window">
+        <field name="name">Reportes</field>
+        <field name="res_model">evaluacion</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="reportes_view_tree"/>
+        <field name="domain" eval="[('porcentaje_respuestas','>','0')]"/>
+    </record>
+
 
 
     <!-- OPCION -->
@@ -91,7 +351,7 @@
         <field name="view_mode">tree,form</field>
     </record>
 
-    <record id="opcion_tree" model="ir.ui.view">
+    <record id="opcion_view_tree" model="ir.ui.view">
         <field name="name">opcion.tree</field>
         <field name="model">opcion</field>
         <field name="arch" type="xml">
@@ -109,96 +369,81 @@
         <field name="view_mode">tree,form</field>
     </record>
 
-    <record id="competencia_tree" model="ir.ui.view">
+    <record id="competencia_view_tree" model="ir.ui.view">
         <field name="name">competencia.tree</field>
         <field name="model">competencia</field>
         <field name="arch" type="xml">
             <tree>
                 <field name="nombre"/>
                 <field name="descripcion"/>
-                <field name="company_id"/>
                 <field name="pregunta_ids"/>
             </tree>
         </field>
     </record>
 
-    <record id="usuario_evaluacion_rel_form" model="ir.ui.view">
+    <record id="usuario_evaluacion_rel_view_form" model="ir.ui.view">
         <field name="name">Asignación</field>
         <field name="model">usuario.evaluacion.rel</field>
         <field name="arch" type="xml">
-            <form string="Evaluation Assignment">
-                <!-- Your other fields here -->
+            <form string="Asignar Evaluacion">
                 <field name="evaluacion_id"/>
                 <field name="usuario_id"/>
             </form>
         </field>
     </record>
 
-    <!-- CLIMA -->
-    <record id="evaluacion_clima_form" model="ir.ui.view">
-        <field name="name">evaluacion.clima.form</field>
-        <field name="model">evaluacion</field>
-        <field name="arch" type="xml">
-            <form string="Clima" create="false">
-                <sheet>
-                    <h1>
-                        <field name="nombre"/>
-                    </h1>
-                    <p>
-                        <field name="descripcion"/>
-                    </p>
-                    <group>
-                        <group>
-                            <field name="estado"/>
-                        </group>
-                        <notebook>
-                            <page string="Preguntas">
-                                <field name="pregunta_ids" readonly="1"/>
-                            </page>
-                            <page string="Asignados">
-                                <field name="usuario_ids"/>
-                            </page>
-                        </notebook>
-                    </group>
-
-                    <div>
-                        <button name="evaluacion_action_tree" string="Finalizar" type="object" class="btn-primary"/>
-                    </div>
-
-                </sheet>
-            </form>
-        </field>
-    </record>
-
     <!-- NOM035 -->
-    <record id="evaluacion_nom035_form" model="ir.ui.view">
+    <record id="evaluacion_nom035_view_form" model="ir.ui.view">
         <field name="name">evaluacion.nom035.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
-            <form string="NOM035" create="false">
+            <form string="NOM035" create="false" duplicate="0">
+                <header>
+                    <button name="evaluacion_action_tree" string="Guardar" type="object" class="btn-primary my-3"/>
+                    <button class="btn btn-primary" name="action_asignar_usuarios_externos" string="Asignar usuarios externos" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
+                </header>
                 <sheet>
-                    <h1>
-                        <field name="nombre"/>
-                    </h1>
-                    <p>
-                        <field name="descripcion"/>
-                    </p>
+                    <h1>Crear evaluación NOM 035</h1>
+                    <br></br>
                     <group>
-                        <group>
-                            <field name="estado"/>
-                        </group>
+                        <field name="nombre"/>
+                    </group>
+                    <group>
+                        <field name="estado"/>
+                    </group>
+                    <group>
+                        <field name="descripcion"/>
+                    </group>
+                    <group>
+                        <field name="fecha_inicio">
+                            <widget name="date"/>
+                        </field>
+                        <field name="fecha_final">
+                            <widget name="date"/>
+                        </field>
+                        <field name="incluir_demograficos"/>
+                    </group>
+                    <group>
+                    <group>
+                        <field name="mensaje" placeholder="Escribe aquí tu mensaje de bienvenida"/>
+                    </group>
                         <notebook>
-                            <page string="Preguntas">
-                                <field name="pregunta_ids" readonly="1"/>
-                            </page>
                             <page string="Asignados">
-                                <field name="usuario_ids"/>
+                                <field class="lh-lg w-100" colspan="2" name="usuario_ids" nolabel="1" context="{'current_evaluacion_id': active_id}">
+                                    <tree editable="bottom">
+                                        <field class="lh-m" name="name" readonly="1"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Asignados Externos">
+                                <field class="lh-lg w-100" colspan="2" name="usuario_externo_ids" nolabel="1" context="{'current_evaluacion_id': active_id}" options="{'link':false}">
+                                    <tree create="false" editable="bottom">
+                                        <field class="lh-m" name="nombre" readonly="1"/>
+                                    </tree>
+                                </field>
                             </page>
                         </notebook>
                     </group>
-                    <div>
-                        <button name="evaluacion_action_tree" string="Finalizar" type="object" class="btn-primary"/>
-                    </div>
                 </sheet>
             </form>
         </field>
@@ -209,7 +454,6 @@
         <field name="model_id" ref="model_evaluacion"/>
         <field name="state">code</field>
         <field name="code">action = model.evaluacion_clima_action_form()</field>
-        <field name="binding_model_id" ref="model_evaluacion"/>
     </record>
 
     <record id="evaluacion_nom035_action_form" model="ir.actions.server">
@@ -217,7 +461,6 @@
         <field name="model_id" ref="model_evaluacion"/>
         <field name="state">code</field>
         <field name="code">action = model.evaluacion_nom035_action_form()</field>
-        <field name="binding_model_id" ref="model_evaluacion"/>
     </record>
 
     <record id="evaluacion_360_action_form" model="ir.actions.server">
@@ -225,7 +468,6 @@
         <field name="model_id" ref="model_evaluacion"/>
         <field name="state">code</field>
         <field name="code">action = model.evaluacion_360_action_form()</field>
-        <field name="binding_model_id" ref="model_evaluacion"/>
     </record>
 
     <record id="evaluacion_action_tree" model="ir.actions.server">
@@ -233,7 +475,5 @@
         <field name="model_id" ref="model_evaluacion"/>
         <field name="state">code</field>
         <field name="code">action = model.evaluacion_action_tree()</field>
-        <field name="binding_model_id" ref="model_evaluacion"/>
     </record>
-
 </odoo>

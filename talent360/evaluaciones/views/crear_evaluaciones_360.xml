@@ -1,10 +1,10 @@
 <odoo>
-    <record id="evaluacion_360_form" model="ir.ui.view">
+    <record id="evaluacion_360_view_form" model="ir.ui.view">
         <field name="name">evaluacion_360.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
-            <form>
-                <sheet string="Evaluacion de personal">
+            <form create="false" duplicate="0">
+                <sheet string="Evaluación de personal">
                     <h1>Evaluación 360</h1>
                     <group>
                         <group>
@@ -24,7 +24,6 @@
                             <tree editable="bottom">
                                 <field name="nombre"/>
                                 <field name="descripcion"/>
-                                <field name="company_id"/>
                                 <field name="pregunta_ids">
                                     <tree>
                                         <field name="pregunta_texto"/>
@@ -40,5 +39,12 @@
                 </sheet>
             </form>
         </field>
+    </record>
+
+    <record id="evaluacion_competencias_action" model="ir.actions.act_window">
+        <field name="name">Evaluaciones</field>
+        <field name="res_model">evaluacion</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="evaluacion_360_view_form"/>
     </record>
 </odoo>
