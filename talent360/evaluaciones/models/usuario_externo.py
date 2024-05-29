@@ -96,3 +96,47 @@ class UsuarioExterno(models.Model):
             raise ValidationError(
                 _("No se encontraron respuestas para el usuario seleccionado.")
             )
+
+
+    def obtener_datos_demograficos(self):
+        """
+        Obtiene los datos demográficos de un usuario externo.
+
+        :return: Un diccionario con los datos demográficos del usuario externo. Incluye nombre, género, puesto, año de nacimiento, generación y departamento.
+        """
+
+
+        datos = {}
+        datos["nombre"] = self.nombre if self.nombre else "N/A"
+        datos["genero"] = self.genero.capitalize() if self.genero else "N/A"
+        datos["puesto"] = self.puesto if self.puesto else "N/A"
+        datos["anio_nacimiento"] = (
+            self.fecha_nacimiento.year if self.fecha_nacimiento else "N/A"
+        )
+        datos["generacion"] = (
+            self.obtener_generacion(datos["anio_nacimiento"])
+            if datos["anio_nacimiento"] != "N/A"
+            else "N/A"
+        )
+        datos["departamento"] = self.direccion if self.direccion else "N/A"
+
+        return datos
+
+    def obtener_generacion(self, anio_nacimiento):
+        """
+        Obtiene la generación a la que pertenece una persona de acuerdo al año de nacimiento.
+        :param anio_nacimiento: El año de nacimiento de la persona.
+
+        :return: La generación a la que pertenece la persona.
+        """
+
+        if 1946 <= anio_nacimiento <= 1964:
+            return "Baby Boomers"
+        elif 1965 <= anio_nacimiento <= 1980:
+            return "Generación X"
+        elif 1981 <= anio_nacimiento <= 1999:
+            return "Millenials"
+        elif 2000 <= anio_nacimiento <= 2015:
+            return "Generacion Z"
+        else:
+            return "N/A"

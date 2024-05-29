@@ -1,5 +1,6 @@
-from odoo import models, fields, _
+from odoo import models, fields, api
 from odoo.exceptions import ValidationError
+from functools import reduce
 
 
 class Users(models.Model):
@@ -52,3 +53,66 @@ class Users(models.Model):
             raise ValidationError(
                 _("No se encontraron respuestas para el usuario seleccionado.")
             )
+
+    def obtener_datos_demograficos(self):
+        """
+        Obtiene los datos demográficos de un usuario.
+
+        Este método obtiene los datos demográficos, como nombre, género, puesto, año de nacimiento, generación, departamento, nivel jerárquico, gerencia, jefatura, fecha de ingreso y ubicación/región.
+
+        :return: Un diccionario con los datos demográficos del usuario.
+        """
+
+        datos = {}
+        datos["nombre"] = self.name if self.name else "N/A"
+        datos["genero"] = self.gender.capitalize() if self.gender else "N/A"
+        datos["puesto"] = self.job_title if self.job_title else "N/A"
+        datos["anio_nacimiento"] = self.birthday.year if self.birthday else "N/A"
+        datos["generacion"] = (
+            self.obtener_generacion(datos["anio_nacimiento"])
+            if datos["anio_nacimiento"] != "N/A"
+            else "N/A"
+        )
+        datos["departamento"] = self.department_id.name if self.department_id else "N/A"
+
+        datos.update(self.obtener_atributos_extra())
+
+        print(datos)
+        return datos
+
+    @api.model
+    def _obtener_valor(self, atributo):
+        if not atributo["value"]:
+            return "N/A"
+        
+        if atributo["type"] == "test":
+            return "TODO"
+
+        return atributo["value"]
+
+    def obtener_atributos_extra(self):
+        atributos = self.employee_id._read_format(["employee_properties"])[0]["employee_properties"]
+        atributos_extra = {}
+        for attr in atributos:
+            atributos_extra[attr["string"]] = self._obtener_valor(attr)
+
+        return atributos_extra
+    
+    def obtener_generacion(self, anio_nacimiento):
+        """
+        Obtiene la generación a la que pertenece una persona de acuerdo al año de nacimiento.
+        :param anio_nacimiento: El año de nacimiento de la persona.
+
+        :return: La generación a la que pertenece la persona.
+        """
+
+        if 1946 <= anio_nacimiento <= 1964:
+            return "Baby Boomers"
+        elif 1965 <= anio_nacimiento <= 1980:
+            return "Generación X"
+        elif 1981 <= anio_nacimiento <= 1999:
+            return "Millenials"
+        elif 2000 <= anio_nacimiento <= 2015:
+            return "Generacion Z"
+        else:
+            return "N/A"

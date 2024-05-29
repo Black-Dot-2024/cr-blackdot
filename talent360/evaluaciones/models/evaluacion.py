@@ -28,12 +28,17 @@ class Evaluacion(models.Model):
     _description = "Evaluacion de personal"
     _rec_name = "nombre"
     nombre = fields.Char(string="Título de la evaluación", required=True)
-    escalar_format = fields.Selection([
-        ("numericas", "Numéricas"),
-        ("textuales", "Textuales"),
-        ("caritas", "Caritas"),
-        ("estrellas", "Estrellas")
-    ], string="Formato para las preguntas escalares", required=True, default="numericas")
+    escalar_format = fields.Selection(
+        [
+            ("numericas", "Numéricas"),
+            ("textuales", "Textuales"),
+            ("caritas", "Caritas"),
+            ("estrellas", "Estrellas"),
+        ],
+        string="Formato para las preguntas escalares",
+        required=True,
+        default="numericas",
+    )
 
     tipo = fields.Selection(
         [
@@ -760,7 +765,7 @@ class Evaluacion(models.Model):
         )
 
         for usuario in usuario_evaluacion.mapped("usuario_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos(usuario)
+            datos_demograficos_usuario = usuario.obtener_datos_demograficos()
             if filtros and not self.validar_filtro(
                 filtros, datos_demograficos=datos_demograficos_usuario
             ):
@@ -777,9 +782,7 @@ class Evaluacion(models.Model):
         )
 
         for usuario_externo in usuario_evaluacion_externo.mapped("usuario_externo_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos_externos(
-                usuario_externo
-            )
+            datos_demograficos_usuario = usuario_externo.obtener_datos_demograficos()
             if filtros and not self.validar_filtro(
                 filtros, datos_demograficos=datos_demograficos_usuario
             ):
@@ -787,12 +790,15 @@ class Evaluacion(models.Model):
 
             datos_demograficos.append(datos_demograficos_usuario)
 
+        atributos = defaultdict(lambda: defaultdict(int))
         departamentos = defaultdict(int)
         generaciones = defaultdict(int)
         puestos = defaultdict(int)
         generos = defaultdict(int)
 
         for dato in datos_demograficos:
+            for categoria, valor in dato.items():
+                atributos[categoria][valor] += 1
             departamentos[dato["departamento"]] += 1
             generaciones[dato["generacion"]] += 1
             puestos[dato["puesto"]] += 1
@@ -997,98 +1003,6 @@ class Evaluacion(models.Model):
         else:
             return "#ff4747"  # Rojo
 
-    def obtener_dato(self, dato):
-        """
-        Obtiene un dato y devuelve 'N/A' si es nulo.
-
-        Este método recibe un dato y verifica si es nulo. Si es nulo, devuelve 'N/A'.
-
-        :param dato: El dato a verificar.
-
-        :return: El dato si no es nulo, 'N/A' si es nulo.
-        """
-        if not dato:
-            return "N/A"
-
-        return dato
-
-    def obtener_generacion(self, anio_nacimiento):
-        """
-        Obtiene la generación a la que pertenece una persona de acuerdo al año de nacimiento.
-        :param anio_nacimiento: El año de nacimiento de la persona.
-
-        :return: La generación a la que pertenece la persona.
-        """
-
-        if 1946 <= anio_nacimiento <= 1964:
-            return "Baby Boomers"
-        elif 1965 <= anio_nacimiento <= 1980:
-            return "Generación X"
-        elif 1981 <= anio_nacimiento <= 1999:
-            return "Millenials"
-        elif 2000 <= anio_nacimiento <= 2015:
-            return "Generacion Z"
-        else:
-            return "N/A"
-
-    def obtener_datos_demograficos(self, usuario):
-        """
-        Obtiene los datos demográficos de un usuario.
-
-        Este método recibe un usuario y obtiene sus datos demográficos, como nombre, género, puesto, año de nacimiento, generación, departamento, nivel jerárquico, gerencia, jefatura, fecha de ingreso y ubicación/región.
-
-        :param usuario: El usuario del que se obtendrán los datos demográficos.
-
-        :return: Un diccionario con los datos demográficos del usuario.
-        """
-
-        datos = {}
-
-        datos["nombre"] = self.obtener_dato(usuario.name)
-        datos["genero"] = self.obtener_dato(usuario.gender).capitalize()
-        datos["puesto"] = self.obtener_dato(usuario.job_title)
-        datos["anio_nacimiento"] = usuario.birthday.year if usuario.birthday else "N/A"
-        datos["generacion"] = (
-            self.obtener_generacion(datos["anio_nacimiento"])
-            if datos["anio_nacimiento"] != "N/A"
-            else "N/A"
-        )
-        datos["departamento"] = self.obtener_dato(usuario.department_id.name)
-
-        # Falta
-        # Nivel Jerarquico
-        # Gerencia
-        # Jefatura
-        # Fecha de ingreso
-        # Ubicación/Region
-
-        return datos
-
-    def obtener_datos_demograficos_externos(self, usuario):
-        """
-        Obtiene los datos demográficos de un usuario externo.
-        :param usuario: El usuario externo del que se obtendrán los datos demográficos.
-
-        :return: Un diccionario con los datos demográficos del usuario externo. Incluye nombre, género, puesto, año de nacimiento, generación y departamento.
-        """
-
-        datos = {}
-
-        datos["nombre"] = self.obtener_dato(usuario.nombre)
-        datos["genero"] = self.obtener_dato(usuario.genero).capitalize()
-        datos["puesto"] = self.obtener_dato(usuario.puesto)
-        datos["anio_nacimiento"] = (
-            usuario.fecha_nacimiento.year if usuario.fecha_nacimiento else "N/A"
-        )
-        datos["generacion"] = (
-            self.obtener_generacion(datos["anio_nacimiento"])
-            if datos["anio_nacimiento"] != "N/A"
-            else "N/A"
-        )
-        datos["departamento"] = self.obtener_dato(usuario.direccion)
-
-        return datos
-
     def get_evaluaciones_action(self, evaluacion_id):
         """
         Obtiene las preguntas asociadas a la evaluación.
@@ -1149,10 +1063,13 @@ class Evaluacion(models.Model):
         # Si se está eliminando un usuario o usuario externo, eliminar sus respuestas
 
         if "usuario_ids" in vals:
-            usuarios_eliminados = list(map(
-                lambda val: val[1], filter(lambda val: val[0] == 3, vals["usuario_ids"])
-            ))
-            
+            usuarios_eliminados = list(
+                map(
+                    lambda val: val[1],
+                    filter(lambda val: val[0] == 3, vals["usuario_ids"]),
+                )
+            )
+
             if usuarios_eliminados:
                 respuestas = self.env["respuesta"].search(
                     [
@@ -1164,10 +1081,12 @@ class Evaluacion(models.Model):
                 respuestas.unlink()
 
         if "usuario_externo_ids" in vals:
-            usuarios_eliminados = list(map(
-                lambda val: val[1],
-                filter(lambda val: val[0] == 3, vals["usuario_externo_ids"]),
-            ))
+            usuarios_eliminados = list(
+                map(
+                    lambda val: val[1],
+                    filter(lambda val: val[0] == 3, vals["usuario_externo_ids"]),
+                )
+            )
 
             if usuarios_eliminados:
                 respuestas = self.env["respuesta"].search(
@@ -1180,9 +1099,13 @@ class Evaluacion(models.Model):
 
         for record in self:
             if record.tipo == "generico" and len(record.pregunta_ids) < 1:
-                raise exceptions.ValidationError(_("La evaluación debe tener al menos una pregunta."))
+                raise exceptions.ValidationError(
+                    _("La evaluación debe tener al menos una pregunta.")
+                )
             if record.tipo == "generico" and len(record.usuario_ids) < 1:
-                raise exceptions.ValidationError(_("La evaluación debe tener al menos una persona asignada."))
+                raise exceptions.ValidationError(
+                    _("La evaluación debe tener al menos una persona asignada.")
+                )
 
         return resultado
 
@@ -1199,7 +1122,7 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "target": "new",
         }
-    
+
     def evaluacion_general_action_form(self):
         """
         Ejecuta la acción de redireccionar a la evaluación general y devuelve un diccionario
@@ -1210,7 +1133,7 @@ class Evaluacion(models.Model):
         a una vista de la evaluación general.
 
         """
-        
+
         nueva_evaluacion = self.env["evaluacion"].create(
             {
                 "nombre": "",
@@ -1234,11 +1157,11 @@ class Evaluacion(models.Model):
     def get_escalar_format(self):
         """
         Devuelve el formato escalar seleccionado para la evaluación actual.
-        
+
         :return: El formato escalar seleccionado para la evaluación.
         """
         return self.escalar_format
-    
+
     def generar_reporte(self):
         """
         Devuelve las fechas de inicio y final que el usuario acordo al realizar la evaluación.
@@ -1246,14 +1169,13 @@ class Evaluacion(models.Model):
         :return: Las fechas de inicio y final.
         """
         return {
-            
             "type": "ir.actions.report",
             "report_name": "evaluaciones.reporte_template",
             "context": {
                 "evaluacion_id": self.id,
                 "fecha_inicio": self.fecha_inicio,
                 "fecha_final": self.fecha_final,
-            }
+            },
         }
 
     def action_importar_preguntas_clima(self):
@@ -1269,5 +1191,3 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "target": "new",
         }
-    
-    
