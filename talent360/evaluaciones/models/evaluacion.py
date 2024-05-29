@@ -2,6 +2,9 @@ from odoo import api, models, fields, _
 from collections import defaultdict, Counter
 from odoo import exceptions
 from datetime import timedelta
+from io import BytesIO
+import pandas as pd
+import base64
 
 
 class Evaluacion(models.Model):
@@ -448,7 +451,8 @@ class Evaluacion(models.Model):
                     lambda r: self.validar_filtro(filtros, r)
                 )
 
-            respuestas = [respuesta.respuesta_mostrar for respuesta in respuesta_ids]
+            respuestas = [
+                respuesta.respuesta_mostrar for respuesta in respuesta_ids]
             respuestas_tabuladas = dict(Counter(respuestas))
             datos_pregunta = {
                 "pregunta": pregunta,
@@ -501,7 +505,8 @@ class Evaluacion(models.Model):
             categoria = dict(pregunta._fields["categoria"].selection).get(
                 pregunta.categoria
             )
-            dominio = dict(pregunta._fields["dominio"].selection).get(pregunta.dominio)
+            dominio = dict(pregunta._fields["dominio"].selection).get(
+                pregunta.dominio)
             valor_pregunta = 0
 
             respuesta_ids = self.env["respuesta"].search(
@@ -673,11 +678,13 @@ class Evaluacion(models.Model):
                 categoria["valor"] = (
                     categoria["puntuacion"] / categoria["puntuacion_maxima"]
                 ) * 100
-                categoria["color"] = self.asignar_color_clima(categoria["valor"])
+                categoria["color"] = self.asignar_color_clima(
+                    categoria["valor"])
 
             for dept in categoria["departamentos"]:
                 if dept["puntos_maximos"] > 0:
-                    dept["valor"] = (dept["puntos"] / dept["puntos_maximos"]) * 100
+                    dept["valor"] = (dept["puntos"] /
+                                     dept["puntos_maximos"]) * 100
                     dept["color"] = self.asignar_color_clima(dept["valor"])
 
         total_porcentaje = round(
@@ -760,7 +767,8 @@ class Evaluacion(models.Model):
         )
 
         for usuario in usuario_evaluacion.mapped("usuario_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos(usuario)
+            datos_demograficos_usuario = self.obtener_datos_demograficos(
+                usuario)
             if filtros and not self.validar_filtro(
                 filtros, datos_demograficos=datos_demograficos_usuario
             ):
@@ -1150,9 +1158,10 @@ class Evaluacion(models.Model):
 
         if "usuario_ids" in vals:
             usuarios_eliminados = list(map(
-                lambda val: val[1], filter(lambda val: val[0] == 3, vals["usuario_ids"])
+                lambda val: val[1], filter(
+                    lambda val: val[0] == 3, vals["usuario_ids"])
             ))
-            
+
             if usuarios_eliminados:
                 respuestas = self.env["respuesta"].search(
                     [
@@ -1180,9 +1189,11 @@ class Evaluacion(models.Model):
 
         for record in self:
             if record.tipo == "generico" and len(record.pregunta_ids) < 1:
-                raise exceptions.ValidationError(_("La evaluación debe tener al menos una pregunta."))
+                raise exceptions.ValidationError(
+                    _("La evaluación debe tener al menos una pregunta."))
             if record.tipo == "generico" and len(record.usuario_ids) < 1:
-                raise exceptions.ValidationError(_("La evaluación debe tener al menos una persona asignada."))
+                raise exceptions.ValidationError(
+                    _("La evaluación debe tener al menos una persona asignada."))
 
         return resultado
 
@@ -1199,7 +1210,7 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "target": "new",
         }
-    
+
     def evaluacion_general_action_form(self):
         """
         Ejecuta la acción de redireccionar a la evaluación general y devuelve un diccionario
@@ -1210,7 +1221,7 @@ class Evaluacion(models.Model):
         a una vista de la evaluación general.
 
         """
-        
+
         nueva_evaluacion = self.env["evaluacion"].create(
             {
                 "nombre": "",
@@ -1234,11 +1245,11 @@ class Evaluacion(models.Model):
     def get_escalar_format(self):
         """
         Devuelve el formato escalar seleccionado para la evaluación actual.
-        
+
         :return: El formato escalar seleccionado para la evaluación.
         """
         return self.escalar_format
-    
+
     def generar_reporte(self):
         """
         Devuelve las fechas de inicio y final que el usuario acordo al realizar la evaluación.
@@ -1246,7 +1257,7 @@ class Evaluacion(models.Model):
         :return: Las fechas de inicio y final.
         """
         return {
-            
+
             "type": "ir.actions.report",
             "report_name": "evaluaciones.reporte_template",
             "context": {
@@ -1269,5 +1280,73 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "target": "new",
         }
-    
-    
+
+    def action_exportar_excel(self):
+        """
+        Exporta las respuestas de la evaluación a un archivo de Excel.
+
+        :return: Una acción para exportar las respuestas a un archivo de Excel.
+        """
+        # Get the data from the 'evaluacion' model
+
+        parametros = {
+            "evaluacion": self,
+            "preguntas": [],
+        }
+
+        for pregunta in self.pregunta_ids:
+
+            respuesta_ids = self.env["respuesta"].search(
+                [
+                    ("pregunta_id.id", "=", pregunta.id),
+                    ("evaluacion_id.id", "=", self.id),
+                ]
+            )
+            respuestas = [
+                respuesta.respuesta_mostrar for respuesta in respuesta_ids]
+            respuestas_tabuladas = dict(Counter(respuestas))
+            datos_pregunta = {
+                "pregunta": pregunta,
+                "respuestas": respuestas,
+                "respuestas_tabuladas": [
+                    {"nombre": nombre, "valor": valor}
+                    for nombre, valor in respuestas_tabuladas.items()
+                ],
+            }
+
+            parametros["preguntas"].append(datos_pregunta)
+
+        data = []
+
+        for pregunta in parametros["preguntas"]:
+            for respuesta in pregunta["respuestas"]:
+                data.append({
+                    "Pregunta": pregunta["pregunta"].pregunta_texto,
+                    "Respuesta": respuesta,
+                })
+
+        print("==================================")
+        print(data)
+
+        # Convert the data to a pandas DataFrame
+        df = pd.DataFrame(data)
+
+        # Write the DataFrame to an Excel file in memory
+        output = BytesIO()
+        df.to_excel(output, index=False)
+        output.seek(0)
+
+        # Create an ir.attachment record
+        attachment = self.env['ir.attachment'].create({
+            'name': 'Respuestas.xlsx',
+            'type': 'binary',
+            'datas': base64.b64encode(output.read()),
+            'res_model': 'evaluacion',
+            'res_id': self.id,
+        })
+
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/web/content/{attachment.id}?download=true',
+            'target': 'self',
+        }
