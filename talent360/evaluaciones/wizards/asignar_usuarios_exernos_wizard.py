@@ -19,7 +19,7 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
         "Correo",
         "Puesto",
         "Nivel Jerarquico",
-        "Direccion",
+        "Departamento",
         "Gerencia",
         "Jefatura",
         "Genero",
@@ -83,14 +83,14 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
                     "nombre": fila["Nombre Completo"],
                     "email": fila["Correo"],
                     "puesto": fila["Puesto"],
-                    "nivel_jerarquico": fila["Nivel Jerarquico"],
-                    "direccion": fila["Direccion"],
-                    "gerencia": fila["Gerencia"],
-                    "jefatura": fila["Jefatura"],
+                    # "nivel_jerarquico": fila["Nivel Jerarquico"],
+                    "departamento": fila["Departamento"],
+                    # "gerencia": fila["Gerencia"],
+                    # "jefatura": fila["Jefatura"],
                     "genero": fila["Genero"],
-                    "fecha_ingreso": fecha_ingreso,
+                    # "fecha_ingreso": fecha_ingreso,
                     "fecha_nacimiento": fecha_nacimiento,
-                    "region": fila["Ubicacion/Region"],
+                    # "region": fila["Ubicacion/Region"],
                 }
             )
 
@@ -135,31 +135,45 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
             )
 
     def descargar_template_usuarios(self):
-        # Descarga el archivo /evaluaciones/static/csv/template_usuarios_externos.csv
-        current_path = os.path.dirname(os.path.abspath(__file__))
-        ruta_archivo = os.path.join(
-            current_path, "../static/csv/template_usuarios_externos.csv"
+        # Generar csv
+
+        atributos = self.env["usuario.externo"].obtener_atributos()
+
+        datos = StringIO()
+
+        csv_writer = csv.writer(datos)
+
+        csv_writer.writerow(atributos)
+
+        # "Nombre Completo", "Correo", "Puesto", "Departamento", "Genero", "Fecha de nacimiento"
+
+        datos_prueba_base = ["Juan Perez", "juanperez@test.com", "Gerente", "Ventas", "Masculino", "01/01/1990"]
+
+        while len(datos_prueba_base) < len(atributos):
+            datos_prueba_base.append("Dato de prueba")
+
+        csv_writer.writerow(datos_prueba_base)
+
+        datos = datos.getvalue()
+
+        nombre_archivo = "template_usuarios_externos.csv"
+
+        attachment = self.env["ir.attachment"].search(
+            [("name", "=", nombre_archivo), ("res_model", "=", self._name)], limit=1
         )
-        with open(ruta_archivo, "r") as archivo:
-            datos = archivo.read()
-            nombre_archivo = "template_usuarios_externos.csv"
 
-            attachment = self.env["ir.attachment"].search(
-                [("name", "=", nombre_archivo), ("res_model", "=", self._name)], limit=1
+        if attachment:
+            attachment.write({"datas": base64.b64encode(datos.encode("utf-8"))})
+        else:
+            attachment = self.env["ir.attachment"].create(
+                {
+                    "name": nombre_archivo,
+                    "type": "binary",
+                    "datas": base64.b64encode(datos.encode("utf-8")),
+                    "res_model": nombre_archivo,
+                    "res_id": self.id,
+                }
             )
-
-            if attachment:
-                attachment.write({"datas": base64.b64encode(datos.encode("utf-8"))})
-            else:
-                attachment = self.env["ir.attachment"].create(
-                    {
-                        "name": nombre_archivo,
-                        "type": "binary",
-                        "datas": base64.b64encode(datos.encode("utf-8")),
-                        "res_model": nombre_archivo,
-                        "res_id": self.id,
-                    }
-                )
 
         return {
             "type": "ir.actions.act_url",

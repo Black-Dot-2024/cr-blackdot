@@ -1,4 +1,4 @@
-from odoo import models, fields, _
+from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 
 
@@ -12,7 +12,7 @@ class UsuarioExterno(models.Model):
     :param email (fields.Char): Correo electrónico del usuario externo. Es un campo obligatorio.
     :param puesto (fields.Char): Puesto del usuario externo.
     :param nivel_jerarquico (fields.Char): Nivel jerárquico del usuario externo.
-    :param direccion (fields.Char): Dirección del usuario externo.
+    :param departamento (fields.Char): Departamento del usuario externo.
     :param gerencia (fields.Char): Gerencia del usuario externo.
     :param jefatura (fields.Char): Jefatura del usuario externo.
     :param genero (fields.Char): Género del usuario externo.
@@ -29,14 +29,9 @@ class UsuarioExterno(models.Model):
     nombre = fields.Char(required=True)
     email = fields.Char(string="Correo electrónico", required=True)
     puesto = fields.Char()
-    nivel_jerarquico = fields.Char(string="Nivel jerárquico")
-    direccion = fields.Char(string="Dirección")
-    gerencia = fields.Char()
-    jefatura = fields.Char()
+    departamento = fields.Char(string="Departamento")
     genero = fields.Char(string="Género")
-    fecha_ingreso = fields.Date(string="Fecha de ingreso")
     fecha_nacimiento = fields.Date(string="Fecha de nacimiento")
-    region = fields.Char(string="Ubicación/Región")
 
     evaluacion_ids = fields.Many2many(
         "evaluacion",
@@ -97,14 +92,12 @@ class UsuarioExterno(models.Model):
                 _("No se encontraron respuestas para el usuario seleccionado.")
             )
 
-
     def obtener_datos_demograficos(self):
         """
         Obtiene los datos demográficos de un usuario externo.
 
         :return: Un diccionario con los datos demográficos del usuario externo. Incluye nombre, género, puesto, año de nacimiento, generación y departamento.
         """
-
 
         datos = {}
         datos["nombre"] = self.nombre if self.nombre else "N/A"
@@ -118,7 +111,7 @@ class UsuarioExterno(models.Model):
             if datos["anio_nacimiento"] != "N/A"
             else "N/A"
         )
-        datos["departamento"] = self.direccion if self.direccion else "N/A"
+        datos["departamento"] = self.departamento if self.departamento else "N/A"
 
         return datos
 
@@ -140,3 +133,29 @@ class UsuarioExterno(models.Model):
             return "Generacion Z"
         else:
             return "N/A"
+
+    @api.model
+    def _obtener_valor(self, atributo):
+        if not atributo["value"]:
+            return "N/A"
+
+        if atributo["type"] == "test":
+            return "TODO"
+
+        return atributo["value"]
+
+    def obtener_atributos(self):
+        """
+        Obtiene los atributos extra de un usuario externo.
+
+        :return: Un diccionario con los atributos extra del usuario externo.
+        """
+
+        atributos = ["Nombre Completo", "Correo", "Puesto", "Departamento", "Genero", "Fecha de nacimiento"]
+
+        atributos_extra = self.env["res.company"].browse(self.env.company.id).employee_properties_definition
+        print("ATRIBUTOS EXTRAA", atributos_extra)
+        for attr in atributos_extra:
+            atributos.append(attr["string"])
+
+        return atributos
