@@ -1281,31 +1281,35 @@ class Evaluacion(models.Model):
             "target": "new",
         }
 
-    def action_exportar_excel(self):
-        """
-        Exporta las respuestas de la evaluación a un archivo de Excel.
-
-        :return: Una acción para exportar las respuestas a un archivo de Excel.
-        """
-        # Get the data from the 'evaluacion' model
-
-        parametros = {
-            "evaluacion": self,
-            "preguntas": [],
-        }
+    def get_preguntas_data(self):
+        preguntas_data = []
 
         for pregunta in self.pregunta_ids:
-
             respuesta_ids = self.env["respuesta"].search(
                 [
                     ("pregunta_id.id", "=", pregunta.id),
                     ("evaluacion_id.id", "=", self.id),
                 ]
             )
+
+            usuarios = []
+            for respuesta in respuesta_ids:
+                id = None
+
+                if respuesta.usuario_externo_id:
+                    id = respuesta.usuario_externo_id.id
+                elif respuesta.usuario_id:
+                    id = respuesta.usuario_id.id
+
+                if id and id not in usuarios:
+                    usuarios.append(id)
+
             respuestas = [
                 respuesta.respuesta_mostrar for respuesta in respuesta_ids]
             respuestas_tabuladas = dict(Counter(respuestas))
+
             datos_pregunta = {
+                "usuarioID": usuarios,
                 "pregunta": pregunta,
                 "respuestas": respuestas,
                 "respuestas_tabuladas": [
@@ -1314,29 +1318,26 @@ class Evaluacion(models.Model):
                 ],
             }
 
-            parametros["preguntas"].append(datos_pregunta)
+            preguntas_data.append(datos_pregunta)
 
+        return preguntas_data
+
+    def generar_excel(self, preguntas_data):
         data = []
-
-        for pregunta in parametros["preguntas"]:
+        for pregunta in preguntas_data:
             for respuesta in pregunta["respuestas"]:
                 data.append({
+                    "UsuarioID": pregunta["usuarioID"][0],
                     "Pregunta": pregunta["pregunta"].pregunta_texto,
                     "Respuesta": respuesta,
                 })
 
-        print("==================================")
-        print(data)
-
-        # Convert the data to a pandas DataFrame
         df = pd.DataFrame(data)
 
-        # Write the DataFrame to an Excel file in memory
         output = BytesIO()
         df.to_excel(output, index=False)
         output.seek(0)
 
-        # Create an ir.attachment record
         attachment = self.env['ir.attachment'].create({
             'name': 'Respuestas.xlsx',
             'type': 'binary',
@@ -1344,6 +1345,17 @@ class Evaluacion(models.Model):
             'res_model': 'evaluacion',
             'res_id': self.id,
         })
+
+        return attachment
+
+    def action_exportar_excel(self):
+        """
+        Exporta las respuestas de la evaluación a un archivo de Excel.
+
+        :return: Una acción para exportar las respuestas a un archivo de Excel.
+        """
+        preguntas_data = self.get_preguntas_data()
+        attachment = self.generar_excel(preguntas_data)
 
         return {
             'type': 'ir.actions.act_url',
