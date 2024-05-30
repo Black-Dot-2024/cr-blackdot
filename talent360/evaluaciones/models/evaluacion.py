@@ -1331,7 +1331,7 @@ class Evaluacion(models.Model):
         return self.env["respuesta"].search_count(
             [("evaluacion_id.id", "=", self.id)]) > 0
 
-    def get_preguntas_data(self):
+    def get_datos_pregunta(self):
         """
         Obtiene los datos de las preguntas de la evaluación.
 
@@ -1418,31 +1418,31 @@ class Evaluacion(models.Model):
 
         return datos_demograficos
 
-    def generar_excel(self, preguntas_data, demograficos_data):
+    def generar_excel(self, preguntas, demograficos):
         """
         Genera un archivo de Excel con las respuestas de la evaluación.
 
-        :param preguntas_data: Los datos de las preguntas de la evaluación.
-        :param demograficos_data: Los datos demográficos de la evaluación.
+        :param preguntas: Los datos de las preguntas de la evaluación.
+        :param demograficos: Los datos demográficos de la evaluación.
 
         :return: Un archivo de Excel con las respuestas de la evaluación.
         """
 
-        data_preguntas = []
-        for pregunta in preguntas_data:
+        datos_preguntas = []
+        for pregunta in preguntas:
             for respuesta in pregunta["respuestas"]:
-                data_preguntas.append({
+                datos_preguntas.append({
                     "UsuarioID": respuesta["usuarioID"],
                     "Pregunta": pregunta["pregunta"].pregunta_texto,
                     "Respuesta": respuesta["respuesta"],
                 })
 
-        df_respuestas = pd.DataFrame(data_preguntas)
+        df_respuestas = pd.DataFrame(datos_preguntas)
 
-        data_demograficos = []
+        datos_demograficos = []
 
-        for demografico in demograficos_data:
-            data_demograficos.append({
+        for demografico in demograficos:
+            datos_demograficos.append({
                 "UsuarioID": demografico["id"],
                 "Nombre": demografico["nombre"],
                 "Genero": demografico["genero"],
@@ -1452,7 +1452,7 @@ class Evaluacion(models.Model):
                 "Departamento": demografico["departamento"],
             })
 
-        df_demograficos = pd.DataFrame(data_demograficos)
+        df_demograficos = pd.DataFrame(datos_demograficos)
 
         output = BytesIO()
 
@@ -1485,9 +1485,9 @@ class Evaluacion(models.Model):
             raise exceptions.ValidationError(
                 _("No hay respuestas para exportar."))
 
-        preguntas_data = self.get_preguntas_data()
-        demograficos_data = self.generar_datos_demograficos_individuales()
-        attachment = self.generar_excel(preguntas_data, demograficos_data)
+        datos_preguntas = self.get_datos_pregunta()
+        datos_demograficos = self.generar_datos_demograficos_individuales()
+        attachment = self.generar_excel(datos_preguntas, datos_demograficos)
 
         return {
             'type': 'ir.actions.act_url',
