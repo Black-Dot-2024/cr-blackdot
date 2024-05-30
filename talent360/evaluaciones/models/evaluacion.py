@@ -1330,7 +1330,7 @@ class Evaluacion(models.Model):
         :return: Los datos demográficos de los usuarios asignados a la evaluación. Incuye departamentos, generaciones, puestos y géneros.
         """
         datos_demograficos = []
-        # SQL
+
         usuario_evaluacion = self.env["usuario.evaluacion.rel"].search(
             [
                 ("evaluacion_id.id", "=", self.id),
@@ -1342,6 +1342,8 @@ class Evaluacion(models.Model):
         for usuario in usuario_evaluacion.mapped("usuario_id"):
             datos_demograficos_usuario = self.obtener_datos_demograficos(
                 usuario)
+            # Set 'id' key on the dictionary
+            datos_demograficos_usuario["id"] = usuario.id.__str__()
             datos_demograficos.append(datos_demograficos_usuario)
 
         usuario_evaluacion_externo = self.env["usuario.evaluacion.rel"].search(
@@ -1354,8 +1356,10 @@ class Evaluacion(models.Model):
 
         for usuario_externo in usuario_evaluacion_externo.mapped("usuario_externo_id"):
             datos_demograficos_usuario = self.obtener_datos_demograficos_externos(
-                usuario_externo
-            )
+                usuario_externo)
+            # Set 'id' key on the dictionary
+            datos_demograficos_usuario["id"] = "E" + \
+                usuario_externo.id.__str__()
             datos_demograficos.append(datos_demograficos_usuario)
 
         return datos_demograficos
@@ -1365,7 +1369,6 @@ class Evaluacion(models.Model):
         for pregunta in preguntas_data:
             for respuesta in pregunta["respuestas"]:
                 data_preguntas.append({
-                    # Access usuarioID from respuesta
                     "UsuarioID": respuesta["usuarioID"],
                     "Pregunta": pregunta["pregunta"].pregunta_texto,
                     "Respuesta": respuesta["respuesta"],
@@ -1377,6 +1380,7 @@ class Evaluacion(models.Model):
 
         for demografico in demograficos_data:
             data_demograficos.append({
+                "UsuarioID": demografico["id"],
                 "Nombre": demografico["nombre"],
                 "Genero": demografico["genero"],
                 "Puesto": demografico["puesto"],
