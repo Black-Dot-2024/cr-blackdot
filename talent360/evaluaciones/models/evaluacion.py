@@ -1297,10 +1297,9 @@ class Evaluacion(models.Model):
                 id = None
 
                 if respuesta.usuario_externo_id:
-                    id = respuesta.usuario_externo_id.id
+                    id = "E" + respuesta.usuario_externo_id.id.__str__()
                 elif respuesta.usuario_id:
-                    id = respuesta.usuario_id.id
-
+                    id = respuesta.usuario_id.id__str__()
                 if id and id not in usuarios:
                     usuarios.append(id)
 
