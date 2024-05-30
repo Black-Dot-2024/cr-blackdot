@@ -14,19 +14,6 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
 
     nombre_archivo = fields.Char()
 
-    campos_obligatorios = [
-        "Nombre Completo",
-        "Correo",
-        "Puesto",
-        "Nivel Jerarquico",
-        "Departamento",
-        "Gerencia",
-        "Jefatura",
-        "Genero",
-        "Fecha de ingreso",
-        "Fecha de nacimiento",
-        "Ubicacion/Region",
-    ]
 
     @api.constrains("nombre_archivo")
     def _validar_nombre_archivo(self):
@@ -63,16 +50,13 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
                     _("Error: No se pueden cargar más de 50,000 usuarios.")
                 )
             try:
-                fecha_ingreso = datetime.strptime(
-                    fila["Fecha de ingreso"], "%d/%m/%Y"
-                ).date()
                 fecha_nacimiento = datetime.strptime(
                     fila["Fecha de nacimiento"], "%d/%m/%Y"
                 ).date()
             except ValueError:
                 raise exceptions.ValidationError(
                     _(
-                        "El formato de las fechas debe ser dd/mm/yyyy. Verifica las fechas de nacimiento e ingreso."
+                        "El formato de las fechas debe ser dd/mm/yyyy. Verifica las fechas."
                     )
                 )
 
@@ -83,14 +67,9 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
                     "nombre": fila["Nombre Completo"],
                     "email": fila["Correo"],
                     "puesto": fila["Puesto"],
-                    # "nivel_jerarquico": fila["Nivel Jerarquico"],
                     "departamento": fila["Departamento"],
-                    # "gerencia": fila["Gerencia"],
-                    # "jefatura": fila["Jefatura"],
                     "genero": fila["Genero"],
-                    # "fecha_ingreso": fecha_ingreso,
                     "fecha_nacimiento": fecha_nacimiento,
-                    # "region": fila["Ubicacion/Region"],
                 }
             )
 
@@ -102,15 +81,25 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
     def validar_columnas(self, columnas: list[str]):
         # Valida que las columnas del archivo CSV sean las correctas
 
+        campos = self.env["usuario.externo"].obtener_atributos()
+        campos_obligatorios = campos[:6]
+        campos_opcionales = campos[6:]
+
+
         columnas_faltantes = []
         columnas_duplicadas = []
+        columnas_extra = []
 
-        for columna in self.campos_obligatorios:
+        for columna in campos_obligatorios:
             if columna not in columnas:
                 columnas_faltantes.append(columna)
 
                 if columnas.count(columna) > 1:
                     columnas_duplicadas.append(columna)
+
+        for columna in columnas:
+            if columna not in campos_obligatorios and columna not in campos_opcionales:
+                columnas_extra.append(columna)
 
         mensaje = ""
 
@@ -120,19 +109,14 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
         if columnas_duplicadas:
             mensaje += f"Las siguientes columnas están duplicadas: {', '.join(columnas_duplicadas)}\n"
 
+        if columnas_extra:
+            mensaje += f"Las siguientes columnas no son soportadas: {', '.join(columnas_extra)}\n"
+
         if mensaje:
             raise exceptions.ValidationError(mensaje)
 
     def validar_fila(self, row: dict):
-        campos = []
-        for campo in self.campos_obligatorios:
-            if not row.get(campo):
-                campos.append(campo)
-
-        if campos:
-            raise exceptions.ValidationError(
-                f"Los siguientes campos son requeridos: {', '.join(campos)}"
-            )
+        pass
 
     def descargar_template_usuarios(self):
         # Generar csv
