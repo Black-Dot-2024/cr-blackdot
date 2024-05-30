@@ -75,26 +75,19 @@ class Users(models.Model):
         )
         datos["departamento"] = self.department_id.name if self.department_id else "N/A"
 
-        datos.update(self.obtener_atributos_extra())
+        datos.update(self._obtener_atributos_extra())
 
-        print(datos)
+        print("DATOS DEMO INTERNO", datos)
+
         return datos
 
-    @api.model
-    def _obtener_valor(self, atributo):
-        if not atributo["value"]:
-            return "N/A"
-        
-        if atributo["type"] == "test":
-            return "TODO"
-
-        return atributo["value"]
-
-    def obtener_atributos_extra(self):
+    def _obtener_atributos_extra(self):
         atributos = self.employee_id._read_format(["employee_properties"])[0]["employee_properties"]
         atributos_extra = {}
         for attr in atributos:
-            atributos_extra[attr["string"]] = self._obtener_valor(attr)
+            if attr["type"] in ["separator", "many2one", "many2many", "tags"]:
+                continue
+            atributos_extra[attr["string"]] = attr["value"] if attr["value"] else "N/A"
 
         return atributos_extra
     

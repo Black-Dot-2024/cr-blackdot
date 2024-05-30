@@ -1,10 +1,8 @@
 import base64
 import csv
-from datetime import datetime
 from io import StringIO
 
 from odoo import fields, models, api, exceptions, _
-import os
 
 
 class AsignarUsuariosExternosWizard(models.TransientModel):
@@ -30,111 +28,45 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
             )
 
         # Procesa el archivo CSV y crea los usuarios externos
-        try:
-            contenidos = base64.b64decode(self.archivo)
-            archivo = StringIO(contenidos.decode("utf-8"))
-            csv_lector = csv.DictReader(archivo)
-
-        except Exception as e:
-            raise exceptions.ValidationError(
-                f"Error al procesar el archivo: {str(e)}. Verifica que el archivo sea un CSV válido."
-            )
-
-        usuarios = []
-
-        self.validar_columnas(csv_lector.fieldnames)
-
-        for i, fila in enumerate(csv_lector):
-            if i >= 50000:
-                raise exceptions.ValidationError(
-                    _("Error: No se pueden cargar más de 50,000 usuarios.")
-                )
-            try:
-                fecha_nacimiento = datetime.strptime(
-                    fila["Fecha de nacimiento"], "%d/%m/%Y"
-                ).date()
-            except ValueError:
-                raise exceptions.ValidationError(
-                    _(
-                        "El formato de las fechas debe ser dd/mm/yyyy. Verifica las fechas."
-                    )
-                )
-
-            self.validar_fila(fila)
-
-            usuarios.append(
-                {
-                    "nombre": fila["Nombre Completo"],
-                    "email": fila["Correo"],
-                    "puesto": fila["Puesto"],
-                    "departamento": fila["Departamento"],
-                    "genero": fila["Genero"],
-                    "fecha_nacimiento": fecha_nacimiento,
-                }
-            )
-
-        usuarios_db = self.env["usuario.externo"].create(usuarios)
-
+        usuarios_db = self.env["usuario.externo"].cargar_csv(self.archivo)
         usuario_ids = [(4, usuario.id) for usuario in usuarios_db]
         evaluacion.write({"usuario_externo_ids": usuario_ids})
-
-    def validar_columnas(self, columnas: list[str]):
-        # Valida que las columnas del archivo CSV sean las correctas
-
-        campos = self.env["usuario.externo"].obtener_atributos()
-        campos_obligatorios = campos[:6]
-        campos_opcionales = campos[6:]
-
-
-        columnas_faltantes = []
-        columnas_duplicadas = []
-        columnas_extra = []
-
-        for columna in campos_obligatorios:
-            if columna not in columnas:
-                columnas_faltantes.append(columna)
-
-                if columnas.count(columna) > 1:
-                    columnas_duplicadas.append(columna)
-
-        for columna in columnas:
-            if columna not in campos_obligatorios and columna not in campos_opcionales:
-                columnas_extra.append(columna)
-
-        mensaje = ""
-
-        if columnas_faltantes:
-            mensaje += f"Las siguientes columnas son requeridas: {', '.join(columnas_faltantes)}\n"
-
-        if columnas_duplicadas:
-            mensaje += f"Las siguientes columnas están duplicadas: {', '.join(columnas_duplicadas)}\n"
-
-        if columnas_extra:
-            mensaje += f"Las siguientes columnas no son soportadas: {', '.join(columnas_extra)}\n"
-
-        if mensaje:
-            raise exceptions.ValidationError(mensaje)
-
-    def validar_fila(self, row: dict):
-        pass
+        
 
     def descargar_template_usuarios(self):
         # Generar csv
 
         atributos = self.env["usuario.externo"].obtener_atributos()
+        atributos_nombres = [atributo["nombre"] for atributo in atributos]
 
         datos = StringIO()
 
         csv_writer = csv.writer(datos)
 
-        csv_writer.writerow(atributos)
+        csv_writer.writerow(atributos_nombres)
 
         # "Nombre Completo", "Correo", "Puesto", "Departamento", "Genero", "Fecha de nacimiento"
-
         datos_prueba_base = ["Juan Perez", "juanperez@test.com", "Gerente", "Ventas", "Masculino", "01/01/1990"]
 
-        while len(datos_prueba_base) < len(atributos):
-            datos_prueba_base.append("Dato de prueba")
+        idx = len(datos_prueba_base)
+
+        for atributo in atributos[idx:]:
+            if atributo["tipo"] == "char":
+                datos_prueba_base.append("Texto")
+            elif atributo["tipo"] == "boolean":
+                datos_prueba_base.append("Si/No")
+            elif atributo["tipo"] == "integer":
+                datos_prueba_base.append("Número entero (1, 2, 3)")
+            elif atributo["tipo"] == "float":
+                datos_prueba_base.append("Número decimal (1.2, 3.4)")
+            elif atributo["tipo"] == "date":
+                datos_prueba_base.append("Fecha (dd/mm/yyyy)")
+            elif atributo["tipo"] == "datetime":
+                datos_prueba_base.append("Fecha y hora (dd/mm/yyyy hh:mm:ss)")
+            elif atributo["tipo"] == "selection":
+                datos_prueba_base.append("Texto")
+            else:
+                datos_prueba_base.append("Datos de prueba (Texto)")
 
         csv_writer.writerow(datos_prueba_base)
 

@@ -2,7 +2,7 @@ from odoo import api, models, fields, _
 from collections import defaultdict, Counter
 from odoo import exceptions
 from datetime import timedelta
-
+from respuesta import Respuesta
 
 class Evaluacion(models.Model):
     """
@@ -708,7 +708,7 @@ class Evaluacion(models.Model):
 
         return parametros
 
-    def validar_filtro(self, filtros, respuesta=None, datos_demograficos=None):
+    def validar_filtro(self, filtros, respuesta: Respuesta=None, datos_demograficos=None):
         """
         Valida si una respuesta cumple con los filtros especificados.
 
@@ -727,14 +727,9 @@ class Evaluacion(models.Model):
                 return False
 
             if respuesta.usuario_id:
-                datos_demograficos = self.obtener_datos_demograficos(
-                    respuesta.usuario_id
-                )
+                datos_demograficos = respuesta.usuario_id.obtener_datos_demograficos()
             elif respuesta.usuario_externo_id:
-                usuario_externo = respuesta.usuario_externo_id
-                datos_demograficos = self.obtener_datos_demograficos_externos(
-                    usuario_externo
-                )
+                datos_demograficos = respuesta.usuario_externo_id.obtener_datos_demograficos()
             else:
                 return False
 
