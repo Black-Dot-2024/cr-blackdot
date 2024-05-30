@@ -160,9 +160,11 @@ class Evaluacion(models.Model):
 
         if not self:
 
+            ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
+
             new_evaluation = self.env["evaluacion"].create(
                 {
-                    "nombre": "",
+                    "nombre": str(ultimo_id.id + 1) + " Evaluación Clima",
                     "descripcion": "La evaluación Clima es una herramienta de medición de clima organizacional, cuyo objetivo es conocer la percepción que tienen las personas que laboran en los centros de trabajo, sobre aquellos aspectos sociales que conforman su entorno laboral y que facilitan o dificultan su desempeño.",
                     "tipo": "CLIMA",
                     "fecha_inicio": fields.Date.today(),
@@ -198,9 +200,12 @@ class Evaluacion(models.Model):
         """
 
         if not self:
+
+            ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
+
             new_evaluation = self.env["evaluacion"].create(
                 {
-                    "nombre": "",
+                    "nombre": str(ultimo_id.id + 1) + " Evaluación NOM 035",
                     "descripcion": "La NOM 035 tiene como objetivo establecer los elementos para identificar, analizar y prevenir los factores de riesgo psicosocial, así como para promover un entorno organizacional favorable en los centros de trabajo.",
                     "tipo": "NOM_035",
                     "fecha_inicio": fields.Date.today(),
@@ -637,9 +642,7 @@ class Evaluacion(models.Model):
                         else "Sin departamento"
                     )
                 elif respuesta.usuario_externo_id:
-                    usuario_externo = self.env["usuario.externo"].browse(
-                        respuesta.usuario_externo_id
-                    )
+                    usuario_externo = respuesta.usuario_externo_id
                     nombre_departamento = (
                         usuario_externo.direccion
                         if usuario_externo.direccion
@@ -728,9 +731,7 @@ class Evaluacion(models.Model):
                     respuesta.usuario_id
                 )
             elif respuesta.usuario_externo_id:
-                usuario_externo = self.env["usuario.externo"].browse(
-                    respuesta.usuario_externo_id
-                )
+                usuario_externo = respuesta.usuario_externo_id
                 datos_demograficos = self.obtener_datos_demograficos_externos(
                     usuario_externo
                 )
@@ -1091,7 +1092,7 @@ class Evaluacion(models.Model):
             if usuarios_eliminados:
                 respuestas = self.env["respuesta"].search(
                     [
-                        ("usuario_externo_id", "in", usuarios_eliminados),
+                        ("usuario_externo_id.id", "in", usuarios_eliminados),
                         ("evaluacion_id.id", "=", self.id),
                     ]
                 )
@@ -1122,7 +1123,43 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "target": "new",
         }
+    
+    def actualizar_estados_eval(self):
+        """
+        Actualiza el estado de las evaluaciones según la fecha actual.
 
+        - Si la fecha actual está dentro del rango de fechas de inicio y finalización,
+        se cambia el estado a 'publicado' (Abierta).
+        - De lo contrario, pasa a 'finalizado' (Cerrada).
+
+        :return: None
+        """
+
+        hoy = fields.Date.today()
+        hora = fields.Datetime.now().strftime("%H:%M:%S")
+
+        # asignar 11:59pm como hora de cierre de evaluaciones
+        hora_cierre = "23:59:55"
+
+        # Asignar la hora de apertura de las evaluaciones 12:01am
+        hora_apertura = "00:00:55"
+
+        evaluaciones = self.search([])
+
+        # Actualizar el estado de las evaluaciones según la fecha y hora actual
+        for evaluacion in evaluaciones:
+            if evaluacion.fecha_inicio <= hoy <= evaluacion.fecha_final:
+                if hoy == evaluacion.fecha_inicio and hora < hora_apertura:
+                    evaluacion.estado = "borrador"
+                elif hoy == evaluacion.fecha_final and hora > hora_cierre:
+                    evaluacion.estado = "finalizado"
+                else:
+                    evaluacion.estado = "publicado"
+            elif evaluacion.fecha_final < hoy:
+                evaluacion.estado = "finalizado"
+            elif evaluacion.fecha_inicio > hoy:
+                evaluacion.estado = "borrador"
+                
     def evaluacion_general_action_form(self):
         """
         Ejecuta la acción de redireccionar a la evaluación general y devuelve un diccionario
@@ -1134,9 +1171,11 @@ class Evaluacion(models.Model):
 
         """
 
+        ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
+        
         nueva_evaluacion = self.env["evaluacion"].create(
             {
-                "nombre": "",
+                "nombre": str(ultimo_id.id + 1) + " Evaluación Genérica",
                 "tipo": "generico",
                 "fecha_inicio": fields.Date.today(),
                 "fecha_final": fields.Date.today(),
