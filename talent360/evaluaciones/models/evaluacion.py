@@ -1300,7 +1300,7 @@ class Evaluacion(models.Model):
                     id = "E" + respuesta.usuario_externo_id.__str__()
 
                 elif respuesta.usuario_id:
-                    id = respuesta.usuario_id.id
+                    id = respuesta.usuario_id.id.__str__()
 
                 respuestas.append({
                     "usuarioID": id,
@@ -1323,21 +1323,78 @@ class Evaluacion(models.Model):
 
         return preguntas_data
 
-    def generar_excel(self, preguntas_data):
-        data = []
+    def generar_datos_demograficos_individuales(self):
+        """
+        Genera los datos demográficos de la evaluación.
+
+        :return: Los datos demográficos de los usuarios asignados a la evaluación. Incuye departamentos, generaciones, puestos y géneros.
+        """
+        datos_demograficos = []
+        # SQL
+        usuario_evaluacion = self.env["usuario.evaluacion.rel"].search(
+            [
+                ("evaluacion_id.id", "=", self.id),
+                ("contestada", "=", "contestada"),
+                ("usuario_id.id", "in", self.usuario_ids.mapped("id")),
+            ]
+        )
+
+        for usuario in usuario_evaluacion.mapped("usuario_id"):
+            datos_demograficos_usuario = self.obtener_datos_demograficos(
+                usuario)
+            datos_demograficos.append(datos_demograficos_usuario)
+
+        usuario_evaluacion_externo = self.env["usuario.evaluacion.rel"].search(
+            [
+                ("evaluacion_id.id", "=", self.id),
+                ("contestada", "=", "contestada"),
+                ("usuario_externo_id.id", "in", self.usuario_externo_ids.ids),
+            ]
+        )
+
+        for usuario_externo in usuario_evaluacion_externo.mapped("usuario_externo_id"):
+            datos_demograficos_usuario = self.obtener_datos_demograficos_externos(
+                usuario_externo
+            )
+            datos_demograficos.append(datos_demograficos_usuario)
+
+        return datos_demograficos
+
+    def generar_excel(self, preguntas_data, demograficos_data):
+        data_preguntas = []
         for pregunta in preguntas_data:
             for respuesta in pregunta["respuestas"]:
-                data.append({
+                data_preguntas.append({
                     # Access usuarioID from respuesta
                     "UsuarioID": respuesta["usuarioID"],
                     "Pregunta": pregunta["pregunta"].pregunta_texto,
                     "Respuesta": respuesta["respuesta"],
                 })
 
-        df = pd.DataFrame(data)
+        df_respuestas = pd.DataFrame(data_preguntas)
+
+        data_demograficos = []
+
+        for demografico in demograficos_data:
+            data_demograficos.append({
+                "Nombre": demografico["nombre"],
+                "Genero": demografico["genero"],
+                "Puesto": demografico["puesto"],
+                "Año de Nacimiento": demografico["anio_nacimiento"],
+                "Generación": demografico["generacion"],
+                "Departamento": demografico["departamento"],
+            })
+
+        df_demograficos = pd.DataFrame(data_demograficos)
 
         output = BytesIO()
-        df.to_excel(output, index=False)
+
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df_respuestas.to_excel(writer, index=False,
+                                   sheet_name="Respuestas")
+            df_demograficos.to_excel(
+                writer, index=False, sheet_name="Datos Demográficos")
+
         output.seek(0)
 
         attachment = self.env['ir.attachment'].create({
@@ -1357,7 +1414,8 @@ class Evaluacion(models.Model):
         :return: Una acción para exportar las respuestas a un archivo de Excel.
         """
         preguntas_data = self.get_preguntas_data()
-        attachment = self.generar_excel(preguntas_data)
+        demograficos_data = self.generar_datos_demograficos_individuales()
+        attachment = self.generar_excel(preguntas_data, demograficos_data)
 
         return {
             'type': 'ir.actions.act_url',
