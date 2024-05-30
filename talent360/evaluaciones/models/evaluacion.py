@@ -1332,6 +1332,12 @@ class Evaluacion(models.Model):
             [("evaluacion_id.id", "=", self.id)]) > 0
 
     def get_preguntas_data(self):
+        """
+        Obtiene los datos de las preguntas de la evaluación.
+
+        :return: Los datos de las preguntas de la evaluación. Incluye las respuestas a cada pregunta y las respuestas tabuladas.
+        """
+
         preguntas_data = []
 
         for pregunta in self.pregunta_ids:
@@ -1347,7 +1353,7 @@ class Evaluacion(models.Model):
                 id = None
 
                 if respuesta.usuario_externo_id:
-                    id = "E" + respuesta.usuario_externo_id.__str__()
+                    id = "E" + respuesta.usuario_externo_id.id.__str__()
 
                 elif respuesta.usuario_id:
                     id = respuesta.usuario_id.id.__str__()
@@ -1406,7 +1412,6 @@ class Evaluacion(models.Model):
         for usuario_externo in usuario_evaluacion_externo.mapped("usuario_externo_id"):
             datos_demograficos_usuario = self.obtener_datos_demograficos_externos(
                 usuario_externo)
-            # Set 'id' key on the dictionary
             datos_demograficos_usuario["id"] = "E" + \
                 usuario_externo.id.__str__()
             datos_demograficos.append(datos_demograficos_usuario)
@@ -1414,6 +1419,15 @@ class Evaluacion(models.Model):
         return datos_demograficos
 
     def generar_excel(self, preguntas_data, demograficos_data):
+        """
+        Genera un archivo de Excel con las respuestas de la evaluación.
+
+        :param preguntas_data: Los datos de las preguntas de la evaluación.
+        :param demograficos_data: Los datos demográficos de la evaluación.
+
+        :return: Un archivo de Excel con las respuestas de la evaluación.
+        """
+
         data_preguntas = []
         for pregunta in preguntas_data:
             for respuesta in pregunta["respuestas"]:
