@@ -38,8 +38,7 @@
                                     </div>
                                     <div>
                                         <strong>
-                                            <field name="resultado"/>
-%
+                                            <field name="resultado"/>%
                                         </strong>
                                     </div>
                                 </div>
@@ -47,6 +46,7 @@
                                     <div style="overflow: hidden; text-overflow: ellipsis; width: 100%;">
                                         <field name="descripcion_corta"/>
                                     </div>
+                                    <br></br>
                                     <div>
                                         <button class="btn btn-primary" name="abrir_objetivo_form" string="Detalles" type="object"/>
                                     </div>
