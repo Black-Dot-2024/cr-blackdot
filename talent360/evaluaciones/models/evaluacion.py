@@ -1292,23 +1292,25 @@ class Evaluacion(models.Model):
                 ]
             )
 
-            usuarios = []
+            respuestas = []
             for respuesta in respuesta_ids:
                 id = None
 
                 if respuesta.usuario_externo_id:
-                    id = "E" + respuesta.usuario_externo_id.id.__str__()
-                elif respuesta.usuario_id:
-                    id = respuesta.usuario_id.id__str__()
-                if id and id not in usuarios:
-                    usuarios.append(id)
+                    id = "E" + respuesta.usuario_externo_id.__str__()
 
-            respuestas = [
-                respuesta.respuesta_mostrar for respuesta in respuesta_ids]
-            respuestas_tabuladas = dict(Counter(respuestas))
+                elif respuesta.usuario_id:
+                    id = respuesta.usuario_id.id
+
+                respuestas.append({
+                    "usuarioID": id,
+                    "respuesta": respuesta.respuesta_mostrar
+                })
+
+            respuestas_tabuladas = dict(
+                Counter([r["respuesta"] for r in respuestas]))
 
             datos_pregunta = {
-                "usuarioID": usuarios,
                 "pregunta": pregunta,
                 "respuestas": respuestas,
                 "respuestas_tabuladas": [
@@ -1326,9 +1328,10 @@ class Evaluacion(models.Model):
         for pregunta in preguntas_data:
             for respuesta in pregunta["respuestas"]:
                 data.append({
-                    "UsuarioID": pregunta["usuarioID"][0],
+                    # Access usuarioID from respuesta
+                    "UsuarioID": respuesta["usuarioID"],
                     "Pregunta": pregunta["pregunta"].pregunta_texto,
-                    "Respuesta": respuesta,
+                    "Respuesta": respuesta["respuesta"],
                 })
 
         df = pd.DataFrame(data)
