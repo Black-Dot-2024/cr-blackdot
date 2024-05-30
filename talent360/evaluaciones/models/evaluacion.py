@@ -1281,6 +1281,15 @@ class Evaluacion(models.Model):
             "target": "new",
         }
 
+    def existen_respuestas(self):
+        """
+        Verifica si existen respuestas para la evaluación.
+
+        :return: True si existen respuestas, False en caso contrario.
+        """
+        return self.env["respuesta"].search_count(
+            [("evaluacion_id.id", "=", self.id)]) > 0
+
     def get_preguntas_data(self):
         preguntas_data = []
 
@@ -1342,7 +1351,6 @@ class Evaluacion(models.Model):
         for usuario in usuario_evaluacion.mapped("usuario_id"):
             datos_demograficos_usuario = self.obtener_datos_demograficos(
                 usuario)
-            # Set 'id' key on the dictionary
             datos_demograficos_usuario["id"] = usuario.id.__str__()
             datos_demograficos.append(datos_demograficos_usuario)
 
@@ -1417,6 +1425,11 @@ class Evaluacion(models.Model):
 
         :return: Una acción para exportar las respuestas a un archivo de Excel.
         """
+
+        if not self.existen_respuestas():
+            raise exceptions.ValidationError(
+                _("No hay respuestas para exportar."))
+
         preguntas_data = self.get_preguntas_data()
         demograficos_data = self.generar_datos_demograficos_individuales()
         attachment = self.generar_excel(preguntas_data, demograficos_data)
