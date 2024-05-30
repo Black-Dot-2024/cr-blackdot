@@ -58,7 +58,7 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
             elif atributo["tipo"] == "integer":
                 datos_prueba_base.append("Número entero (1, 2, 3)")
             elif atributo["tipo"] == "float":
-                datos_prueba_base.append("Número decimal (1.2, 3.4)")
+                datos_prueba_base.append("Número decimal separado por punto (1.2, 3.4)")
             elif atributo["tipo"] == "date":
                 datos_prueba_base.append("Fecha (dd/mm/yyyy)")
             elif atributo["tipo"] == "datetime":

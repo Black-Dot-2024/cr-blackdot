@@ -305,6 +305,8 @@ class UsuarioExterno(models.Model):
             tipo = campo["tipo"]
             valor = fila.get(nombre, "N/A")
 
+            self._validar_campo(campo, valor)
+
             atributo = {
                 "nombre": nombre,
                 "tipo": tipo,
@@ -323,10 +325,48 @@ class UsuarioExterno(models.Model):
         return usuario_externo_id
 
     def _validar_campo(self, campo, valor):
-        if not campo:
-            return "N/A"
-
-        return campo
+        if campo["tipo"] == "char":
+            return
+        elif campo["tipo"] == "boolean":
+            if valor.lower() not in ["si", "no"]:
+                raise ValidationError(
+                    f"El campo {campo['nombre']} debe ser 'Si' o 'No'."
+                )
+        elif campo["tipo"] == "integer":
+            try:
+                int(valor)
+                if float(valor) % 1 != 0:
+                    raise ValidationError(
+                        _(f"El campo {campo['nombre']} debe ser un número entero.")
+                    )
+            except ValueError:
+                raise ValidationError(
+                _(f"El campo {campo['nombre']} debe ser un número entero.")
+                )
+        elif campo["tipo"] == "float":
+            try:
+                float(valor)
+            except ValueError:
+                raise ValidationError(
+                    _(f"El campo {campo['nombre']} debe ser un número decimal.")
+                )
+        elif campo["tipo"] == "date":
+            try:
+                datetime.strptime(valor, "%d/%m/%Y")
+            except ValueError:
+                raise ValidationError(
+                    _(f"El campo {campo['nombre']} debe ser una fecha en formato dd/mm/yyyy.")
+                )
+        elif campo["tipo"] == "datetime":
+            try:
+                datetime.strptime(valor, "%d/%m/%Y %H:%M:%S")
+            except ValueError:
+                raise ValidationError(
+                    _(f"El campo {campo['nombre']} debe ser una fecha en formato dd/mm/yyyy hh:mm:ss.")
+                )
+        elif campo["tipo"] == "selection":
+            return
+        
 
 
 class AtributosExtra(models.Model):

@@ -2,7 +2,6 @@ from odoo import api, models, fields, _
 from collections import defaultdict, Counter
 from odoo import exceptions
 from datetime import timedelta
-from respuesta import Respuesta
 
 class Evaluacion(models.Model):
     """
@@ -708,7 +707,7 @@ class Evaluacion(models.Model):
 
         return parametros
 
-    def validar_filtro(self, filtros, respuesta: Respuesta=None, datos_demograficos=None):
+    def validar_filtro(self, filtros, respuesta=None, datos_demograficos=None):
         """
         Valida si una respuesta cumple con los filtros especificados.
 
