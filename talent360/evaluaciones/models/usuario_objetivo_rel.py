@@ -46,6 +46,5 @@ class UsuarioObjetivoRel(models.Model):
         Método para agregar elipsis en títulos y descripciones que son mayores a 30 y 100 caracteres respectivamente
         """
         for record in self:
-            print(record)
             record.descripcion_corta = record.descripcion[:100] + "..." if len(record.descripcion) > 100 else record.descripcion
             record.titulo_corto = record.titulo[:30] + "..." if len(record.titulo) > 30 else record.titulo

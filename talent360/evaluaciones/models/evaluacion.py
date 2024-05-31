@@ -3,6 +3,7 @@ from collections import defaultdict, Counter
 from odoo import exceptions
 from datetime import timedelta
 
+
 class Evaluacion(models.Model):
     """
     Modelo para representar una evaluación de personal en Odoo.
@@ -398,7 +399,7 @@ class Evaluacion(models.Model):
                 continue
 
             nombre = mapeo_categorias.get(categoria, categoria)
-            
+
             filtro_id = self.env["filtro.wizard"].create(
                 {
                     "categoria": nombre,
@@ -733,17 +734,14 @@ class Evaluacion(models.Model):
             if respuesta.usuario_id:
                 datos_demograficos = respuesta.usuario_id.obtener_datos_demograficos()
             elif respuesta.usuario_externo_id:
-                datos_demograficos = respuesta.usuario_externo_id.obtener_datos_demograficos()
+                datos_demograficos = (
+                    respuesta.usuario_externo_id.obtener_datos_demograficos()
+                )
             else:
                 return False
 
         for _, filtro in filtros.items():
             categoria = filtro["categoria_interna"]
-            print(categoria)
-            print(filtro["valores"])
-            print(datos_demograficos)
-
-
             if not (categoria in datos_demograficos.keys()):
                 continue
 
@@ -795,10 +793,6 @@ class Evaluacion(models.Model):
             datos_demograficos.append(datos_demograficos_usuario)
 
         atributos = defaultdict(lambda: defaultdict(int))
-        departamentos = defaultdict(int)
-        generaciones = defaultdict(int)
-        puestos = defaultdict(int)
-        generos = defaultdict(int)
 
         for dato in datos_demograficos:
             for categoria, valor in dato.items():
@@ -806,8 +800,11 @@ class Evaluacion(models.Model):
 
         ans = {}
         for categoria, valores in atributos.items():
-            ans[categoria] = [{"nombre": nombre, "valor": conteo} for nombre, conteo in valores.items()]
-        print(ans)
+            ans[categoria] = [
+                {"nombre": nombre, "valor": conteo}
+                for nombre, conteo in valores.items()
+            ]
+
         return ans
 
     def asignar_color(self, valor, categoria=None, dominio=None):
@@ -1109,7 +1106,7 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "target": "new",
         }
-    
+
     def actualizar_estados_eval(self):
         """
         Actualiza el estado de las evaluaciones según la fecha actual.
@@ -1145,7 +1142,7 @@ class Evaluacion(models.Model):
                 evaluacion.estado = "finalizado"
             elif evaluacion.fecha_inicio > hoy:
                 evaluacion.estado = "borrador"
-                
+
     def evaluacion_general_action_form(self):
         """
         Ejecuta la acción de redireccionar a la evaluación general y devuelve un diccionario
@@ -1158,7 +1155,7 @@ class Evaluacion(models.Model):
         """
 
         ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
-        
+
         nueva_evaluacion = self.env["evaluacion"].create(
             {
                 "nombre": str(ultimo_id.id + 1) + " Evaluación Genérica",

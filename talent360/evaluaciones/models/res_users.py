@@ -1,6 +1,5 @@
-from odoo import models, fields, api
+from odoo import models, fields, _
 from odoo.exceptions import ValidationError
-from functools import reduce
 
 
 class Users(models.Model):

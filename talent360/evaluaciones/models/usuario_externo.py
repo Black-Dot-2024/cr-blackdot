@@ -122,8 +122,6 @@ class UsuarioExterno(models.Model):
 
         datos.update(self._obtener_atributos_extra())
 
-        print("DATOS DEMO EXTERNO", datos)
-
         return datos
 
     def _obtener_atributos_extra(self):
