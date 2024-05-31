@@ -474,6 +474,7 @@
                     </group>
                     <notebook>
                         <page string="Preguntas">
+                            <blockquote>En esta sección puedes consultar las preguntas que se mostrarán dentro de la evaluación</blockquote>
                             <field class="lh-lg w-100" colspan="2" name="pregunta_ids" readonly="1" nolabel="1" context="{'actual_evaluacion_id': active_id}">
                                 <tree editable="bottom" create="0">
                                     <field class="lh-m" name="pregunta_texto" readonly="1"/>
@@ -484,6 +485,7 @@
                             </field>
                         </page> 
                         <page string="Asignados">
+                            <blockquote>En esta sección puedes asignar y consultar las personas que estarán contempladas para la evaluación</blockquote>
                             <field class="lh-lg w-100" colspan="2" name="usuario_ids" nolabel="1" context="{'actual_evaluacion_id': active_id}">
                                 <tree editable="bottom" create="false">
                                     <field class="lh-m" name="name" readonly="1" string="Nombre del usuario"/>
@@ -491,6 +493,7 @@
                             </field>
                         </page>
                         <page string="Asignados Externos">
+                            <blockquote>En esta sección puedes consultar las personas externas al sistema que estarán contempladas para la evaluación</blockquote>
                             <field class="lh-lg w-100" colspan="2" name="usuario_externo_ids" nolabel="1" context="{'actual_evaluacion_id': active_id}" options="{'link':false}">
                                 <tree create="false" editable="bottom">
                                     <field class="lh-m" name="nombre" readonly="1" string="Nombre del usuario"/>
@@ -498,6 +501,7 @@
                             </field>
                         </page>
                         <page string="Notificaciones">
+                            <blockquote>En esta sección puedes personalizar los mensajes que se mostrarán dentro de la evaluación y en el correo electrónico</blockquote>
                             <group>
                                 <field name="mensaje_bienvenida" placeholder="[Ejemplo] - Por favor haz clic en el botón 'Responder' para iniciar tu Evaluación. Te recordamos que todas tus respuestas son confidenciales."/>
                                 <field name="mensaje_agradecimiento" placeholder="[Ejemplo] - Gracias por tu tiempo y por compartir tus respuestas con nosotros."/>
