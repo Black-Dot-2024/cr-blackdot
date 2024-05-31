@@ -77,8 +77,6 @@ class Users(models.Model):
 
         datos.update(self._obtener_atributos_extra())
 
-        print("DATOS DEMO INTERNO", datos)
-
         return datos
 
     def _obtener_atributos_extra(self):

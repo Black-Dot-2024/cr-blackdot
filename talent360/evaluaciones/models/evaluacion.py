@@ -384,20 +384,25 @@ class Evaluacion(models.Model):
 
         datos_demograficos = self.generar_datos_demograficos()
 
-        categorias = [
-            ("Departamento", "departamentos", "departamento"),
-            ("Generación", "generaciones", "generacion"),
-            ("Puesto", "puestos", "puesto"),
-            ("Género", "generos", "genero"),
-        ]
-
         filtros_ids = []
 
-        for categoria, nombre_grupal, nombre_individual in categorias:
+        mapeo_categorias = {
+            "departamento": "Departamento",
+            "generacion": "Generación",
+            "puesto": "Puesto",
+            "genero": "Género",
+        }
+
+        for categoria, valores in datos_demograficos.items():
+            if categoria in ["nombre", "anio_nacimiento"]:
+                continue
+
+            nombre = mapeo_categorias.get(categoria, categoria)
+            
             filtro_id = self.env["filtro.wizard"].create(
                 {
-                    "categoria": categoria,
-                    "categoria_interna": nombre_individual,
+                    "categoria": nombre,
+                    "categoria_interna": categoria,
                 }
             )
             filtros_ids.append(filtro_id.id)
@@ -405,11 +410,11 @@ class Evaluacion(models.Model):
             self.env["filtro.seleccion.wizard"].create(
                 [
                     {
-                        "texto": dep["nombre"],
-                        "categoria": categoria,
+                        "texto": valor["nombre"],
+                        "categoria": nombre,
                         "filtro_original_id": filtro_id.id,
                     }
-                    for dep in datos_demograficos[nombre_grupal]
+                    for valor in valores
                 ]
             )
 
@@ -734,11 +739,15 @@ class Evaluacion(models.Model):
 
         for _, filtro in filtros.items():
             categoria = filtro["categoria_interna"]
+            print(categoria)
+            print(filtro["valores"])
+            print(datos_demograficos)
+
 
             if not (categoria in datos_demograficos.keys()):
                 continue
 
-            if not datos_demograficos[filtro["categoria_interna"]] in filtro["valores"]:
+            if not datos_demograficos[categoria] in filtro["valores"]:
                 return False
 
         return True
@@ -794,29 +803,12 @@ class Evaluacion(models.Model):
         for dato in datos_demograficos:
             for categoria, valor in dato.items():
                 atributos[categoria][valor] += 1
-            departamentos[dato["departamento"]] += 1
-            generaciones[dato["generacion"]] += 1
-            puestos[dato["puesto"]] += 1
-            generos[dato["genero"]] += 1
 
-        return {
-            "departamentos": [
-                {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in departamentos.items()
-            ],
-            "generaciones": [
-                {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in generaciones.items()
-            ],
-            "puestos": [
-                {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in puestos.items()
-            ],
-            "generos": [
-                {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in generos.items()
-            ],
-        }
+        ans = {}
+        for categoria, valores in atributos.items():
+            ans[categoria] = [{"nombre": nombre, "valor": conteo} for nombre, conteo in valores.items()]
+        print(ans)
+        return ans
 
     def asignar_color(self, valor, categoria=None, dominio=None):
         """

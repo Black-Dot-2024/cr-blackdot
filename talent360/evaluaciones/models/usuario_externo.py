@@ -132,12 +132,22 @@ class UsuarioExterno(models.Model):
 
         :return: Un diccionario con los atributos extra del usuario externo.
         """
+        atributos = list(map(lambda attr: attr["nombre"], self.obtener_atributos()[6:]))
+        atributos_extra = {}
 
-        return {
-            atributo.nombre: atributo.valor if atributo.valor else "N/A"
-            for atributo in self.atributos_extra_ids
-        }
+        for atributo in self.atributos_extra_ids:
+            if atributo.nombre in atributos:
+                atributos_extra[atributo.nombre] = atributo.valor
+                # Elimiar el atributo de la lista para no repetirlo
+                atributos.remove(atributo.nombre)
+        
+        # Agregar los atributos faltantes con valor N/A
+        for atributo in atributos:
+            atributos_extra[atributo] = "N/A"
 
+        return atributos_extra
+
+    @api.model
     def obtener_generacion(self, anio_nacimiento):
         """
         Obtiene la generación a la que pertenece una persona de acuerdo al año de nacimiento.
@@ -158,15 +168,6 @@ class UsuarioExterno(models.Model):
             return "N/A"
 
     @api.model
-    def _obtener_valor(self, atributo):
-        if not atributo["value"]:
-            return "N/A"
-
-        if atributo["type"] == "test":
-            return "TODO"
-
-        return atributo["value"]
-
     def obtener_atributos(self):
         """
         Obtiene los atributos extra de un usuario externo.
