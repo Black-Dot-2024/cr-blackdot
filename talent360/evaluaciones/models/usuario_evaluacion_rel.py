@@ -120,21 +120,30 @@ class UsuarioEvaluacionRel(models.Model):
 
                 usuario.write({"token": token, "contestada": "pendiente"})
                 evaluacion_url = f"{base_url}/{extension_url}/{evaluacion_id}/{token}"
-                contenido_adicional = f"""<hr>{evaluacion.contenido_correo}<hr>""" if evaluacion.contenido_correo else ""
-                mail = {
-                    "subject": "Invitación para completar la evaluación",
-                    "email_from": "talent360@cr-organizacional.com",
-                    "email_to": correo,
-                    "body_html": 
-                        f"""<p>Hola, <strong>{nombre}</strong>,</p>
-                        {contenido_adicional}
-                        <p>En <strong>{self.env.user.company_id.name}</strong> estamos interesados en que contestes la siguiente evaluación, tu participación nos ayudará a mejorar y crecer como organización. La evaluación estará disponible del <strong>{evaluacion.fecha_inicio}</strong> al <strong>{evaluacion.fecha_final}</strong>. Puedes comenzar la evaluación haciendo clic en el siguiente enlace: <a href="{evaluacion_url}">Comenzar {evaluacion.nombre}</a></p>
-                        <p>Gracias por tu colaboración.</p>
-                        <p>Atentamente,</p>
-                        <p><strong>{self.env.user.name}</strong> from <strong>{self.env.user.company_id.name}</strong></p>
-                        <p>Correo de contacto: <a href="mailto:{self.env.user.email}">{self.env.user.email}</a></p>
-                        """,
-                }
+                if evaluacion.contenido_correo:
+                    mail = {
+                        "subject": "Invitación para completar la evaluación",
+                        "email_from": "talent360@cr-organizacional.com",
+                        "email_to": correo,
+                        "body_html": f"""
+                                    {evaluacion.contenido_correo}
+                                    <p><a href="{evaluacion_url}">Comenzar {evaluacion.nombre}</a></p>
+                                    """ 
+                    }
+                else:   
+                    mail = {
+                        "subject": "Invitación para completar la evaluación",
+                        "email_from": "talent360@cr-organizacional.com",
+                        "email_to": correo,
+                        "body_html": 
+                            f"""<p>Hola, <strong>{nombre}</strong>,</p>
+                            <p>En <strong>{self.env.user.company_id.name}</strong> estamos interesados en que contestes la siguiente evaluación, tu participación nos ayudará a mejorar y crecer como organización. La evaluación estará disponible del <strong>{evaluacion.fecha_inicio}</strong> al <strong>{evaluacion.fecha_final}</strong>. Puedes comenzar la evaluación haciendo clic en el siguiente enlace: <a href="{evaluacion_url}">Comenzar {evaluacion.nombre}</a></p>
+                            <p>Gracias por tu colaboración.</p>
+                            <p>Atentamente,</p>
+                            <p><strong>{self.env.user.name}</strong> from <strong>{self.env.user.company_id.name}</strong></p>
+                            <p>Correo de contacto: <a href="mailto:{self.env.user.email}">{self.env.user.email}</a></p>
+                            """,
+                    }
 
                 lista_mails.append(mail)
 
