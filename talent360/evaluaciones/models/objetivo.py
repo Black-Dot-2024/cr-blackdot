@@ -107,8 +107,6 @@ class Objetivo(models.Model):
         string="Asignados",
     )
 
-    evaluador = fields.Char()
-
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
 
     @api.constrains("piso_minimo", "piso_maximo")
