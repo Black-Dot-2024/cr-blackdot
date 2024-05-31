@@ -83,9 +83,9 @@
                         </page>
                         <page string="Notificaciones">
                             <group>
-                                <field name="mensaje_bienvenida" placeholder="Escribe aquí tu mensaje de bienvenida"/>
-                                <field name="mensaje_agradecimiento" placeholder="Escribe aquí tu mensaje de bienvenida"/>
-                                <field name="contenido_correo" placeholder="Escribe el contenido del correo"/>
+                                <field name="mensaje_bienvenida" placeholder="[Ejemplo] - Por favor haz clic en el botón 'Responder' para iniciar tu Evaluación. Te recordamos que todas tus respuestas son confidenciales."/>
+                                <field name="mensaje_agradecimiento" placeholder="[Ejemplo] - Gracias por tu tiempo y por compartir tus respuestas con nosotros."/>
+                                <field name="contenido_correo" placeholder="Hola, estamos interesados en que contestes la siguiente evaluación, tu participación nos ayudará a mejorar y crecer como organización. La evaluación estará disponible por un período específico. Puedes comenzar la evaluación haciendo clic en el siguiente enlace: Comenzar evaluación. Gracias por tu colaboración."/>
                             </group>
                         </page>
                     </notebook>
