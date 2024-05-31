@@ -182,7 +182,7 @@ class Objetivo(models.Model):
                     _("La fecha final debe ser mayor a la fecha de hoy")
                 )
 
-    @api.depends("resultado", "piso_maximo")
+    @api.depends("resultado", "piso_maximo", "piso_minimo", "orden")
     def _compute_estado(self):
         """
         Método que calcula el estado actual del objetivo dependiendo del resultado
@@ -204,7 +204,7 @@ class Objetivo(models.Model):
                     registro.estado = "azul"
                 registro.porcentaje = ratio
             else:
-                ratio = 1 - ((registro.resultado - registro.piso_maximo) / (registro.piso_minimo - registro.piso_maximo))
+                ratio = 1 - ((registro.resultado - registro.piso_maximo) / (registro.piso_minimo - registro.piso_maximo)) if registro.piso_minimo != 0 else 0
                 if 0 <= ratio <= 0.6:
                     registro.estado = "rojo"
                 elif 0.61 <= ratio <= 0.85:
@@ -214,6 +214,9 @@ class Objetivo(models.Model):
                 elif ratio > 1:
                     registro.estado = "azul"
                 registro.porcentaje = ratio
+            
+            if registro.porcentaje < 0:
+                registro.porcentaje = 0
 
     @api.constrains("usuario_ids")
     def _checar_usuario_ids(self):
