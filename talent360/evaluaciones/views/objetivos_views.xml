@@ -112,7 +112,7 @@
 
                                         <br />
                                         <label for="orden" string="Orden" />
-                                        <field name="orden" readonly="True"/>
+                                        <field name="orden" readonly="id > 0"/>
                                         <br />
                                         <label for="peso" string="Peso" />
                                         <field name="peso" />
