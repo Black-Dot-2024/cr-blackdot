@@ -1,18 +1,17 @@
 <?xml version="1.0"?>
 <odoo>
     <!-- Vista en árbol para usuario.objetivo.rel -->
-    <record id="usuario_objetivo_rel_view_tree" model="ir.ui.view">
+    <record id="objetivo_view_tree" model="ir.ui.view">
         <field name="name">objetivo</field>
         <field name="model">objetivo</field>
         <field name="arch" type="xml">
-            <tree string="Objetivos de Usuarios">
+            <tree string="Objetivos de Usuarios" import="False">
                 <field name="titulo" string="Nombre del Objetivo"/>
                 <field name="fecha_fin" string="Fecha Fin"/>
                 <field name="tipo" string="Tipo"/>
                 <field name="estado" string="Estado"/>
+                <field name="porcentaje" string="Progreso" widget="percentage"/>
                 <field name="peso" string="Peso"/>
-                <field name="piso_minimo" string="Piso Mínimo"/>
-                <field name="piso_maximo" string="Piso Máximo"/>
             </tree>
         </field>
     </record>
@@ -37,8 +36,7 @@
                                     </div>
                                     <div>
                                         <strong>
-                                            <field name="resultado"/>
-%
+                                            <field name="resultado" widget="percentage"/>
                                         </strong>
                                     </div>
                                 </div>
@@ -46,6 +44,7 @@
                                     <div style="overflow: hidden; text-overflow: ellipsis; width: 100%;">
                                         <field name="descripcion_corta"/>
                                     </div>
+                                    <br></br>
                                     <div>
                                         <button class="btn btn-primary" name="abrir_objetivo_form" string="Detalles" type="object"/>
                                     </div>
@@ -96,6 +95,11 @@
                         <br />
                         <label for="descripcion" string="Descripción" />
                         <field placeholder="¿Qué es lo que se espera lograr con este objetivo?" name="descripcion" />
+                        <br />
+                        <group>
+                            <field name="resultado" readonly="True" string="Progreso"/>
+                           <field name="porcentaje" readonly="True" string="Porcentaje" widget="percentage"/>
+                        </group>
                     </div>
                     <notebook>
                         <page string="Detalles">
@@ -103,10 +107,12 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <label for="metrica" string="Métrica" />
-                                        <field name="metrica" />
+                                        <field name="metrica" options="{'no_create': False, 'no_open': True}" />
+                                        <field name="nueva_metrica" invisible="metrica != 'otro'" placeholder="Métrica Personalizada"/>
+
                                         <br />
                                         <label for="orden" string="Orden" />
-                                        <field name="orden" />
+                                        <field name="orden" readonly="id > 0"/>
                                         <br />
                                         <label for="peso" string="Peso" />
                                         <field name="peso" />
@@ -149,6 +155,8 @@
         <field name="name">Objetivos</field>
         <field name="res_model">objetivo</field>
         <field name="view_mode">tree,form</field>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'tree', 'view_id': ref('objetivo_view_tree')}), (0, 0, {'view_mode': 'form', 'view_id': ref('objetivo_view_form')})]"/>
+        <field name="context">{'create': True}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_empty_folder">
                 Actualmente no hay objetivos creados.

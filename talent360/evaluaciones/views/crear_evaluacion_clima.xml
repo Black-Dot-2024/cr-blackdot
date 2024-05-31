@@ -1,14 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- CLIMA -->
+    <!-- Vista de formulario para evaluación del clima -->
     <record id="evaluacion_clima_view_form" model="ir.ui.view">
         <field name="name">evaluacion_clima.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
             <form string="Clima" create="false" duplicate="0">
                 <header>
-                    <button name="evaluacion_action_tree" string="Guardar" type="object" class="btn-primary my-3"/>
                     <button class="btn btn-primary" name="action_asignar_usuarios_externos" string="Asignar usuarios externos" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
+                    <button class=" btn btn-primary" name="action_importar_preguntas_clima" string="Agregar catálogo de preguntas" type="object" />
+                    <field name="estado" widget="statusbar" statusbar_visible="borrador, publicado, finalizado" />
                 </header>
                 <sheet>
                     <h1>Crear evaluación Clima Laboral</h1>
@@ -17,10 +17,10 @@
                         <field name="nombre"/>
                     </group>
                     <group>
-                        <field name="estado"/>
+                        <field name="estado" invisible="1"/>
                     </group>
                     <group>
-                        <field name="descripcion"/>
+                        <field name="descripcion" placeholder="Descripción de la evaluación"/>
                     </group>
                     <group>
                         <field name="fecha_inicio">
@@ -29,18 +29,33 @@
                         <field name="fecha_final">
                             <widget name="date"/>
                         </field>
-                        <field name="incluir_demograficos"/>
+                        <field name="incluir_demograficos" placeholder="Incluir datos demográficos"/>
                     </group>
                     <group>
+                        <!-- Campo para seleccionar el formato de las preguntas escalares -->
                         <field name="escalar_format"/>
                     </group>
                     <notebook>
                         <page string="Preguntas">
-                            <field class="lh-lg w-100" readonly="1" colspan="2" name="pregunta_ids">
-                                <tree create="false" editable="bottom">
-                                    <field class="lh-m" name="pregunta_texto" readonly="1"/>
-                                    <field class="lh-m" name="tipo" readonly="1"/>
+                            <field class="lh-lg w-100" name="pregunta_ids" domain="[('tipo', '=', False)]">
+                                <tree create="true" delete="true">
+                                    <field name="categoria" string="Categoría"/>
+                                    <field name="pregunta_texto"/>
+                                    <field name="tipo"/>
                                 </tree>
+                                <form string="Agregar pregunta">
+                                    <group>
+                                        <field name="pregunta_texto" placeholder="Ingrese la pregunta"/>
+                                        <field name="tipo"/>
+                                        <field name="categoria" placeholder="Seleccione o agregue una categoría" required="True"/>
+                                        <field name="ponderacion" invisible="tipo != 'escala'" required="True"/>
+                                        <field name="opcion_ids" placeholder="Opciones" context="{'default_pregunta_id': active_id}" invisible="tipo != 'multiple_choice'" required="True">
+                                            <tree create="true" delete="true" editable="bottom">
+                                                <field name="opcion_texto"/>
+                                            </tree>
+                                        </field>
+                                    </group>
+                                </form>
                             </field>
                         </page>
                         <page string="Asignados">
@@ -58,139 +73,19 @@
                             </field>
                         </page>
                         <page string="Semaforización">
-                            <style>
-                                .my_table th {
-                                    text-align: left;
-                                    padding: 8px;
-                                    border-bottom: 1px solid #ddd;
-                                }
-
-                                .my_table td {
-                                    padding: 8px;
-                                    border-bottom: 1px solid #ddd;
-                                }
-
-                                .my_table td:nth-child(1) {
-                                    width: 10%;
-                                }
-
-                                .my_table td:nth-child(2),
-                                .my_table td:nth-child(3) {
-                                    width: 20%;
-                                }
-
-                                .my_table td:nth-child(4) {
-                                    width: 60%;
-                                }
-
-                                .color-pill {
-                                    display: inline-block;
-                                    width: 50px;
-                                    height: 25px;
-                                    border-radius: 10%;
-                                    background-color: inherit; 
-                                    margin-top : 20%;
-                                    margin-left : 20%;
-                                }
-
-                                .rojo { background-color: #E46053; }
-                                .naranja { background-color: #FBBD40; }
-                                .amarillo { background-color: #FFD93B; }
-                                .verde { background-color: #BDD261; }
-                                .azul { background-color: #36BCC2; }
-
-                            </style>
-                            <table class="my_table">
-                                <thead>
-                                    <tr>
-                                        <th></th>
-                                        <th>Mínimo</th>
-                                        <th>Máximo</th>
-                                        <th>Descripción</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <div class="color-pill rojo"></div>
-                                        </td>
-                                        <td style="padding-top:4%;">
-                                            <field name="piso_rojo" string="Piso Rojo" class="o_input  text-secondary" readonly="1"/>
-                                        </td>
-                                        <td style="padding-top:3.5%;">
-                                            <field name="techo_rojo" string="Techo Rojo" class="o_input"/>
-                                        </td>
-                                        <td>
-                                            <field name="descripcion_rojo" string="Descripción Rojo" class="o_input "/>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td>
-                                            <div class="color-pill naranja"></div>
-                                        </td>
-                                        <td style="padding-top:4%;">
-                                            <field name="techo_rojo" string="Piso Naranja" placeholder="Piso Naranja" class="o_input text-secondary" readonly="1"/>
-                                        </td>
-                                        <td style="padding-top:3.5%;">
-                                            <field name="techo_naranja" string="Techo Naranja" placeholder="Techo Naranja" class="o_input"/>
-                                        </td>
-                                        <td>
-                                            <field name="descripcion_naranja" string="Descripción Naranja" class="o_input"/>
-                                        </td>
-
-                                    </tr>
-
-                                    <tr>
-                                        <td>
-                                            <div class="color-pill amarillo"></div>
-                                        </td>
-                                        <td style="padding-top:4%%;">
-                                            <field name="techo_naranja" string="Piso Amarillo" placeholder="Piso Amarillo" class="o_input text-secondary" readonly="1"/>
-                                        </td>
-                                        <td style="padding-top:3.5%;">
-                                            <field name="techo_amarillo" string="Techo Amarillo" placeholder="Techo Amarillo" class="o_input"/>
-                                        </td>
-                                        <td>
-                                            <field name="descripcion_amarillo" string="Descripción Amarillo" class="o_input"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <div class="color-pill verde"></div>
-                                        </td>
-                                        <td style="padding-top:4%;">
-                                            <field name="techo_amarillo" string="Piso Verde" placeholder="Piso Verde" class="o_input text-secondary" readonly="1"/>
-                                        </td>
-                                        <td style="padding-top:3.5%;">
-                                            <field name="techo_verde" string="Techo Verde" placeholder="Techo Verde" class="o_input"/>
-                                        </td>
-                                        <td>
-                                            <field name="descripcion_verde" string="Descripción Verde" class="o_input"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <div class="color-pill azul"></div>
-                                        </td>
-                                        <td style="padding-top:4%;">
-                                            <field name="techo_verde" string="Piso Azul" placeholder="Piso Azul" class="o_input text-secondary" readonly="1"/>
-                                        </td>
-                                        <td style="padding-top:3.5%;">
-                                            <field name="techo_azul" string="Techo Azul" placeholder="Techo Azul" class="o_input"/>
-                                        </td>
-                                        <td>
-                                            <field name="descripcion_azul" string="Descripción Azul" class="o_input"/>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <field name="niveles">
+                                <tree editable="bottom">
+                                    <field name="techo" />
+                                    <field name="color" widget="color" />
+                                    <field name="descripcion_nivel" />
+                                </tree>
+                            </field>
                         </page>
                         <page string="Notificaciones">
                             <group>
-                                <field name="mensaje_bienvenida" placeholder="Escribe aquí tu mensaje de bienvenida"/>
-                                <field name="mensaje_agradecimiento" placeholder="Escribe aquí tu mensaje de bienvenida"/>
-                                <field name="contenido_correo" placeholder="Escribe el contenido del correo"/>
+                                <field name="mensaje_bienvenida" placeholder="[Ejemplo] - Por favor haz clic en el botón 'Responder' para iniciar tu Evaluación. Te recordamos que todas tus respuestas son confidenciales."/>
+                                <field name="mensaje_agradecimiento" placeholder="[Ejemplo] - Gracias por tu tiempo y por compartir tus respuestas con nosotros."/>
+                                <field name="contenido_correo" placeholder="Hola, estamos interesados en que contestes la siguiente evaluación, tu participación nos ayudará a mejorar y crecer como organización. La evaluación estará disponible por un período específico. Puedes comenzar la evaluación haciendo clic en el siguiente enlace: Comenzar evaluación. Gracias por tu colaboración."/>
                             </group>
                         </page>
                     </notebook>

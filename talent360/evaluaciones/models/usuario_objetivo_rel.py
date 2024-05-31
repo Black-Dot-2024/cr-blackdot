@@ -17,6 +17,7 @@ class UsuarioObjetivoRel(models.Model):
 
     _name = "usuario.objetivo.rel"
     _description = "Relación entre objetivos y usuarios"
+    _rec_name = "titulo"
 
     objetivo_id = fields.Many2one("objetivo", string="Objetivos", ondelete="cascade")
     usuario_id = fields.Many2one("res.users", string="Usuario", ondelete="cascade")
@@ -25,7 +26,7 @@ class UsuarioObjetivoRel(models.Model):
     titulo_corto = fields.Char(compute="_compute_kanban")
     descripcion = fields.Text(related="objetivo_id.descripcion")
     descripcion_corta = fields.Char(compute="_compute_kanban")
-    resultado = fields.Integer(related="objetivo_id.resultado", string="Resultado")
+    resultado = fields.Float(related="objetivo_id.porcentaje", string="Resultado")
     
     def abrir_objetivo_form(self):
         """

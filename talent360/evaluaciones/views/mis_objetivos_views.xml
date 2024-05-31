@@ -1,36 +1,17 @@
 <?xml version="1.0"?>
 <odoo>
-    <!-- Acción para abrir la vista en tree y mis objetivos -->
-    <record id="mis_objetivos_action" model="ir.actions.act_window">
-        <field name="name">Mis Objetivos</field>
-        <field name="res_model">objetivo</field>
-        <field name="view_mode">tree,form</field>
-        <field name="domain">[('usuario_ids', 'in', [uid])]</field>
-        <field name="context">{'form_view_ref': 'evaluaciones.objetivo_form_mis_objetivos', 'create': False, 'edit': False, 'delete': False, 'duplicate': False}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_empty_folder">
-                Actualmente no tienes objetivos asignados.
-            </p>
-            <p>
-                Los objetivos que se te asignen aparecerán aquí.
-            </p>
-        </field>
-    </record>
-
-
     <!-- Vista en árbol para objetivo.tree -->
-    <record id="objetivo_tree" model="ir.ui.view">
-        <field name="name">objetivo.tree</field>
+    <record id="mis_objetivos_tree" model="ir.ui.view">
+        <field name="name">mis_objetivos.tree</field>
         <field name="model">objetivo</field>
         <field name="arch" type="xml">
-            <tree string="Objetivos" create="false" delete="false" duplicate="false">
-                <field name="titulo" string="Nombre"/>
+            <tree string="Mis objetivos" create="false" delete="false" duplicate="false">
+                <field name="titulo" string="Nombre del Objetivo"/>
+                <field name="metrica"/>
                 <field name="fecha_fin"/>
                 <field name="tipo"/>
                 <field name="estado"/>
-                <field name="peso"/>
-                <field name="piso_minimo"/>
-                <field name="piso_maximo"/>
+                <field name="resultado" string="Progreso"/>
             </tree>
         </field>
     </record>
@@ -42,11 +23,14 @@
         <field name="arch" type="xml">
             <form string="Objetivo">
                 <header>
+                    <button name="registrar_avance_action" string="Registrar Avance" type="object" class="btn-primary" context="{'actual_objetivo_id': active_id}"/>
                     <field name="estado" widget="statusbar" statusbar_visible="rojo, amarillo, verde, azul"/>
                 </header>
                 <sheet>
                     <div style="width: 100%;">
-                        <h1><field name="titulo" readonly="1"/></h1>
+                        <h1>
+                            <field name="titulo" readonly="1"/>
+                        </h1>
                         <label for="descripcion" string="Descripción"/>
                         <field name="descripcion" readonly="1"/>
                     </div>
@@ -60,11 +44,53 @@
                                 <field name="tipo" readonly="1"/>
                                 <field name="piso_minimo" readonly="1"/>
                                 <field name="piso_maximo" readonly="1"/>
+                                <field name="resultado" string="Progreso" readonly="1"/>
                             </group>
+                        </page>
+                        <page string="Avances">
+                            <field name="avances">
+                                <tree string="Avances" create="false" delete="false" duplicate="false">
+                                    <field name="fecha"/>
+                                    <field name="avance"/>
+                                    <field name="comentarios"/>
+                                    <field name="archivos" widget="many2many_tags"/>
+                                </tree>
+                                <form>
+                                    <group>
+                                        <field name="fecha"/>
+                                        <field name="avance"/>
+                                        <field name="archivos">
+                                            <tree create="false" editable="bottom" edit="false">
+                                                <field name="name" string="Nombre del archivo"/>
+                                                <field name="datas" filename="name" widget="binary" string="Descargar Archivo" />
+                                            </tree>
+                                        </field>
+                                    </group>
+                                </form>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>
             </form>
         </field>
+    </record>
+
+    <!-- Acción para abrir la vista en tree y mis objetivos -->
+    <record id="mis_objetivos_action" model="ir.actions.act_window">
+        <field name="name">Mis Objetivos</field>
+        <field name="res_model">objetivo</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'tree', 'view_id': ref('mis_objetivos_tree')}), (0, 0, {'view_mode': 'form', 'view_id': ref('objetivo_form_mis_objetivos')})]"/>
+        <field name="domain">[('usuario_ids', 'in', [uid])]</field>
+        <field name="context">{'create': False, 'edit': False, 'delete': False, 'duplicate': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">
+                Actualmente no tienes objetivos asignados.
+            </p>
+            <p>
+                Los objetivos que se te asignen aparecerán aquí.
+            </p>
+        </field>
+        <field name="view_id" ref="mis_objetivos_tree"/>
     </record>
 </odoo>
