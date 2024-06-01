@@ -143,12 +143,15 @@
                                 </field>
                             </group>
                         </page>
-                        <page string="Revisar">
+                        <page string="Revisar">   
                             <group>
-                                <field name="resultado" readonly="1" />
-                                <field name="avance" readonly="1" />
+                                <field name="resultado" readonly="1" string="Actual" />
+                                <field name="avance" readonly="1" string="Nuevo" />
                                 <field name="archivos" widget="many2many_tags" readonly="1" />
                                 <field name="comentarios_revision" readonly="1" />
+                                <field name="opcion" widget="radio" />
+                                <field name="comentarios_evaluador" />
+                                <button name="actualizar_resultado_action" string="Guardar" type="object" class="btn-primary" confirm="¿Estas seguro de enviar este avance?" />
                             </group>
                         </page>
                     </notebook>

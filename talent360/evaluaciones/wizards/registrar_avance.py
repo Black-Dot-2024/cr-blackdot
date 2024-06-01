@@ -34,10 +34,6 @@ class RegistrarAvance(models.TransientModel):
         help="Comentarios que sustentan el avance que se está registrando."
     )
 
-    retroalimentacion = fields.Text()
-
-    # opcion = fields.Selection()
-
     @api.constrains("avance")
     def _validar_avance(self):
         """
@@ -184,12 +180,3 @@ class RegistrarAvance(models.TransientModel):
             "fecha_envio": fecha,
             "archivos": [(6, 0, archivos.ids)],
         })
-
-        # No va a funcionar aún
-        # if opcion == "Aceptar":
-        #     nuevo_resultado = borrador_resultado
-        # else:
-        #     nuevo_resultado = anterior_resultado
-        
-        # usuario_objetivo.sudo().write({"resultado": nuevo_resultado})
-        

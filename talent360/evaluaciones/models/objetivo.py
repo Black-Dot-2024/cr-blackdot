@@ -50,9 +50,6 @@ class Objetivo(models.Model):
         string="Métrica", compute="_compute_metrica_mostrar", store="True", size=20
     )
 
-
-   
-
     tipo = fields.Selection(
         [
             ("puesto", "Del puesto"),
@@ -117,7 +114,14 @@ class Objetivo(models.Model):
 
     comentarios_revision = fields.Text(string="Comentarios")
 
+    comentarios_evaluador = fields.Text(string="Comentarios de la revisión", required=True)
+
     fecha_envio = fields.Date(string="Fecha de Envío")
+
+    opcion = fields.Selection([
+        ('aceptar', 'Aceptar'),
+        ('rechazar', 'Rechazar'),
+    ], string="Revisión")
 
     avance = fields.Integer()
 
@@ -281,3 +285,18 @@ class Objetivo(models.Model):
         if vals.get("orden") == "descendente":
             vals["resultado"] = vals.get("piso_minimo")
         return super(Objetivo, self).create(vals)
+    
+    def actualizar_resultado_action(self):
+        """
+        Método para actualizar el resultado de un objetivo
+        """
+        opcion = self.opcion
+        if opcion == "aceptar":
+            self.write({"resultado": self.avance})
+            self.write({"estado_revision": "sin_solicitar"})
+        else:
+            self.write({"estado_revision": "sin_solicitar"})
+        
+        self.write({"avance": 0})
+        self.write({"comentarios_evaluador": ""})
+        
