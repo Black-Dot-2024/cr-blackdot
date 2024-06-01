@@ -50,7 +50,29 @@ class EvaluacionesController(http.Controller):
             return request.render("evaluaciones.encuestas_reporte_no_respuestas", parametros)        
 
         if evaluacion.incluir_demograficos:
-            parametros.update(evaluacion.generar_datos_demograficos(filtros))
+            datos_demograficos = evaluacion.generar_datos_demograficos(filtros)
+            mapeo_categorias = {
+                "departamento": "Departamento",
+                "generacion": "Generación",
+                "puesto": "Puesto",
+                "genero": "Género",
+            }
+            
+            parametros["datos_demograficos"] = []
+
+            for categoria, valores in datos_demograficos.items():
+                if categoria in ["nombre", "anio_nacimiento"]:
+                    continue
+
+                nombre = mapeo_categorias.get(categoria, categoria)
+                parametros["datos_demograficos"].append(
+                    {
+                        "categoria": nombre,
+                        "valores": valores,
+                    }
+                )
+                
+            parametros.update(datos_demograficos)
         if evaluacion.tipo == "NOM_035":
             parametros.update(evaluacion.generar_datos_reporte_NOM_035_action(filtros))
             return request.render("evaluaciones.encuestas_reporte_nom_035", parametros)
