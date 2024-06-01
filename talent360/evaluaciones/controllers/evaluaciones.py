@@ -61,6 +61,10 @@ class EvaluacionesController(http.Controller):
             parametros["datos_demograficos"] = []
 
             for categoria, valores in datos_demograficos.items():
+                # Si todos los datos son N/A, omitir la categoría
+                if len(valores) == 1 and valores[0]["nombre"] == "N/A":
+                    continue
+
                 if categoria in ["nombre", "anio_nacimiento"]:
                     continue
 
