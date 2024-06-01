@@ -1213,26 +1213,39 @@ class Evaluacion(models.Model):
     def checar_techo(self):
         """
         Verifica que los valores de la ponderación sean válidos.
-        Validación 1: Verifica que el valor de la ponderación no sea menor o igual a 0.
-        Validación 2: Verifica que no haya valores duplicados en la ponderación para la misma evaluación.
-        Validación 3: Verifica que no haya más de 10 techos.
-        Validación 4: Verifica que los valores de la ponderación estén en orden ascendente.
-        Validación 5: Verifica que el valor de las ponderaciones no sean mayores a 100 y que el último sea 100.
+        Validación 1: Verifica que si haya niveles en la ponderación.
+        Validación 2: Verifica que mínimo haya dos niveles en la ponderación.
+        Validación 3: Verifica que el valor de la ponderación no sea menor o igual a 0.
+        Validación 4: Verifica que no haya valores duplicados en la ponderación.
+        Validación 5: Verifica que no haya más de 10 techos.
+        Validación 6: Verifica que los valores de la ponderación estén en orden ascendente.
+        Validación 7: Verifica que el valor de las ponderaciones no sean mayores a 100 y que el último sea 100.
 
         """
+        if len(self.niveles) == 0:
+            raise ValidationError("Debe haber al menos un nivel en la ponderación.")
+
+        if len(self.niveles) < 2:
+            raise ValidationError(
+                "Debe haber al menos dos niveles en la ponderación."
+            )
+
         for nivel in self.niveles:
+            
             if nivel.techo <= 0:
                 raise ValidationError(
                     "El valor de la ponderación no debe ser menor o igual a 0."
                 )
 
             techos = self.niveles.filtered(lambda n: n.id != nivel.id).mapped("techo")
+
             if nivel.techo in techos:
                 raise ValidationError(
                     "No puede haber valores duplicados en la ponderación."
                 )
 
         todos_techos = self.niveles.mapped("techo")
+
         if len(todos_techos) > 10:
             raise ValidationError(
                 "No puede haber más de 10 valores de ponderación."
@@ -1249,6 +1262,22 @@ class Evaluacion(models.Model):
             )
         if todos_techos[-1] != 100:
             raise ValidationError("El último valor de la ponderación debe ser 100.")
+
+    @api.constrains("niveles")
+    def checar_color(self):
+        """
+        Verifica que los valores de los colores sean válidos.
+
+        """
+
+        for nivel in self.niveles:
+
+            colores = self.niveles.filtered(lambda n: n.id != nivel.id).mapped("color")
+            if nivel.color in colores:
+                print("AAAAAAAAAAAAAAAAAAAAAAA",nivel.color)
+                raise ValidationError(
+                    "No puede haber colores duplicados en la ponderación."
+                )
 
 
     def actualizar_estados_eval(self):
