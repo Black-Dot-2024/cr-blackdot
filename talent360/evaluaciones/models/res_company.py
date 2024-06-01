@@ -17,7 +17,6 @@ class ResCompany(models.Model):
                         company.employee_properties_definition,
                     )
                 )
-                print(nombres)
                 if len(nombres) != len(set(nombres)):
                     raise ValidationError(
                         _("No se permiten propiedades con nombres duplicados")
