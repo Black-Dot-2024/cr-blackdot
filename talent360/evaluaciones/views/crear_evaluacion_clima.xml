@@ -8,15 +8,16 @@
                 <header>
                     <button class="btn btn-primary" name="action_asignar_usuarios_externos" string="Asignar usuarios externos" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
                     <button class=" btn btn-primary" name="action_importar_preguntas_clima" string="Agregar catálogo de preguntas" type="object" />
+                    <field name="estado" widget="statusbar" statusbar_visible="borrador, publicado, finalizado" />
                 </header>
                 <sheet>
                     <h1>Crear evaluación Clima Laboral</h1>
                     <br></br>
                     <group>
-                        <field name="nombre" placeholder="Ingrese el nombre de la evaluación"/>
+                        <field name="nombre"/>
                     </group>
                     <group>
-                        <field name="estado" placeholder="Estado de la evaluación"/>
+                        <field name="estado" invisible="1"/>
                     </group>
                     <group>
                         <field name="descripcion" placeholder="Descripción de la evaluación"/>
@@ -82,9 +83,9 @@
                         </page>
                         <page string="Notificaciones">
                             <group>
-                                <field name="mensaje_bienvenida" placeholder="Escribe aquí tu mensaje de bienvenida"/>
-                                <field name="mensaje_agradecimiento" placeholder="Escribe aquí tu mensaje de bienvenida"/>
-                                <field name="contenido_correo" placeholder="Escribe el contenido del correo"/>
+                                <field name="mensaje_bienvenida" placeholder="[Ejemplo] - Por favor haz clic en el botón 'Responder' para iniciar tu Evaluación. Te recordamos que todas tus respuestas son confidenciales."/>
+                                <field name="mensaje_agradecimiento" placeholder="[Ejemplo] - Gracias por tu tiempo y por compartir tus respuestas con nosotros."/>
+                                <field name="contenido_correo" placeholder="Hola, estamos interesados en que contestes la siguiente evaluación, tu participación nos ayudará a mejorar y crecer como organización. La evaluación estará disponible por un período específico. Puedes comenzar la evaluación haciendo clic en el siguiente enlace: Comenzar evaluación. Gracias por tu colaboración."/>
                             </group>
                         </page>
                     </notebook>

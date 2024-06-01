@@ -87,6 +87,7 @@ class Objetivo(models.Model):
         help="Fecha en la que se debe cumplir el objetivo",
     )
     resultado = fields.Integer(store=True)
+    porcentaje = fields.Float(store=True)
     estado = fields.Selection(
         [
             ("rojo", "No cumple con las expectativas"),
@@ -119,12 +120,14 @@ class Objetivo(models.Model):
         De no ser el caso, el sistema manda un error al usuario.
         """
         for registro in self:
-            if registro.piso_minimo >= registro.piso_maximo:
-                raise ValidationError(_("El piso mínimo debe ser menor al piso máximo"))
+            if registro.orden == "ascendente":
+                if registro.piso_minimo >= registro.piso_maximo:
+                    raise ValidationError(_("El piso mínimo debe ser menor al piso máximo para objetivos ascendentes"))
+            else:
+                if registro.piso_minimo <= registro.piso_maximo:
+                    raise ValidationError(_("El piso mínimo debe ser mayor al piso máximo para objetivos descendentes"))
             if registro.piso_minimo < 0 or registro.piso_maximo < 0:
-                raise ValidationError(
-                    _("Los pisos minimos y maximos deben ser mayores a 0")
-                )
+                raise ValidationError(_("Los pisos mínimos y máximos deben ser mayores a 0"))
 
     @api.constrains("peso")
     def _checar_peso(self):
@@ -147,15 +150,18 @@ class Objetivo(models.Model):
 
         De no ser ningún caso, el sistema manda un error al usuario.
         """
-        if "piso_minimo" in vals or "piso_maximo" in vals:
+        if "piso_minimo" in vals or "piso_maximo" in vals or "orden" in vals:
             nuevo_piso_minimo = vals.get("piso_minimo", self.piso_minimo)
             nuevo_piso_maximo = vals.get("piso_maximo", self.piso_maximo)
-            if nuevo_piso_minimo >= nuevo_piso_maximo:
-                raise ValidationError(_("El piso mínimo debe ser menor al piso máximo"))
+            nuevo_orden = vals.get("orden", self.orden)
+            if nuevo_orden == "ascendente":
+                if nuevo_piso_minimo >= nuevo_piso_maximo:
+                    raise ValidationError(_("El piso mínimo debe ser menor al piso máximo para objetivos ascendentes"))
+            else:
+                if nuevo_piso_minimo <= nuevo_piso_maximo:
+                    raise ValidationError(_("El piso mínimo debe ser mayor al piso máximo para objetivos descendentes"))
             if nuevo_piso_minimo < 0 or nuevo_piso_maximo < 0:
-                raise ValidationError(
-                    _("Los pisos mínimos y máximos deben ser mayores a 0")
-                )
+                raise ValidationError(_("Los pisos mínimos y máximos deben ser mayores a 0"))
 
         if "peso" in vals:
             nuevo_peso = vals.get("peso", self.peso)
@@ -176,14 +182,18 @@ class Objetivo(models.Model):
                     _("La fecha final debe ser mayor a la fecha de hoy")
                 )
 
-    @api.depends("resultado", "piso_maximo")
+    @api.depends("resultado", "piso_maximo", "piso_minimo", "orden")
     def _compute_estado(self):
         """
         Método que calcula el estado actual del objetivo dependiendo del resultado
         """
         for registro in self:
-            if registro.piso_maximo and registro.resultado:
-                ratio = registro.resultado / registro.piso_maximo
+            if registro.resultado is None:
+                registro.estado = "rojo"
+                continue
+
+            if registro.orden == "ascendente":
+                ratio = (registro.resultado - registro.piso_minimo) / (registro.piso_maximo - registro.piso_minimo) if registro.piso_maximo != 0 else 0
                 if 0 <= ratio <= 0.6:
                     registro.estado = "rojo"
                 elif 0.61 <= ratio <= 0.85:
@@ -192,6 +202,21 @@ class Objetivo(models.Model):
                     registro.estado = "verde"
                 elif ratio > 1:
                     registro.estado = "azul"
+                registro.porcentaje = ratio
+            else:
+                ratio = 1 - ((registro.resultado - registro.piso_maximo) / (registro.piso_minimo - registro.piso_maximo)) if registro.piso_minimo != 0 else 0
+                if 0 <= ratio <= 0.6:
+                    registro.estado = "rojo"
+                elif 0.61 <= ratio <= 0.85:
+                    registro.estado = "amarillo"
+                elif 0.851 <= ratio <= 1:
+                    registro.estado = "verde"
+                elif ratio > 1:
+                    registro.estado = "azul"
+                registro.porcentaje = ratio
+            
+            if registro.porcentaje < 0:
+                registro.porcentaje = 0
 
     @api.constrains("usuario_ids")
     def _checar_usuario_ids(self):
@@ -243,3 +268,8 @@ class Objetivo(models.Model):
             if record.metrica == "otro" and (not record.nueva_metrica or record.nueva_metrica.strip() == ''):
                 raise ValidationError(("El campo 'Métrica Personalizada' no puede estar vacío."))
                 
+    @api.model
+    def create(self, vals):
+        if vals.get("orden") == "descendente":
+            vals["resultado"] = vals.get("piso_minimo")
+        return super(Objetivo, self).create(vals)

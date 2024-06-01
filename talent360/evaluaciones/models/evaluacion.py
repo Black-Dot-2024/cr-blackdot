@@ -32,7 +32,7 @@ class Evaluacion(models.Model):
     escalar_format = fields.Selection([
         ("numericas", "Numéricas"),
         ("textuales", "Textuales"),
-        ("caritas", "Caritas"),
+        ("caritas", "LIKERT"),
         ("estrellas", "Estrellas")
     ], string="Formato para las preguntas escalares", required=True, default="numericas")
 
@@ -162,9 +162,11 @@ class Evaluacion(models.Model):
 
         if not self:
 
+            ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
+
             new_evaluation = self.env["evaluacion"].create(
                 {
-                    "nombre": "",
+                    "nombre": str(ultimo_id.id + 1) + " Evaluación Clima",
                     "descripcion": "La evaluación Clima es una herramienta de medición de clima organizacional, cuyo objetivo es conocer la percepción que tienen las personas que laboran en los centros de trabajo, sobre aquellos aspectos sociales que conforman su entorno laboral y que facilitan o dificultan su desempeño.",
                     "tipo": "CLIMA",
                     "fecha_inicio": fields.Date.today(),
@@ -207,9 +209,12 @@ class Evaluacion(models.Model):
         """
 
         if not self:
+
+            ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
+
             new_evaluation = self.env["evaluacion"].create(
                 {
-                    "nombre": "",
+                    "nombre": str(ultimo_id.id + 1) + " Evaluación NOM 035",
                     "descripcion": "La NOM 035 tiene como objetivo establecer los elementos para identificar, analizar y prevenir los factores de riesgo psicosocial, así como para promover un entorno organizacional favorable en los centros de trabajo.",
                     "tipo": "NOM_035",
                     "fecha_inicio": fields.Date.today(),
@@ -646,9 +651,7 @@ class Evaluacion(models.Model):
                         else "Sin departamento"
                     )
                 elif respuesta.usuario_externo_id:
-                    usuario_externo = self.env["usuario.externo"].browse(
-                        respuesta.usuario_externo_id
-                    )
+                    usuario_externo = respuesta.usuario_externo_id
                     nombre_departamento = (
                         usuario_externo.direccion
                         if usuario_externo.direccion
@@ -737,9 +740,7 @@ class Evaluacion(models.Model):
                     respuesta.usuario_id
                 )
             elif respuesta.usuario_externo_id:
-                usuario_externo = self.env["usuario.externo"].browse(
-                    respuesta.usuario_externo_id
-                )
+                usuario_externo = respuesta.usuario_externo_id
                 datos_demograficos = self.obtener_datos_demograficos_externos(
                     usuario_externo
                 )
@@ -1180,7 +1181,7 @@ class Evaluacion(models.Model):
             if usuarios_eliminados:
                 respuestas = self.env["respuesta"].search(
                     [
-                        ("usuario_externo_id", "in", usuarios_eliminados),
+                        ("usuario_externo_id.id", "in", usuarios_eliminados),
                         ("evaluacion_id.id", "=", self.id),
                     ]
                 )
@@ -1296,10 +1297,12 @@ class Evaluacion(models.Model):
         a una vista de la evaluación general.
 
         """
+
+        ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
         
         nueva_evaluacion = self.env["evaluacion"].create(
             {
-                "nombre": "",
+                "nombre": str(ultimo_id.id + 1) + " Evaluación Genérica",
                 "tipo": "generico",
                 "fecha_inicio": fields.Date.today(),
                 "fecha_final": fields.Date.today(),
