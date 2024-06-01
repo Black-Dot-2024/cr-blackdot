@@ -985,17 +985,10 @@ class Evaluacion(models.Model):
 
         :return: El color asignado al valor.
         """
-        if self.techo_verde <= valor <= self.techo_azul:
-            return "#2894a7"  # Azul clarito
-        elif self.techo_amarillo <= valor <= self.techo_verde:
-            return "#5aaf2b"  # Verde
-        elif self.techo_naranja <= valor <= self.techo_amarillo:
-            return "#ebae14"  # Amarillo
-        elif self.techo_rojo <= valor <= self.techo_naranja:
-            return "#ffa446"  # Naranja
-        else:
-            return "#ff4747"  # Rojo
 
+        for nivel in self.niveles:
+            if valor <= nivel.techo:
+                return nivel.color
     def get_evaluaciones_action(self, evaluacion_id):
         """
         Obtiene las preguntas asociadas a la evaluación.
@@ -1056,13 +1049,10 @@ class Evaluacion(models.Model):
         # Si se está eliminando un usuario o usuario externo, eliminar sus respuestas
 
         if "usuario_ids" in vals:
-            usuarios_eliminados = list(
-                map(
-                    lambda val: val[1],
-                    filter(lambda val: val[0] == 3, vals["usuario_ids"]),
-                )
-            )
-
+            usuarios_eliminados = list(map(
+                lambda val: val[1], filter(lambda val: val[0] == 3, vals["usuario_ids"])
+            ))
+            
             if usuarios_eliminados:
                 respuestas = self.env["respuesta"].search(
                     [
@@ -1074,12 +1064,10 @@ class Evaluacion(models.Model):
                 respuestas.unlink()
 
         if "usuario_externo_ids" in vals:
-            usuarios_eliminados = list(
-                map(
-                    lambda val: val[1],
-                    filter(lambda val: val[0] == 3, vals["usuario_externo_ids"]),
-                )
-            )
+            usuarios_eliminados = list(map(
+                lambda val: val[1],
+                filter(lambda val: val[0] == 3, vals["usuario_externo_ids"]),
+            ))
 
             if usuarios_eliminados:
                 respuestas = self.env["respuesta"].search(
@@ -1092,13 +1080,9 @@ class Evaluacion(models.Model):
 
         for record in self:
             if record.tipo == "generico" and len(record.pregunta_ids) < 1:
-                raise exceptions.ValidationError(
-                    _("La evaluación debe tener al menos una pregunta.")
-                )
+                raise exceptions.ValidationError(_("La evaluación debe tener al menos una pregunta."))
             if record.tipo == "generico" and len(record.usuario_ids) < 1:
-                raise exceptions.ValidationError(
-                    _("La evaluación debe tener al menos una persona asignada.")
-                )
+                raise exceptions.ValidationError(_("La evaluación debe tener al menos una persona asignada."))
 
         return resultado
 
@@ -1193,7 +1177,7 @@ class Evaluacion(models.Model):
                 evaluacion.estado = "finalizado"
             elif evaluacion.fecha_inicio > hoy:
                 evaluacion.estado = "borrador"
-
+                
     def evaluacion_general_action_form(self):
         """
         Ejecuta la acción de redireccionar a la evaluación general y devuelve un diccionario
@@ -1206,7 +1190,7 @@ class Evaluacion(models.Model):
         """
 
         ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
-
+        
         nueva_evaluacion = self.env["evaluacion"].create(
             {
                 "nombre": str(ultimo_id.id + 1) + " Evaluación Genérica",
@@ -1230,7 +1214,7 @@ class Evaluacion(models.Model):
     def get_escalar_format(self):
         """
         Devuelve el formato escalar seleccionado para la evaluación actual.
-
+        
         :return: El formato escalar seleccionado para la evaluación.
         """
         return self.escalar_format
@@ -1242,13 +1226,14 @@ class Evaluacion(models.Model):
         :return: Las fechas de inicio y final.
         """
         return {
+            
             "type": "ir.actions.report",
             "report_name": "evaluaciones.reporte_template",
             "context": {
                 "evaluacion_id": self.id,
                 "fecha_inicio": self.fecha_inicio,
                 "fecha_final": self.fecha_final,
-            },
+            }
         }
 
     def action_importar_preguntas_clima(self):
@@ -1264,3 +1249,5 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "target": "new",
         }
+    
+    
