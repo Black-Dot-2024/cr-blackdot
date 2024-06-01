@@ -127,6 +127,8 @@ class Objetivo(models.Model):
 
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
 
+    comentarios = fields.One2many("objetivo.comentarios", "objetivo_id", string="Comentarios")
+
     @api.constrains("piso_minimo", "piso_maximo")
     def _checar_pisos(self):
         """
@@ -296,6 +298,12 @@ class Objetivo(models.Model):
             self.write({"estado_revision": "sin_solicitar"})
         else:
             self.write({"estado_revision": "sin_solicitar"})
+
+        self.env["objetivo.comentarios"].create({
+            "objetivo_id": self.id,
+            "fecha": date.today(),
+            "comentarios_evaluador": self.comentarios_evaluador,
+        })
         
         self.write({"avance": 0})
         self.write({"comentarios_evaluador": ""})

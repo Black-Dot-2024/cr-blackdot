@@ -35,3 +35,5 @@
 "access_importar_preguntas_wizard","access_importar_preguntas_wizard","model_importar_preguntas_wizard","evaluaciones.evaluaciones_cliente_cr_group_user",1,1,1,1
 "access_objetivo_avances_cliente_cr","access.objetivo.avances","model_objetivo_avances","evaluaciones.evaluaciones_cliente_cr_group_user",1,1,1,1
 "access_objetivo_avances_colaborador_cr","access.objetivo.avances","model_objetivo_avances","evaluaciones.evaluaciones_colaborador_cr_group_user",1,1,1,1
+"access_objetivo_comentarios_colaborador_cr","access.objetivo.comentarios","model_objetivo_comentarios","evaluaciones.evaluaciones_colaborador_cr_group_user",1,1,1,1
+"access_objetivo_comentarios_cliente_cr","access.objetivo.comentarios","model_objetivo_comentarios","evaluaciones.evaluaciones_cliente_cr_group_user",1,1,1,1
