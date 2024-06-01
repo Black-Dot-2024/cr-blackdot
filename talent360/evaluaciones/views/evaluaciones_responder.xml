@@ -42,12 +42,11 @@
             </div>
 
             <div class="o_survey_form_content w-100">
-
-                <t t-if="contestada == 'contestada'"  t-call="evaluaciones.evaluacion_responder_form_done"/>
+                <t t-if="len(evaluacion.pregunta_ids) == 0" t-call="evaluaciones.evaluacion_responder_form_validation"/>
+                <t t-elif="contestada == 'contestada'"  t-call="evaluaciones.evaluacion_responder_form_done"/>
                 <t t-elif="evaluacion.estado == 'finalizado'" t-call="evaluaciones.evaluacion_responder_form_closed"/>
                 <t t-elif="evaluacion.estado == 'publicado'" t-call="evaluaciones.evaluacion_responder_form_start"/>
-                <t t-elif="evaluacion.estado == 'borrador'" t-call="evaluaciones.evaluacion_responder_form_draft"/>
-
+                <t t-elif="evaluacion.estado == 'borrador'" t-call="evaluaciones.evaluacion_responder_form_draft"/> 
             </div>
         </form>
 
@@ -115,6 +114,26 @@
         </div>
 
         <t t-call="evaluaciones.preguntas_contenedor"/>
+    </template>
+
+    <template id="evaluacion_responder_form_validation" name="Evaluaciones: Terminada">
+        <div class="wrap">
+            <div class="o_survey_finished mt32 mb32">
+                <h1>Esta evaluación aún no tiene preguntas</h1>
+                <div class="row">
+                    <div class="col">
+                        <t t-if="evaluacion.mensaje_agradecimiento">
+                            <div t-field='evaluacion.mensaje_agradecimiento' class="oe_no_empty pb-5 text-break"/>
+                        </t>
+                        <t t-else="">
+                            <div class="o_survey_review">
+                                Vuelve a revisar mas tarde
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </div>
     </template>
 
     <!-- Finished (taken and finished) survey page -->
