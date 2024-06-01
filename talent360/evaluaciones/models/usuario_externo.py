@@ -168,9 +168,9 @@ class UsuarioExterno(models.Model):
     @api.model
     def obtener_atributos(self):
         """
-        Obtiene los atributos extra de un usuario externo.
+        Obtiene los atributos de un usuario externo.
 
-        :return: Un diccionario con los atributos extra del usuario externo.
+        :return: Un diccionario con los atributos del usuario externo.
         """
 
         atributos = [
@@ -195,6 +195,9 @@ class UsuarioExterno(models.Model):
         return atributos
 
     def cargar_csv(self, archivo):
+        """
+        Procesa un archivo CSV y crea usuarios externos en Odoo.
+        """
         lector_csv = None
         try:
             contenidos = base64.b64decode(archivo)
@@ -240,7 +243,9 @@ class UsuarioExterno(models.Model):
         campos_obligatorios,
         campos_opcionales,
     ):
-        # Valida que las columnas del archivo CSV sean las correctas
+        """
+        Valida que las columnas del archivo CSV sean las correctas
+        """
 
         columnas_faltantes = []
         columnas_duplicadas = []
@@ -273,7 +278,9 @@ class UsuarioExterno(models.Model):
 
     @api.model
     def _construir_usuario(self, fila: dict, campos_obligatorios, campos_opcionales):
-
+        """
+        Construye un usuario externo a partir de una fila de un archivo CSV.
+        """
         for campo in map(lambda c: c["nombre"], campos_obligatorios):
             if not fila.get(campo):
                 raise ValidationError(
@@ -324,6 +331,10 @@ class UsuarioExterno(models.Model):
         return usuario_externo_id
 
     def _validar_campo(self, campo, valor):
+        """
+        Valida que el valor de un campo sea correcto de acuerdo a su tipo.
+        """
+        
         if campo["tipo"] == "char":
             return
         elif campo["tipo"] == "boolean":

@@ -9,6 +9,10 @@ class ResCompany(models.Model):
     # Avoid creation of properties with duplicated names
     @api.constrains("employee_properties_definition")
     def _check_employee_properties_definition(self):
+        """
+        Función para verificar que no existan propiedades con nombres duplicados
+        """
+
         for company in self:
             if company.employee_properties_definition:
                 nombres = list(
@@ -24,6 +28,9 @@ class ResCompany(models.Model):
 
     @api.model
     def configurar_datos_demograficos(self):
+        """
+        Función para configurar los datos demográficos de la empresa
+        """
         atributos_nuevos = [
             {
                 "name": "parametro1",

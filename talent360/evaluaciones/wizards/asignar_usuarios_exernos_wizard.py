@@ -15,11 +15,16 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
 
     @api.constrains("nombre_archivo")
     def _validar_nombre_archivo(self):
+        """
+        Método para validar que el archivo cargado sea un archivo CSV
+        """
         if self.nombre_archivo and not self.nombre_archivo.lower().endswith(".csv"):
             raise exceptions.ValidationError(_("Solo se aceptan archivos CSV."))
 
     def procesar_csv(self):
-
+        """
+        Método para procesar el archivo CSV y crear los usuarios externos
+        """
         evaluacion = self.env["evaluacion"].browse(self._context.get("active_id"))
 
         if not evaluacion:
@@ -34,7 +39,9 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
         
 
     def descargar_template_usuarios(self):
-        # Generar csv
+        """
+        Método para generar y descargar el template de usuarios externos
+        """
 
         atributos = self.env["usuario.externo"].obtener_atributos()
         atributos_nombres = [atributo["nombre"] for atributo in atributos]
