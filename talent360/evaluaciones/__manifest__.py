@@ -24,6 +24,7 @@
         "data/competencia.csv",
         "data/opcion.csv",
         "data/template.csv",
+        "data/data.xml",
     ],
     "depends": ["base", "mail", "hr"],
     "assets": {
