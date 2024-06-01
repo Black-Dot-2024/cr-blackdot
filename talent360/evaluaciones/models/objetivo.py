@@ -108,6 +108,19 @@ class Objetivo(models.Model):
         string="Asignados",
     )
 
+    estado_revision = fields.Selection([
+        ('pendiente', 'Pendiente'),
+        ('sin_solicitar', 'Sin Solicitar'),
+    ], default='sin_solicitar')
+
+    archivos = fields.Many2many("ir.attachment", string="Archivos")
+
+    comentarios_revision = fields.Text(string="Comentarios")
+
+    fecha_envio = fields.Date(string="Fecha de Envío")
+
+    avance = fields.Integer()
+
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
 
     @api.constrains("piso_minimo", "piso_maximo")

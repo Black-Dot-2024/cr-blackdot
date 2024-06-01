@@ -144,7 +144,12 @@
                             </group>
                         </page>
                         <page string="Revisar">
-                            <h1>En progreso</h1>
+                            <group>
+                                <field name="resultado" readonly="1" />
+                                <field name="avance" readonly="1" />
+                                <field name="archivos" widget="many2many_tags" readonly="1" />
+                                <field name="comentarios_revision" readonly="1" />
+                            </group>
                         </page>
                     </notebook>
                 </sheet>

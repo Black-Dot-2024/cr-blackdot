@@ -34,6 +34,10 @@ class RegistrarAvance(models.TransientModel):
         help="Comentarios que sustentan el avance que se está registrando."
     )
 
+    retroalimentacion = fields.Text()
+
+    # opcion = fields.Selection()
+
     @api.constrains("avance")
     def _validar_avance(self):
         """
@@ -153,6 +157,7 @@ class RegistrarAvance(models.TransientModel):
         objetivo_id = self.env.context.get("objetivo_id")
         usuario_objetivo = self.env["objetivo"].browse(objetivo_id)
         
+        # Registrar en la bitácora
         self.env["objetivo.avances"].create({
             "objetivo_id": usuario_objetivo.id,
             "fecha": fecha,
@@ -160,14 +165,31 @@ class RegistrarAvance(models.TransientModel):
             "comentarios": comentarios,
             "archivos": [(6, 0, archivos.ids)],
         })
+
+        anterior_resultado = usuario_objetivo.resultado
         
         orden = usuario_objetivo.orden
         if orden == "ascendente":
-            nuevo_resultado = usuario_objetivo.resultado + avance
+            borrador_resultado = usuario_objetivo.resultado + avance
         else:
-            nuevo_resultado = usuario_objetivo.resultado - avance
-            if nuevo_resultado <= 0:
-                nuevo_resultado = 0
+            borrador_resultado = usuario_objetivo.resultado - avance
+            if borrador_resultado <= 0:
+                borrador_resultado = 0
 
-        usuario_objetivo.sudo().write({"resultado": nuevo_resultado})
+        # Marcar el avance como pendiente
+        usuario_objetivo.sudo().write({
+            "estado_revision": 'pendiente',
+            "avance": borrador_resultado,
+            "comentarios_revision": comentarios,
+            "fecha_envio": fecha,
+            "archivos": [(6, 0, archivos.ids)],
+        })
+
+        # No va a funcionar aún
+        # if opcion == "Aceptar":
+        #     nuevo_resultado = borrador_resultado
+        # else:
+        #     nuevo_resultado = anterior_resultado
+        
+        # usuario_objetivo.sudo().write({"resultado": nuevo_resultado})
         
