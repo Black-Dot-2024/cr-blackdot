@@ -114,7 +114,7 @@ class Objetivo(models.Model):
 
     comentarios_revision = fields.Text(string="Comentarios")
 
-    comentarios_evaluador = fields.Text(string="Comentarios de la revisión", required=True)
+    comentarios_evaluador = fields.Text(string="Comentarios de la revisión")
 
     fecha_envio = fields.Date(string="Fecha de Envío")
 
@@ -297,7 +297,10 @@ class Objetivo(models.Model):
             self.write({"resultado": self.avance})
             self.write({"estado_revision": "sin_solicitar"})
         else:
-            self.write({"estado_revision": "sin_solicitar"})
+            if self.comentarios_evaluador == "":
+                raise ValidationError(_("Por favor, deje un comentario antes de rechazar el avance"))
+            else:
+                self.write({"estado_revision": "sin_solicitar"})
 
         self.env["objetivo.comentarios"].create({
             "objetivo_id": self.id,

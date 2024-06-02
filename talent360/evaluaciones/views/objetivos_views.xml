@@ -146,7 +146,14 @@
                         </page>
                         <page string="Revisar">
                             <div invisible="estado_revision != 'sin_solicitar'">
-                                <h2>Los usuarios asignados no han registrado avance en este momento.</h2>
+                                <div class="o_view_nocontent_empty_folder">
+                                    <p>
+                                        Los usuarios no han registrado avance en este momento.
+                                    </p>
+                                    <p>
+                                        Los avances registrados aparecerán aquí.
+                                    </p>
+                                </div>
                             </div>
                             <group invisible="estado_revision != 'pendiente'">
                                 <field name="resultado" readonly="1" string="Actual" />
