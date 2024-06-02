@@ -303,6 +303,7 @@ class Objetivo(models.Model):
             "objetivo_id": self.id,
             "fecha": date.today(),
             "comentarios_evaluador": self.comentarios_evaluador,
+            "opcion": opcion,
         })
         
         self.write({"avance": 0})

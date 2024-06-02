@@ -85,6 +85,7 @@
             <form string="Objetivo">
                 <header>
                     <field name="estado" widget="statusbar" statusbar_visible="rojo, amarillo, verde, azul" />
+                    <field name="estado_revision" invisible="True" />
                 </header>
                 <sheet>
                     <div style="width: 100%;">
@@ -143,8 +144,11 @@
                                 </field>
                             </group>
                         </page>
-                        <page string="Revisar">   
-                            <group>
+                        <page string="Revisar">
+                            <div invisible="estado_revision != 'sin_solicitar'">
+                                <h2>Los usuarios asignados no han registrado avance en este momento.</h2>
+                            </div>
+                            <group invisible="estado_revision != 'pendiente'">
                                 <field name="resultado" readonly="1" string="Actual" />
                                 <field name="avance" readonly="1" string="Nuevo" />
                                 <field name="archivos" widget="many2many_tags" readonly="1" />

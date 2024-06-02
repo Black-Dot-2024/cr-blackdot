@@ -16,4 +16,8 @@ class ObjetivoComentarios(models.Model):
 
     objetivo_id = fields.Many2one("objetivo", string="Objetivo", required=True, ondelete="cascade")
     fecha = fields.Date(string="Fecha", required=True)
+    opcion = fields.Selection([
+        ("aceptar", "Aceptado"),
+        ("rechazar", "Rechazado"),
+    ], string="Estatus")
     comentarios_evaluador = fields.Text(string="Comentarios")

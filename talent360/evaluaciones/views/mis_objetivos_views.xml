@@ -91,6 +91,7 @@
                                 <tree string="Comentarios" create="false" delete="false" duplicate="false">
                                     <field name="fecha"/>
                                     <field name="comentarios_evaluador"/>
+                                    <field name="opcion"/>
                                 </tree>
                             </field>
                         </page>
