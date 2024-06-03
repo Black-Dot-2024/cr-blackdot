@@ -1,3 +1,4 @@
+from venv import logger
 from odoo import api, models, fields, _
 from collections import defaultdict, Counter
 from odoo import exceptions
@@ -111,6 +112,27 @@ class Evaluacion(models.Model):
         string="Incluir datos demográficos", default=True
     )
 
+    plan_accion = fields.Text(string="Plan de acción")
+
+    @api.model
+    def create(self, vals):
+        logger.info(f"Creando registro con vals: {vals}")
+        if 'plan_accion' not in vals or not vals['plan_accion']:
+            vals['plan_accion'] = self.get_plan_accion()
+        return super(Evaluacion, self).create(vals)
+
+
+    @staticmethod
+    def get_plan_accion():
+        """ Método estático para generar el plan de acción por defecto. """
+        return "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
+
+    def generar_plan_accion(self):
+        self.plan_accion = "Nuevo valor de Lorem Ipsum después de hacer clic en el botón."
+        self.message_post(body="Plan de acción actualizado.")
+        self.env.cr.commit()
+    
+    
     @api.constrains("fecha_inicio", "fecha_final")
     def checar_fechas(self):
         """
