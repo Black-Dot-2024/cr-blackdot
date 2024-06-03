@@ -158,7 +158,7 @@
                             <group invisible="estado_revision != 'pendiente'">
                                 <field name="resultado" readonly="1" string="Actual" />
                                 <field name="avance" readonly="1" string="Nuevo" />
-                                <field name="archivos" widget="many2many_tags" readonly="1" />
+                                <field name="archivos" widget="many2many_binary" readonly="1" />
                                 <field name="comentarios_revision" readonly="1" />
                                 <field name="opcion" widget="radio" />
                                 <field name="comentarios_evaluador" />
