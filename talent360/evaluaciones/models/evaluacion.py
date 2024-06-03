@@ -667,8 +667,8 @@ class Evaluacion(models.Model):
                 elif respuesta.usuario_externo_id:
                     usuario_externo = respuesta.usuario_externo_id
                     nombre_departamento = (
-                        usuario_externo.direccion
-                        if usuario_externo.direccion
+                        usuario_externo.departamento
+                        if usuario_externo.departamento
                         else "Sin departamento"
                     )
                 else:
