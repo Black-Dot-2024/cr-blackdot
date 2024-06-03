@@ -1337,8 +1337,7 @@ class Evaluacion(models.Model):
         )
 
         for usuario in usuario_evaluacion.mapped("usuario_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos(
-                usuario)
+            datos_demograficos_usuario = usuario.obtener_datos_demograficos()
             datos_demograficos_usuario["id"] = usuario.id.__str__()
             datos_demograficos.append(datos_demograficos_usuario)
 
@@ -1351,8 +1350,7 @@ class Evaluacion(models.Model):
         )
 
         for usuario_externo in usuario_evaluacion_externo.mapped("usuario_externo_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos_externos(
-                usuario_externo)
+            datos_demograficos_usuario = usuario_externo.obtener_datos_demograficos()
             datos_demograficos_usuario["id"] = "E" + \
                 usuario_externo.id.__str__()
             datos_demograficos.append(datos_demograficos_usuario)
@@ -1383,15 +1381,14 @@ class Evaluacion(models.Model):
         datos_demograficos = []
 
         for demografico in demograficos:
-            datos_demograficos.append({
+            entrada = {
                 "UsuarioID": demografico["id"],
-                "Nombre": demografico["nombre"],
-                "Genero": demografico["genero"],
-                "Puesto": demografico["puesto"],
-                "Año de Nacimiento": demografico["anio_nacimiento"],
-                "Generación": demografico["generacion"],
-                "Departamento": demografico["departamento"],
-            })
+            }
+            for categoria, valor in demografico.items():
+                if categoria != "id":
+                    entrada[categoria] = valor
+
+            datos_demograficos.append(entrada)
 
         df_demograficos = pd.DataFrame(datos_demograficos)
 
