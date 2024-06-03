@@ -148,96 +148,56 @@ class Evaluacion(models.Model):
                         _("La fecha de inicio debe ser anterior a la fecha final")
                     )
 
-    # Método para copiar preguntas de la plantilla a la evaluación
-    def copiar_preguntas_de_template(self):
-        """
-        Copia preguntas de un template de evaluación predeterminado a una nueva evaluación.
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super(Evaluacion, self).default_get(fields_list)
 
-        Este método verifica si el objeto actual está vacío (self). Si lo está, crea una nueva
-        evaluación con un nombre predeterminado y asigna este nuevo objeto a self. Luego, limpia
-        las preguntas existentes y copia todas las preguntas de un template con ID predefinido
-        (en este caso, 332) al objeto evaluación actual.
+        # Obtener tipo del contexto
+        tipo = self._context.get("tipo", "generico")
 
-        Returns:
-        object: Retorna el objeto evaluación actualizado con las preguntas copiadas del template.
-        """
+        ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
 
-        if not self:
+        defaults["fecha_inicio"] = fields.Date.today()
+        defaults["fecha_final"] = fields.Date.today()
 
-            ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
+        template_id = False
 
-            new_evaluation = self.env["evaluacion"].create(
-                {
-                    "nombre": str(ultimo_id.id + 1) + " Evaluación Clima",
-                    "descripcion": "La evaluación Clima es una herramienta de medición de clima organizacional, cuyo objetivo es conocer la percepción que tienen las personas que laboran en los centros de trabajo, sobre aquellos aspectos sociales que conforman su entorno laboral y que facilitan o dificultan su desempeño.",
-                    "tipo": "CLIMA",
-                    "fecha_inicio": fields.Date.today(),
-                    "fecha_final": fields.Date.today(),
-                    "niveles": [
-                        (0, 0, {"descripcion_nivel": "Muy malo", "techo": 20, "color": "#ff4747"}),
-                        (0, 0, {"descripcion_nivel": "Malo", "techo": 40, "color": "#ffa446"}),
-                        (0, 0, {"descripcion_nivel": "Regular", "techo": 60, "color": "#ebae14"}),
-                        (0, 0, {"descripcion_nivel": "Bueno", "techo": 80, "color": "#5aaf2b"}),
-                        (0, 0, {"descripcion_nivel": "Muy bueno", "techo": 100, "color": "#2894a7"}),
-                    ],
-                }
+        if tipo == "clima":
+            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación Clima"
+            defaults["descripcion"] = "La evaluación Clima es una herramienta de medición de clima organizacional, cuyo objetivo es conocer la percepción que tienen las personas que laboran en los centros de trabajo, sobre aquellos aspectos sociales que conforman su entorno laboral y que facilitan o dificultan su desempeño."
+            defaults["tipo"] = "CLIMA"
+
+            defaults["niveles"] = [
+                (0, 0, {"descripcion_nivel": "Muy malo", "techo": 20, "color": "#ff4747"}),
+                (0, 0, {"descripcion_nivel": "Malo", "techo": 40, "color": "#ffa446"}),
+                (0, 0, {"descripcion_nivel": "Regular", "techo": 60, "color": "#ebae14"}),
+                (0, 0, {"descripcion_nivel": "Bueno", "techo": 80, "color": "#5aaf2b"}),
+                (0, 0, {"descripcion_nivel": "Muy bueno", "techo": 100, "color": "#2894a7"}),
+            ]
+            template_id = self.env["ir.model.data"]._xmlid_to_res_id(
+                "evaluaciones.template_clima"
             )
-            self = new_evaluation
 
-        self.pregunta_ids = [(5,)]
-
-        template_id = self.env["ir.model.data"]._xmlid_to_res_id(
-            "evaluaciones.template_clima"
-        )
+        elif tipo == "nom035":
+            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación NOM 035"
+            defaults["descripcion"] = "La NOM 035 tiene como objetivo establecer los elementos para identificar, analizar y prevenir los factores de riesgo psicosocial, así como para promover un entorno organizacional favorable en los centros de trabajo."
+            defaults["tipo"] = "NOM_035"
+            defaults["fecha_inicio"] = fields.Date.today()
+            defaults["fecha_final"] = fields.Date.today()
+            template_id = self.env["ir.model.data"]._xmlid_to_res_id(
+                "evaluaciones.template_nom035"
+            )
+        elif tipo == "generico":
+            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación Genérica"
+            defaults["tipo"] = "generico"
 
         if template_id:
             template = self.env["template"].browse(template_id)
             if template:
                 pregunta_ids = template.pregunta_ids.ids
-                self.pregunta_ids = [(6, 0, pregunta_ids)]
+                defaults["pregunta_ids"] = [(6, 0, pregunta_ids)]
 
-        return self
-
-    def copiar_preguntas_de_template_nom035(self):
-        """
-        Copia preguntas de un template de evaluación predeterminado a una nueva evaluación.
-
-        Este método verifica si el objeto actual está vacío (self). Si lo está, crea una nueva
-        evaluación con un nombre predeterminado y asigna este nuevo objeto a self. Luego, limpia
-        las preguntas existentes y copia todas las preguntas de un template con ID predefinido
-        (en este caso, 331) al objeto evaluación actual.
-
-        :return: object: Retorna el objeto evaluación actualizado con las preguntas copiadas del template.
-        """
-
-        if not self:
-
-            ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
-
-            new_evaluation = self.env["evaluacion"].create(
-                {
-                    "nombre": str(ultimo_id.id + 1) + " Evaluación NOM 035",
-                    "descripcion": "La NOM 035 tiene como objetivo establecer los elementos para identificar, analizar y prevenir los factores de riesgo psicosocial, así como para promover un entorno organizacional favorable en los centros de trabajo.",
-                    "tipo": "NOM_035",
-                    "fecha_inicio": fields.Date.today(),
-                    "fecha_final": fields.Date.today(),
-                }
-            )
-            self = new_evaluation
-
-        self.pregunta_ids = [(5,)]
-
-        template_id = self.env["ir.model.data"]._xmlid_to_res_id(
-            "evaluaciones.template_nom035"
-        )
-
-        if template_id:
-            template = self.env["template"].browse(template_id)
-            if template:
-                pregunta_ids = template.pregunta_ids.ids
-                self.pregunta_ids = [(6, 0, pregunta_ids)]
-
-        return self
+        return defaults
 
     def evaluacion_clima_action_form(self):
         """
@@ -253,8 +213,6 @@ class Evaluacion(models.Model):
 
         """
 
-        self = self.copiar_preguntas_de_template()
-
         # Retornar la acción con la vista como destino
         return {
             "type": "ir.actions.act_window",
@@ -263,7 +221,7 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "view_id": self.env.ref("evaluaciones.evaluacion_clima_view_form").id,
             "target": "current",
-            "res_id": self.id,
+            "context": {"tipo": "clima"},
         }
 
     def evaluacion_nom035_action_form(self):
@@ -279,8 +237,6 @@ class Evaluacion(models.Model):
         evaluación en una vista de formulario específica de Odoo.
 
         """
-        self = self.copiar_preguntas_de_template_nom035()
-
         return {
             "type": "ir.actions.act_window",
             "name": "NOM 035",
@@ -288,7 +244,7 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "view_id": self.env.ref("evaluaciones.evaluacion_nom035_view_form").id,
             "target": "current",
-            "res_id": self.id,
+            "context": {"tipo": "nom035"},
         }
 
     def evaluacion_360_action_form(self):
@@ -1303,18 +1259,6 @@ class Evaluacion(models.Model):
 
         """
 
-        ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
-        
-        nueva_evaluacion = self.env["evaluacion"].create(
-            {
-                "nombre": str(ultimo_id.id + 1) + " Evaluación Genérica",
-                "tipo": "generico",
-                "fecha_inicio": fields.Date.today(),
-                "fecha_final": fields.Date.today(),
-            }
-        )
-        self = nueva_evaluacion
-
         return {
             "type": "ir.actions.act_window",
             "name": "General",
@@ -1322,7 +1266,7 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "view_id": self.env.ref("evaluaciones.evaluacion_general_view_form").id,
             "target": "current",
-            "res_id": self.id,
+            "context": {"default_tipo": "generico"},
         }
 
     def get_escalar_format(self):
