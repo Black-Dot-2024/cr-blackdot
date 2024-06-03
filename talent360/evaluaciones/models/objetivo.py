@@ -110,7 +110,7 @@ class Objetivo(models.Model):
         ('sin_solicitar', 'Sin Solicitar'),
     ], default='sin_solicitar')
 
-    archivos = fields.Many2many("ir.attachment", string="Archivos")
+    archivos = fields.Many2many("ir.attachment")
 
     comentarios_revision = fields.Text(string="Comentarios")
 
@@ -125,9 +125,9 @@ class Objetivo(models.Model):
 
     avance = fields.Integer()
 
-    avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
+    avances = fields.One2many("objetivo.avances", "objetivo_id")
 
-    comentarios = fields.One2many("objetivo.comentarios", "objetivo_id", string="Comentarios")
+    comentarios = fields.One2many("objetivo.comentarios", "objetivo_id")
 
     @api.constrains("piso_minimo", "piso_maximo")
     def _checar_pisos(self):
