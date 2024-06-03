@@ -2,6 +2,9 @@ from odoo import api, models, fields, _
 from collections import defaultdict, Counter
 from odoo import exceptions
 from datetime import timedelta
+from io import BytesIO
+import pandas as pd
+import base64
 from odoo.exceptions import ValidationError
 import logging
 
@@ -164,7 +167,8 @@ class Evaluacion(models.Model):
 
         if not self:
 
-            ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
+            ultimo_id = self.env["evaluacion"].search(
+                [], order="id desc", limit=1)
 
             new_evaluation = self.env["evaluacion"].create(
                 {
@@ -212,7 +216,8 @@ class Evaluacion(models.Model):
 
         if not self:
 
-            ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
+            ultimo_id = self.env["evaluacion"].search(
+                [], order="id desc", limit=1)
 
             new_evaluation = self.env["evaluacion"].create(
                 {
@@ -469,7 +474,8 @@ class Evaluacion(models.Model):
                     lambda r: self.validar_filtro(filtros, r)
                 )
 
-            respuestas = [respuesta.respuesta_mostrar for respuesta in respuesta_ids]
+            respuestas = [
+                respuesta.respuesta_mostrar for respuesta in respuesta_ids]
             respuestas_tabuladas = dict(Counter(respuestas))
             datos_pregunta = {
                 "pregunta": pregunta,
@@ -522,7 +528,8 @@ class Evaluacion(models.Model):
             categoria = dict(pregunta._fields["categoria"].selection).get(
                 pregunta.categoria
             )
-            dominio = dict(pregunta._fields["dominio"].selection).get(pregunta.dominio)
+            dominio = dict(pregunta._fields["dominio"].selection).get(
+                pregunta.dominio)
             valor_pregunta = 0
 
             respuesta_ids = self.env["respuesta"].search(
@@ -692,11 +699,13 @@ class Evaluacion(models.Model):
                 categoria["valor"] = (
                     categoria["puntuacion"] / categoria["puntuacion_maxima"]
                 ) * 100
-                categoria["color"] = self.asignar_color_clima(categoria["valor"])
+                categoria["color"] = self.asignar_color_clima(
+                    categoria["valor"])
 
             for dept in categoria["departamentos"]:
                 if dept["puntos_maximos"] > 0:
-                    dept["valor"] = (dept["puntos"] / dept["puntos_maximos"]) * 100
+                    dept["valor"] = (dept["puntos"] /
+                                     dept["puntos_maximos"]) * 100
                     dept["color"] = self.asignar_color_clima(dept["valor"])
 
         total_porcentaje = round(
@@ -777,7 +786,8 @@ class Evaluacion(models.Model):
         )
 
         for usuario in usuario_evaluacion.mapped("usuario_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos(usuario)
+            datos_demograficos_usuario = self.obtener_datos_demograficos(
+                usuario)
             if filtros and not self.validar_filtro(
                 filtros, datos_demograficos=datos_demograficos_usuario
             ):
@@ -1161,9 +1171,10 @@ class Evaluacion(models.Model):
 
         if "usuario_ids" in vals:
             usuarios_eliminados = list(map(
-                lambda val: val[1], filter(lambda val: val[0] == 3, vals["usuario_ids"])
+                lambda val: val[1], filter(
+                    lambda val: val[0] == 3, vals["usuario_ids"])
             ))
-            
+
             if usuarios_eliminados:
                 respuestas = self.env["respuesta"].search(
                     [
@@ -1191,9 +1202,11 @@ class Evaluacion(models.Model):
 
         for record in self:
             if record.tipo == "generico" and len(record.pregunta_ids) < 1:
-                raise exceptions.ValidationError(_("La evaluación debe tener al menos una pregunta."))
+                raise exceptions.ValidationError(
+                    _("La evaluación debe tener al menos una pregunta."))
             if record.tipo == "generico" and len(record.usuario_ids) < 1:
-                raise exceptions.ValidationError(_("La evaluación debe tener al menos una persona asignada."))
+                raise exceptions.ValidationError(
+                    _("La evaluación debe tener al menos una persona asignada."))
 
         return resultado
 
@@ -1304,7 +1317,7 @@ class Evaluacion(models.Model):
         """
 
         ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
-        
+
         nueva_evaluacion = self.env["evaluacion"].create(
             {
                 "nombre": str(ultimo_id.id + 1) + " Evaluación Genérica",
@@ -1328,7 +1341,7 @@ class Evaluacion(models.Model):
     def get_escalar_format(self):
         """
         Devuelve el formato escalar seleccionado para la evaluación actual.
-        
+
         :return: El formato escalar seleccionado para la evaluación.
         """
         return self.escalar_format
@@ -1340,7 +1353,7 @@ class Evaluacion(models.Model):
         :return: Las fechas de inicio y final.
         """
         return {
-            
+
             "type": "ir.actions.report",
             "report_name": "evaluaciones.reporte_template",
             "context": {
@@ -1363,5 +1376,176 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "target": "new",
         }
-    
-    
+
+    def existen_respuestas(self):
+        """
+        Verifica si existen respuestas para la evaluación.
+
+        :return: True si existen respuestas, False en caso contrario.
+        """
+        return self.env["respuesta"].search_count(
+            [("evaluacion_id.id", "=", self.id)]) > 0
+
+    def get_datos_pregunta(self):
+        """
+        Obtiene los datos de las preguntas de la evaluación.
+
+        :return: Los datos de las preguntas de la evaluación. Incluye las respuestas a cada pregunta y las respuestas tabuladas.
+        """
+
+        preguntas_data = []
+
+        for pregunta in self.pregunta_ids:
+            respuesta_ids = self.env["respuesta"].search(
+                [
+                    ("pregunta_id.id", "=", pregunta.id),
+                    ("evaluacion_id.id", "=", self.id),
+                ]
+            )
+
+            respuestas = []
+            for respuesta in respuesta_ids:
+                id = None
+
+                if respuesta.usuario_externo_id:
+                    id = "E" + respuesta.usuario_externo_id.id.__str__()
+
+                elif respuesta.usuario_id:
+                    id = respuesta.usuario_id.id.__str__()
+
+                respuestas.append({
+                    "usuarioID": id,
+                    "respuesta": respuesta.respuesta_mostrar
+                })
+
+            respuestas_tabuladas = dict(
+                Counter([r["respuesta"] for r in respuestas]))
+
+            datos_pregunta = {
+                "pregunta": pregunta,
+                "respuestas": respuestas,
+                "respuestas_tabuladas": [
+                    {"nombre": nombre, "valor": valor}
+                    for nombre, valor in respuestas_tabuladas.items()
+                ],
+            }
+
+            preguntas_data.append(datos_pregunta)
+
+        return preguntas_data
+
+    def generar_datos_demograficos_individuales(self):
+        """
+        Genera los datos demográficos de la evaluación.
+
+        :return: Los datos demográficos de los usuarios asignados a la evaluación. Incuye departamentos, generaciones, puestos y géneros.
+        """
+        datos_demograficos = []
+
+        usuario_evaluacion = self.env["usuario.evaluacion.rel"].search(
+            [
+                ("evaluacion_id.id", "=", self.id),
+                ("contestada", "=", "contestada"),
+                ("usuario_id.id", "in", self.usuario_ids.mapped("id")),
+            ]
+        )
+
+        for usuario in usuario_evaluacion.mapped("usuario_id"):
+            datos_demograficos_usuario = self.obtener_datos_demograficos(
+                usuario)
+            datos_demograficos_usuario["id"] = usuario.id.__str__()
+            datos_demograficos.append(datos_demograficos_usuario)
+
+        usuario_evaluacion_externo = self.env["usuario.evaluacion.rel"].search(
+            [
+                ("evaluacion_id.id", "=", self.id),
+                ("contestada", "=", "contestada"),
+                ("usuario_externo_id.id", "in", self.usuario_externo_ids.ids),
+            ]
+        )
+
+        for usuario_externo in usuario_evaluacion_externo.mapped("usuario_externo_id"):
+            datos_demograficos_usuario = self.obtener_datos_demograficos_externos(
+                usuario_externo)
+            datos_demograficos_usuario["id"] = "E" + \
+                usuario_externo.id.__str__()
+            datos_demograficos.append(datos_demograficos_usuario)
+
+        return datos_demograficos
+
+    def generar_excel(self, preguntas, demograficos):
+        """
+        Genera un archivo de Excel con las respuestas de la evaluación.
+
+        :param preguntas: Los datos de las preguntas de la evaluación.
+        :param demograficos: Los datos demográficos de la evaluación.
+
+        :return: Un archivo de Excel con las respuestas de la evaluación.
+        """
+
+        datos_preguntas = []
+        for pregunta in preguntas:
+            for respuesta in pregunta["respuestas"]:
+                datos_preguntas.append({
+                    "UsuarioID": respuesta["usuarioID"],
+                    "Pregunta": pregunta["pregunta"].pregunta_texto,
+                    "Respuesta": respuesta["respuesta"],
+                })
+
+        df_respuestas = pd.DataFrame(datos_preguntas)
+
+        datos_demograficos = []
+
+        for demografico in demograficos:
+            datos_demograficos.append({
+                "UsuarioID": demografico["id"],
+                "Nombre": demografico["nombre"],
+                "Genero": demografico["genero"],
+                "Puesto": demografico["puesto"],
+                "Año de Nacimiento": demografico["anio_nacimiento"],
+                "Generación": demografico["generacion"],
+                "Departamento": demografico["departamento"],
+            })
+
+        df_demograficos = pd.DataFrame(datos_demograficos)
+
+        output = BytesIO()
+
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df_respuestas.to_excel(writer, index=False,
+                                   sheet_name="Respuestas")
+            df_demograficos.to_excel(
+                writer, index=False, sheet_name="Datos Demográficos")
+
+        output.seek(0)
+
+        attachment = self.env['ir.attachment'].create({
+            'name': 'Respuestas.xlsx',
+            'type': 'binary',
+            'datas': base64.b64encode(output.read()),
+            'res_model': 'evaluacion',
+            'res_id': self.id,
+        })
+
+        return attachment
+
+    def action_exportar_excel(self):
+        """
+        Exporta las respuestas de la evaluación a un archivo de Excel.
+
+        :return: Una acción para exportar las respuestas a un archivo de Excel.
+        """
+
+        if not self.existen_respuestas():
+            raise exceptions.ValidationError(
+                _("No hay respuestas para exportar."))
+
+        datos_preguntas = self.get_datos_pregunta()
+        datos_demograficos = self.generar_datos_demograficos_individuales()
+        attachment = self.generar_excel(datos_preguntas, datos_demograficos)
+
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/web/content/{attachment.id}?download=true',
+            'target': 'self',
+        }
