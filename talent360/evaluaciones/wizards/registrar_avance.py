@@ -135,7 +135,7 @@ class RegistrarAvance(models.TransientModel):
                 if archivo.type == 'url':
                     raise exceptions.ValidationError(_("No se pueden subir URL, solo archivos. Por favor descarga el archivo y sube el archivo en lugar de la URL"))
                 if not archivo.datas:
-                    raise exceptions.ValidationError(_("El archivo no debe estar vacío"))   
+                    raise exceptions.ValidationError(_("El archivo no debe estar vacío"))
 
     def confirmar_action(self):
         """
@@ -152,6 +152,10 @@ class RegistrarAvance(models.TransientModel):
         
         objetivo_id = self.env.context.get("objetivo_id")
         usuario_objetivo = self.env["objetivo"].browse(objetivo_id)
+
+        if usuario_objetivo.estado_revision == 'pendiente':
+            raise exceptions.ValidationError(_("No se puede registrar un avance mientras haya un registro pendiente"))
+            return
         
         # Registrar en la bitácora
         self.env["objetivo.avances"].create({

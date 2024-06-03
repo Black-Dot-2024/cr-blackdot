@@ -291,17 +291,6 @@ class Objetivo(models.Model):
             vals["resultado"] = vals.get("piso_minimo")
         return super(Objetivo, self).create(vals)
     
-    @api.constrains("avance")
-    def _check_avance_pendiente(self):
-        """
-        Método para verificar que no se registre un nuevo avance si el avance anterior está en estado pendiente.
-
-        De ser el caso, el sistema manda un error al usuario.
-        """
-        for registro in self:
-            if registro.avance > 0 and registro.estado_revision == "pendiente":
-                raise ValidationError("No se puede registrar un nuevo avance mientras haya un avance pendiente.")
-    
     def actualizar_resultado_action(self):
         """
         Método para actualizar el resultado de un objetivo
