@@ -1081,8 +1081,6 @@ class Evaluacion(models.Model):
         for record in self:
             if record.tipo == "generico" and len(record.pregunta_ids) < 1:
                 raise exceptions.ValidationError(_("La evaluación debe tener al menos una pregunta."))
-            if record.tipo == "generico" and len(record.usuario_ids) < 1:
-                raise exceptions.ValidationError(_("La evaluación debe tener al menos una persona asignada."))
 
         return resultado
 
@@ -1101,7 +1099,7 @@ class Evaluacion(models.Model):
         }
     
     @api.constrains("niveles")
-    def checar_techo(self):
+    def checar_techo(record):
         """
         Verifica que los valores de la ponderación sean válidos.
         Validación 1: Verifica que el valor de la ponderación no sea menor o igual a 0.
@@ -1111,19 +1109,19 @@ class Evaluacion(models.Model):
         Validación 5: Verifica que el valor de las ponderaciones no sean mayores a 100 y que el último sea 100.
 
         """
-        for nivel in self.niveles:
+        for nivel in record.niveles:
             if nivel.techo <= 0:
                 raise ValidationError(
                     "El valor de la ponderación no debe ser menor o igual a 0."
                 )
 
-            techos = self.niveles.filtered(lambda n: n.id != nivel.id).mapped("techo")
+            techos = record.niveles.filtered(lambda n: n.id != nivel.id).mapped("techo")
             if nivel.techo in techos:
                 raise ValidationError(
                     "No puede haber valores duplicados en la ponderación."
                 )
 
-        todos_techos = self.niveles.mapped("techo")
+        todos_techos = record.niveles.mapped("techo")
         if len(todos_techos) > 10:
             raise ValidationError(
                 "No puede haber más de 10 valores de ponderación."
