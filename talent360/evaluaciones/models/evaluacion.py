@@ -6,8 +6,10 @@ from io import BytesIO
 import pandas as pd
 import base64
 from odoo.exceptions import ValidationError
+import logging
 
 
+_logger = logging.getLogger(__name__)
 class Evaluacion(models.Model):
     """
     Modelo para representar una evaluación de personal en Odoo.
@@ -1288,18 +1290,21 @@ class Evaluacion(models.Model):
 
         # Actualizar el estado de las evaluaciones según la fecha y hora actual
         for evaluacion in evaluaciones:
-            if evaluacion.fecha_inicio <= hoy <= evaluacion.fecha_final:
-                if hoy == evaluacion.fecha_inicio and hora < hora_apertura:
-                    evaluacion.estado = "borrador"
-                elif hoy == evaluacion.fecha_final and hora > hora_cierre:
+            try:
+                if evaluacion.fecha_inicio <= hoy <= evaluacion.fecha_final:
+                    if hoy == evaluacion.fecha_inicio and hora < hora_apertura:
+                        evaluacion.estado = "borrador"
+                    elif hoy == evaluacion.fecha_final and hora > hora_cierre:
+                        evaluacion.estado = "finalizado"
+                    else:
+                        evaluacion.estado = "publicado"
+                elif evaluacion.fecha_final < hoy:
                     evaluacion.estado = "finalizado"
-                else:
-                    evaluacion.estado = "publicado"
-            elif evaluacion.fecha_final < hoy:
-                evaluacion.estado = "finalizado"
-            elif evaluacion.fecha_inicio > hoy:
-                evaluacion.estado = "borrador"
-
+                elif evaluacion.fecha_inicio > hoy:
+                    evaluacion.estado = "borrador"
+            except Exception as e:
+                _logger.error(f"Error al actualizar el estado de la evaluación: {e}")
+                
     def evaluacion_general_action_form(self):
         """
         Ejecuta la acción de redireccionar a la evaluación general y devuelve un diccionario
