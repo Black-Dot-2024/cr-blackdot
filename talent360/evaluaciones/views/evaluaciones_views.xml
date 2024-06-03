@@ -444,7 +444,7 @@
                         <field name="estado" invisible="1"/>
                     </group>
                     <group>
-                        <field name="descripcion" placeholder="Escribe aquí la descripción para te evaluación"/>
+                        <field name="descripcion" placeholder="Escribe aquí la descripción para tu evaluación"/>
                     </group>
                     <group>
                         <field name="fecha_inicio">
