@@ -357,7 +357,6 @@ class UsuarioExterno(models.Model):
                 )
         elif campo["tipo"] == "integer":
             try:
-                int(valor)
                 if float(valor) % 1 != 0:
                     raise ValidationError(
                         _(f"El campo {campo['nombre']} debe ser un número entero.")
@@ -371,7 +370,7 @@ class UsuarioExterno(models.Model):
                 float(valor)
             except ValueError:
                 raise ValidationError(
-                    _(f"El campo {campo['nombre']} debe ser un número decimal.")
+                    _(f"El campo {campo['nombre']} debe ser un número decimal separado con punto '.'")
                 )
         elif campo["tipo"] == "date":
             try:
