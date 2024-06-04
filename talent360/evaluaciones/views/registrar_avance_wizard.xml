@@ -8,18 +8,18 @@
             <form string="Registrar Avance">
                 <h4>Registra el progreso de tu objetivo, adjunta archivos que respalden tu avance y añade comentarios para ofrecer aclaraciones adicionales.</h4>
                 <group>
-                    <group>
-                        <label for="avance" string="Avance: " />
-                        <field name="avance" nolabel="1" />
-                    </group>
-                    <group>
-                        <label for="archivos" string="Evidencias: " />
-                        <field name="archivos" nolabel="1" widget="many2one_binary" />
-                    </group>
-                    <group>
-                        <label for="comentarios" string="Comentarios: " />
-                        <field name="comentarios" nolabel="1" />
-                    </group>
+                    <label for="avance" string="Avance: " />
+                    <field name="avance" nolabel="1" />
+                    <label for="archivos" string="Evidencias: " />
+                    <field name="archivos" nolabel="1" widget="many2one_binary" >
+                        <tree delete="false" duplicate="false">
+                            <field name="name" string="Nombre del Archivo"/>
+                            <field name="file_size" string="Tamaño del Archivo"/>
+                            <field name="mimetype" string="Tipo de Archivo"/>
+                        </tree>
+                    </field>
+                    <label for="comentarios" string="Comentarios: " />
+                    <field name="comentarios" nolabel="1" />
                     <footer>
                         <button string="Confirmar" type="object" class="btn-primary" name="confirmar_action" context="{'objetivo_id': context.get('actual_objetivo_id')}"/>
                         <button string="Cancelar" class="btn-secondary" special="cancel"/>

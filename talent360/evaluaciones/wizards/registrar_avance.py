@@ -25,7 +25,7 @@ class RegistrarAvance(models.TransientModel):
         required=True,
         comodel_name="ir.attachment",
         string="Subir Archivo",
-        help="Evidencias que sustenten el porqué del avance registrado. Solo se permiten archivos con extensión pdf, xlsx, csv, txt, png, jpeg"
+        help="Evidencias que sustenten el porqué del avance registrado. Solo se permiten archivos con extensión:\n- pdf\n- xlsx\n- csv\n- txt\n- png\n- jpeg"
     )
 
     nombres_archivos = fields.Char(string="Nombres de Archivos")
