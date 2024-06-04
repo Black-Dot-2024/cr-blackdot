@@ -39,11 +39,11 @@ class EvaluacionesController(http.Controller):
 
         parametros["filtros"] = filtros
 
-        tiene_respuestas = True
+        tiene_respuestas = False
 
         for pregunta in parametros["preguntas"]:
-            if not pregunta["respuestas"]:
-                tiene_respuestas = False
+            if pregunta["respuestas"]:
+                tiene_respuestas = True
                 break
     
         if not tiene_respuestas:
