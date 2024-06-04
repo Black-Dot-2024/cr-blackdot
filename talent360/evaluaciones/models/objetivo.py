@@ -32,7 +32,7 @@ class Objetivo(models.Model):
 
     titulo = fields.Char(required=True, string="Título", help="Título del objetivo", size=70)
     descripcion = fields.Text(
-        required=True, string="Descripción", help="Descripción del objetivo", size=205
+        required=True, string="Descripción", help="Descripción del objetivo", size=200
     )
     metrica = fields.Selection(
         [
@@ -115,8 +115,8 @@ class Objetivo(models.Model):
     @api.constrains('descripcion')
     def _check_field_lengths(self):
         for record in self:
-            if len(record.descripcion or '') > 205:
-                raise ValidationError("La descripción no puede tener más de 100 caracteres.")
+            if len(record.descripcion or '') > 200:
+                raise ValidationError("La descripción no puede tener más de 200 caracteres.")
 
     @api.constrains("piso_minimo", "piso_maximo")
     def _checar_pisos(self):

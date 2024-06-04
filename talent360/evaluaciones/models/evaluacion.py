@@ -113,6 +113,13 @@ class Evaluacion(models.Model):
         string="Incluir datos demográficos", default=True
     )
 
+    @api.constrains('descripcion')
+    def _check_field_lengths(self):
+        for record in self:
+            if len(record.descripcion or '') > 300:
+                raise ValidationError("La descripción no puede tener más de 300 caracteres.")
+
+
     @api.constrains("fecha_inicio", "fecha_final")
     def checar_fechas(self):
         """
