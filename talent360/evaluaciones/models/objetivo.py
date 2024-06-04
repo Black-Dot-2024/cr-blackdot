@@ -296,14 +296,19 @@ class Objetivo(models.Model):
         Método para actualizar el resultado de un objetivo
         """
         opcion = self.opcion
-        if opcion == "aceptar":
-            self.write({"resultado": self.avance})
-            self.write({"estado_revision": "sin_solicitar"})
-        else:
-            if self.comentarios_evaluador == "":
-                raise ValidationError(_("Por favor, deje un comentario antes de rechazar el avance"))
-            else:
+
+        if opcion != "aceptar" and opcion != "rechazar":
+            raise ValidationError(_("Por favor, seleccione una opción entre Aceptar y Rechazar"))
+            return
+        else: 
+            if opcion == "aceptar":
+                self.write({"resultado": self.avance})
                 self.write({"estado_revision": "sin_solicitar"})
+            else:
+                if not self.comentarios_evaluador:
+                    raise ValidationError(_("Por favor, deje un comentario antes de rechazar el avance"))
+                else:
+                    self.write({"estado_revision": "sin_solicitar"})
 
         self.env["objetivo.comentarios"].create({
             "objetivo_id": self.id,
