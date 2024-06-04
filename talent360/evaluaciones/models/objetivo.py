@@ -30,9 +30,9 @@ class Objetivo(models.Model):
     _description = "Objetivos de desempeño"
     _rec_name = "titulo"
 
-    titulo = fields.Char(required=True, string="Título", help="Título del objetivo")
+    titulo = fields.Char(required=True, string="Título", help="Título del objetivo", size=70)
     descripcion = fields.Text(
-        required=True, string="Descripción", help="Descripción del objetivo", size="20"
+        required=True, string="Descripción", help="Descripción del objetivo", size=205
     )
     metrica = fields.Selection(
         [
@@ -111,6 +111,12 @@ class Objetivo(models.Model):
     evaluador = fields.Char()
 
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
+
+    @api.constrains('descripcion')
+    def _check_field_lengths(self):
+        for record in self:
+            if len(record.descripcion or '') > 205:
+                raise ValidationError("La descripción no puede tener más de 100 caracteres.")
 
     @api.constrains("piso_minimo", "piso_maximo")
     def _checar_pisos(self):

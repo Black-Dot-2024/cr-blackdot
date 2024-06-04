@@ -30,7 +30,7 @@ class Evaluacion(models.Model):
     _name = "evaluacion"
     _description = "Evaluacion de personal"
     _rec_name = "nombre"
-    nombre = fields.Char(string="Título de la evaluación", required=True)
+    nombre = fields.Char(string="Título de la evaluación", required=True, size=50)
     escalar_format = fields.Selection([
         ("numericas", "Numéricas"),
         ("textuales", "Textuales"),
@@ -48,7 +48,7 @@ class Evaluacion(models.Model):
         required=True,
         default="generico",
     )
-    descripcion = fields.Text(string="Descripción")
+    descripcion = fields.Text(string="Descripción", size=300)
     estado = fields.Selection(
         [
             ("borrador", "Borrador"),
