@@ -319,10 +319,12 @@ class UsuarioExterno(models.Model):
             tipo = campo["tipo"]
             valor = fila.get(nombre, "N/A")
 
+            if tipo == "boolean":
+                if valor != "N/A":
+                    valor = "Si" if valor.lower() == "si" else "No"
+
             self._validar_campo(campo, valor)
 
-            if tipo == "boolean":
-                valor = "Si" if valor.lower() == "si" else "No"
 
             atributo = {
                 "nombre": nombre,
@@ -349,7 +351,7 @@ class UsuarioExterno(models.Model):
         if campo["tipo"] == "char":
             return
         elif campo["tipo"] == "boolean":
-            if valor.lower() not in ["si", "no"]:
+            if valor.lower() not in ["si", "no", "n/a"]:
                 raise ValidationError(
                     f"El campo {campo['nombre']} debe ser 'Si' o 'No'."
                 )

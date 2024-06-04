@@ -39,11 +39,11 @@ class EvaluacionesController(http.Controller):
 
         parametros["filtros"] = filtros
 
-        tiene_respuestas = True
+        tiene_respuestas = False
 
         for pregunta in parametros["preguntas"]:
-            if not pregunta["respuestas"]:
-                tiene_respuestas = False
+            if pregunta["respuestas"]:
+                tiene_respuestas = True
                 break
     
         if not tiene_respuestas:
@@ -70,24 +70,15 @@ class EvaluacionesController(http.Controller):
 
                 nombre = mapeo_categorias.get(categoria, categoria)
 
-                valores_escapados = []
-
-                for valor in valores:
-                    if valor["nombre"] == "N/A":
-                        valores_escapados.append("N/A")
-                    else:
-                        valor_escapado = valor["nombre"].replace("'", "\\'")
-                        valor_escapado = valor_escapado.replace('"', '\\"')
-                        valores_escapados.append(valor_escapado)
-
                 parametros["datos_demograficos"].append(
                     {
                         "categoria": nombre,
-                        "valores": valores,
+                        "valores": json.dumps(valores),
                     }
                 )
                 
             parametros.update(datos_demograficos)
+            print("parametros", parametros)
         if evaluacion.tipo == "NOM_035":
             parametros.update(evaluacion.generar_datos_reporte_NOM_035_action(filtros))
             return request.render("evaluaciones.encuestas_reporte_nom_035", parametros)
