@@ -163,7 +163,7 @@
                                 <field name="comentarios_revision" readonly="1" />
                                 <field name="opcion" widget="radio" />
                                 <field name="comentarios_evaluador" />
-                                <button name="actualizar_resultado_action" string="Guardar" type="object" class="btn-primary" confirm="¿Estas seguro de enviar este avance?" />
+                                <button name="actualizar_resultado_action" string="Guardar" type="object" class="btn-primary" confirm="¿Estás seguro de enviar este avance?" />
                             </group>
                         </page>
                     </notebook>

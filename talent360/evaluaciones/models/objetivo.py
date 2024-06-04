@@ -106,9 +106,9 @@ class Objetivo(models.Model):
     )
 
     estado_revision = fields.Selection([
-        ('pendiente', 'Pendiente'),
-        ('sin_solicitar', 'Sin Solicitar'),
-    ], default='sin_solicitar')
+        ("pendiente", "Pendiente"),
+        ("sin_solicitar", "Sin Solicitar"),
+    ], default="sin_solicitar")
 
     archivos = fields.Many2many("ir.attachment")
 
@@ -119,8 +119,8 @@ class Objetivo(models.Model):
     fecha_envio = fields.Date(string="Fecha de Envío")
 
     opcion = fields.Selection([
-        ('aceptar', 'Aceptar'),
-        ('rechazar', 'Rechazar'),
+        ("aceptar", "Aceptar"),
+        ("rechazar", "Rechazar"),
     ], string="Revisión")
 
     avance = fields.Integer()

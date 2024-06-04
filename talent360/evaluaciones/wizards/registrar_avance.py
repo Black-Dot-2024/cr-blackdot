@@ -88,9 +88,9 @@ class RegistrarAvance(models.TransientModel):
         archivos_permitidos = ["csv", "xlsx", "txt", "pdf", "png", "jpeg", "jpg"]
 
         for archivo in self.archivos:
-            if '.' not in archivo.name:
+            if "." not in archivo.name:
                 raise exceptions.ValidationError(_("No se pueden subir archivos sin extensión"))
-            nombre, tipo_archivo = archivo.name.rsplit('.', 1)
+            nombre, tipo_archivo = archivo.name.rsplit(".", 1)
             if tipo_archivo.lower() not in archivos_permitidos:
                     raise exceptions.ValidationError(_("Solo se pueden subir archivos con extensión pdf, xlsx, csv, txt, png, jpeg"))
     
@@ -132,7 +132,7 @@ class RegistrarAvance(models.TransientModel):
 
         for registro in self:
             for archivo in registro.archivos:
-                if archivo.type == 'url':
+                if archivo.type == "url":
                     raise exceptions.ValidationError(_("No se pueden subir URL, solo archivos. Por favor descarga el archivo y sube el archivo en lugar de la URL"))
                 if not archivo.datas:
                     raise exceptions.ValidationError(_("El archivo no debe estar vacío"))
@@ -153,7 +153,7 @@ class RegistrarAvance(models.TransientModel):
         objetivo_id = self.env.context.get("objetivo_id")
         usuario_objetivo = self.env["objetivo"].browse(objetivo_id)
 
-        if usuario_objetivo.estado_revision == 'pendiente':
+        if usuario_objetivo.estado_revision == "pendiente":
             raise exceptions.ValidationError(_("No se puede registrar un avance mientras haya un registro pendiente"))
             return
         
@@ -178,7 +178,7 @@ class RegistrarAvance(models.TransientModel):
 
         # Marcar el avance como pendiente
         usuario_objetivo.sudo().write({
-            "estado_revision": 'pendiente',
+            "estado_revision": "pendiente",
             "avance": borrador_resultado,
             "comentarios_revision": comentarios,
             "fecha_envio": fecha,
