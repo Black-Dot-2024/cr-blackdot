@@ -281,6 +281,14 @@ class UsuarioExterno(models.Model):
         """
         Construye un usuario externo a partir de una fila de un archivo CSV.
         """
+
+        for campo, valor in fila.items():
+            cadena = valor.strip()
+            if cadena and len(cadena) > 0:
+                fila[campo] = cadena
+            else:
+                fila[campo] = "N/A"
+
         for campo in map(lambda c: c["nombre"], campos_obligatorios):
             if not fila.get(campo):
                 raise ValidationError(
