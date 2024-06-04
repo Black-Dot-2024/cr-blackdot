@@ -25,7 +25,7 @@ class Pregunta(models.Model):
     _description = "Pregunta para una evaluación"
     _rec_name = "pregunta_texto"
 
-    pregunta_texto = fields.Char("Pregunta", required=True)
+    pregunta_texto = fields.Char("Pregunta", required=True, size=255)
     tipo = fields.Selection(
         [
             ("multiple_choice", "Opción múltiple"),

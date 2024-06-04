@@ -31,7 +31,7 @@ class Evaluacion(models.Model):
     _name = "evaluacion"
     _description = "Evaluacion de personal"
     _rec_name = "nombre"
-    nombre = fields.Char(string="Título de la evaluación", required=True)
+    nombre = fields.Char(string="Título de la evaluación", required=True, size=50)
     escalar_format = fields.Selection([
         ("numericas", "Numéricas"),
         ("textuales", "Textuales"),
@@ -49,7 +49,7 @@ class Evaluacion(models.Model):
         required=True,
         default="generico",
     )
-    descripcion = fields.Text(string="Descripción")
+    descripcion = fields.Text(string="Descripción", size=255)
     estado = fields.Selection(
         [
             ("borrador", "Borrador"),
@@ -113,9 +113,14 @@ class Evaluacion(models.Model):
     incluir_demograficos = fields.Boolean(
         string="Incluir datos demográficos", default=True
     )
-    plan_accion = fields.Text(string='Plan de Acción')
 
-    
+    @api.constrains("descripcion")
+    def _checar_largo(self):
+        for registro in self:
+            if len(registro.descripcion or "") > 255:
+                raise ValidationError(_("La descripción no puede tener más de 255 caracteres."))
+
+
     @api.constrains("fecha_inicio", "fecha_final")
     def checar_fechas(self):
         """
