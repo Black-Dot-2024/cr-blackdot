@@ -1274,7 +1274,6 @@ class Evaluacion(models.Model):
 
             colores = self.niveles.filtered(lambda n: n.id != nivel.id).mapped("color")
             if nivel.color in colores:
-                print("AAAAAAAAAAAAAAAAAAAAAAA",nivel.color)
                 raise ValidationError(
                     "No puede haber colores duplicados en la ponderación."
                 )
