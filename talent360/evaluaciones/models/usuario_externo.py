@@ -321,6 +321,9 @@ class UsuarioExterno(models.Model):
 
             self._validar_campo(campo, valor)
 
+            if tipo == "boolean":
+                valor = "Si" if valor.lower() == "si" else "No"
+
             atributo = {
                 "nombre": nombre,
                 "tipo": tipo,
