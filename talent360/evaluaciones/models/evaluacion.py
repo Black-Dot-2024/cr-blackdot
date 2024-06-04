@@ -117,7 +117,7 @@ class Evaluacion(models.Model):
     def _checar_largo(self):
         for registro in self:
             if len(registro.descripcion or "") > 255:
-                raise ValidationError(_("La descripción no puede tener más de 300 caracteres."))
+                raise ValidationError(_("La descripción no puede tener más de 255 caracteres."))
 
 
     @api.constrains("fecha_inicio", "fecha_final")

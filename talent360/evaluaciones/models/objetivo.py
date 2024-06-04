@@ -116,7 +116,7 @@ class Objetivo(models.Model):
     def _chechar_largo(self):
         for registro in self:
             if len(registro.descripcion or "") > 255:
-                raise ValidationError(_("La descripción no puede tener más de 200 caracteres."))
+                raise ValidationError(_("La descripción no puede tener más de 255 caracteres."))
 
     @api.constrains("piso_minimo", "piso_maximo")
     def _checar_pisos(self):
