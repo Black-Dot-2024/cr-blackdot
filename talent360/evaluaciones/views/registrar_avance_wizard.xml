@@ -13,9 +13,9 @@
                     <label for="archivos" string="Evidencias: " />
                     <field name="archivos" nolabel="1" widget="many2one_binary" >
                         <tree delete="false" duplicate="false">
-                            <field name="name" string="Nombre del Archivo"/>
-                            <field name="file_size" string="Tamaño del Archivo"/>
-                            <field name="mimetype" string="Tipo de Archivo"/>
+                            <field name="name" string="Nombre"/>
+                            <field name="file_size" string="Tamaño"/>
+                            <field name="mimetype" string="Tipo"/>
                         </tree>
                     </field>
                     <label for="comentarios" string="Comentarios: " />

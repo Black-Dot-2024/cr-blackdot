@@ -112,6 +112,8 @@ class Objetivo(models.Model):
 
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
 
+    revisar = fields.Text()
+
     @api.constrains("descripcion")
     def _chechar_largo(self):
         for registro in self:

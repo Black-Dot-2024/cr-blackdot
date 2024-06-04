@@ -144,6 +144,28 @@
                                 </field>
                             </group>
                         </page>
+                        <page string="Avances">
+                            <field name="avances">
+                                <tree string="Avances" create="false" delete="false" duplicate="false">
+                                    <field name="fecha"/>
+                                    <field name="avance"/>
+                                    <field name="comentarios"/>
+                                    <field name="archivos" widget="many2many_tags"/>
+                                </tree>
+                                <form>
+                                    <group>
+                                        <field name="fecha" readonly="1" />
+                                        <field name="avance"/>
+                                        <field name="archivos" readonly="1">
+                                            <tree create="false" editable="bottom" edit="false">
+                                                <field name="name" string="Nombre del archivo"/>
+                                                <field name="datas" filename="name" widget="binary" string="Descargar Archivo" />
+                                            </tree>
+                                        </field>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
                     </notebook>
                 </sheet>
             </form>
