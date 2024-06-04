@@ -112,11 +112,11 @@ class Objetivo(models.Model):
 
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
 
-    @api.constrains('descripcion')
-    def _check_field_lengths(self):
-        for record in self:
-            if len(record.descripcion or '') > 200:
-                raise ValidationError("La descripción no puede tener más de 200 caracteres.")
+    @api.constrains("descripcion")
+    def _chechar_largo(self):
+        for registro in self:
+            if len(registro.descripcion or "") > 200:
+                raise ValidationError(_("La descripción no puede tener más de 200 caracteres."))
 
     @api.constrains("piso_minimo", "piso_maximo")
     def _checar_pisos(self):
