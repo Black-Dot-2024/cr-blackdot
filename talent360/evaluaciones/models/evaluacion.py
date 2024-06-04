@@ -48,7 +48,7 @@ class Evaluacion(models.Model):
         required=True,
         default="generico",
     )
-    descripcion = fields.Text(string="Descripción", size=300)
+    descripcion = fields.Text(string="Descripción", size=255)
     estado = fields.Selection(
         [
             ("borrador", "Borrador"),
@@ -116,7 +116,7 @@ class Evaluacion(models.Model):
     @api.constrains("descripcion")
     def _checar_largo(self):
         for registro in self:
-            if len(registro.descripcion or "") > 300:
+            if len(registro.descripcion or "") > 255:
                 raise ValidationError(_("La descripción no puede tener más de 300 caracteres."))
 
 

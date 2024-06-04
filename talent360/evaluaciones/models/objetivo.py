@@ -30,9 +30,9 @@ class Objetivo(models.Model):
     _description = "Objetivos de desempeño"
     _rec_name = "titulo"
 
-    titulo = fields.Char(required=True, string="Título", help="Título del objetivo", size=70)
+    titulo = fields.Char(required=True, string="Título", help="Título del objetivo", size=50)
     descripcion = fields.Text(
-        required=True, string="Descripción", help="Descripción del objetivo", size=200
+        required=True, string="Descripción", help="Descripción del objetivo", size=255
     )
     metrica = fields.Selection(
         [
@@ -115,7 +115,7 @@ class Objetivo(models.Model):
     @api.constrains("descripcion")
     def _chechar_largo(self):
         for registro in self:
-            if len(registro.descripcion or "") > 200:
+            if len(registro.descripcion or "") > 255:
                 raise ValidationError(_("La descripción no puede tener más de 200 caracteres."))
 
     @api.constrains("piso_minimo", "piso_maximo")
