@@ -31,7 +31,7 @@
                     <t t-foreach="evaluacion.niveles" t-as="nivel">
                         <t t-if="not mostrado and total_porcentaje &lt;= nivel.techo">
                             <span t-attf-style="color: #{nivel.color};" class="category_number">
-                                <t t-esc="total_porcentaje" /> </span>
+                                <t t-esc="total_porcentaje"/> </span>
                                 <span class="fs-5 pill">
                                     <span t-field="nivel.descripcion_nivel"></span>
                                 </span>
@@ -125,18 +125,17 @@
                         <div class="page-break"></div>
                     </div>
                 </t>
-
+                
                 <div class="survey_section mb-5" style="page-break-inside: avoid; margin-top: 50px;">
                     <h4>Necesidad de acción
-                        <button type="button" class="btn btn-success" t-on-click="model.generar_plan_accion" style="margin-left: 15px;">
+                        <a type="button" class="btn btn-success" t-attf-href="/plan_accion/reporte/#{evaluacion.id}">
                             <i class="fa fa-cogs"></i> Generar Plan de Acción
-                        </button>
+                        </a>
                     </h4>
-                    <textarea class="form-control" rows="10" style="width: 100%; resize: none;"
-                            placeholder="Aquí se mostrará el plan de acción generado..."
-                            t-field="evaluacion.plan_accion"/>
+                    <textarea id="plan_accion_textarea" class="form-control" rows="10" style="width: 100%; resize: none;"
+                              placeholder="Aquí se mostrará el plan de acción generado..."
+                              t-att-value="evaluacion.plan_accion"/>
                 </div>
-
             </div>
         </template>
     </data>

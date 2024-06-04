@@ -6,9 +6,8 @@ import requests
 class PlanAccion(http.Controller):
     """Controlador para manejar las solicitudes relacionadas con los planes de acción."""
     
-    @http.route(
-        "/plan_accion/reporte/<model('evaluacion'):evaluacion>", type="http", auth="user"
-    )
+    @http.route("/plan_accion/reporte/<model('evaluacion'):evaluacion>", type="http", auth="user")
+
 
     def generar_plan_action(self, evaluacion):
         """

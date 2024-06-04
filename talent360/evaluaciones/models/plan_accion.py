@@ -14,7 +14,7 @@ class PlanAccion(models.Model):
 
     _name = "plan.accion"
     _description = "Respuesta a una pregunta"
-
+    plan_accion = fields.Text(string="Plan de acción")
     descripcion = fields.Text(string="Descripción")
     evaluacion_id = fields.Many2one("evaluacion", string="Evaluación", required=True, ondelete="cascade")
     
@@ -38,5 +38,6 @@ class PlanAccion(models.Model):
         )
         
         return resp
+    
     
     
