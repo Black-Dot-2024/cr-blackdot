@@ -94,9 +94,9 @@ class ModificarProgreso(models.TransientModel):
         
         orden = usuario_objetivo.orden
         if orden == "ascendente":
-            nuevo_resultado = usuario_objetivo.resultado + (usuario_objetivo.piso_maximo * progreso / 100)
+            nuevo_resultado =  (usuario_objetivo.piso_maximo * progreso / 100)
         else:
-            nuevo_resultado = usuario_objetivo.resultado - (usuario_objetivo.piso_maximo * progreso / 100)
+            nuevo_resultado = usuario_objetivo.piso_minimo - (usuario_objetivo.piso_minimo * progreso / 100)
             if nuevo_resultado <= 0:
                 nuevo_resultado = 0
 

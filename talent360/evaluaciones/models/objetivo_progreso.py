@@ -17,5 +17,5 @@ class ObjetivoProgreso(models.Model):
 
     objetivo_id = fields.Many2one("objetivo", string="Objetivo", required=True, ondelete="cascade")
     fecha = fields.Date(string="Fecha", required=True)
-    progreso = fields.Float(string="Avance", required=True)
+    progreso = fields.Float(string="Progreso", required=True)
     comentarios = fields.Text(string="Comentarios")
