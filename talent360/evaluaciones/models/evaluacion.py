@@ -1318,13 +1318,13 @@ class Evaluacion(models.Model):
         """
         Este método genera una previsualización de la evaluación.
 
-        :return: una acción de redirección a la previsualización de la evaluación
+        :return: una acción de redirección a la previsualización de la evaluación.
 
         """
 
         return {
             "type": "ir.actions.act_url",
-            "url": f"/evaluacion/responder/{self.id}",
+            "url": f"/evaluacion/previsualizar/{self.id}",
             "target": "new",
         }
     
