@@ -15,6 +15,7 @@
         </template>
 
         <template id="encuestas_reporte_clima_body" name="Reporte de Clima Laboral">
+            <input type="hidden" name="evaluacion_id" t-att-value="evaluacion.id"/>
             <div class="page container-fluid row gap-5 justify-content-between g-2">
                 <div class="d-flex flex-row justify-content-between">
                     <h1>
@@ -127,11 +128,12 @@
                 </t>
                 
                 <div class="survey_section mb-5" style="page-break-inside: avoid; margin-top: 50px;">
-                    <h4>Necesidad de acción
-                        <a type="button" class="btn btn-success" t-attf-href="/plan_accion/reporte/#{evaluacion.id}">
-                            <i class="fa fa-cogs"></i> Generar Plan de Acción
-                        </a>
+                    <h4>
+                        Necesidad de acción
                     </h4>
+                    <button onclick="generarPlanAccion()" value="start" class="btn btn-primary btn-lg">
+                        <i class="fa fa-cogs"></i> Generar Plan de Acción
+                    </button>
                     <textarea id="plan_accion_textarea" class="form-control" rows="10" style="width: 100%; resize: none;"
                               placeholder="Aquí se mostrará el plan de acción generado..."
                               t-att-value="evaluacion.plan_accion"/>
