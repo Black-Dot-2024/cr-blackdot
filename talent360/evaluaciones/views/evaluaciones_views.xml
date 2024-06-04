@@ -334,7 +334,12 @@
                     <field name="estado" widget="statusbar" statusbar_visible="borrador, publicado, finalizado" />
                 </header>
                 <sheet>
-                    <h1>Crear evaluación NOM 035</h1>
+                    <h1 style="display: flex; justify-content: space-between; align-items: center;">Crear
+                    evaluación NOM 035 
+                    <button style="align-items: center;" name="previsualizacion_action" type="object">
+                        <i class="fa fa-eye" style="font-size: 20px;"></i>
+                    </button>
+                    </h1>
                     <br></br>
                     <group>
                         <field name="nombre"/>
@@ -435,7 +440,13 @@
                     <field name="estado" widget="statusbar" statusbar_visible="borrador, publicado, finalizado" />
                 </header>
                 <sheet>
-                    <h1>Crear evaluación genérica</h1>
+                    <h1 style="display: flex; justify-content: space-between; align-items: center;">
+                        Crear evaluación genérica 
+                    <button style="align-items: center;"
+                            name="previsualizacion_action" type="object">
+                            <i class="fa fa-eye" style="font-size: 20px;"></i>
+                    </button>
+                    </h1>
                     <br></br>
                     <group>
                         <field name="nombre"/>
