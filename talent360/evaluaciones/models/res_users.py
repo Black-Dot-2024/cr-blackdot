@@ -94,6 +94,8 @@ class Users(models.Model):
                             valor = option[1]
                             break
                 atributos_extra[attr["string"]] = valor
+            elif attr["type"] == "boolean":
+                atributos_extra[attr["string"]] = "Sí" if attr["value"] else "No"
             else:    
                 atributos_extra[attr["string"]] = attr["value"] if attr["value"] else "N/A"
 

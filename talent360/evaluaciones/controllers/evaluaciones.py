@@ -69,6 +69,17 @@ class EvaluacionesController(http.Controller):
                     continue
 
                 nombre = mapeo_categorias.get(categoria, categoria)
+
+                valores_escapados = []
+
+                for valor in valores:
+                    if valor["nombre"] == "N/A":
+                        valores_escapados.append("N/A")
+                    else:
+                        valor_escapado = valor["nombre"].replace("'", "\\'")
+                        valor_escapado = valor_escapado.replace('"', '\\"')
+                        valores_escapados.append(valor_escapado)
+
                 parametros["datos_demograficos"].append(
                     {
                         "categoria": nombre,
