@@ -148,7 +148,7 @@
                         <page string="Historial">
                             <group>
                                 <field class="lh-lg w-100" colspan="2" name="progreso" nolabel="1">
-                                    <tree create="false" edit="false" delete="false">
+                                    <tree create="false" edit="false" delete="false" editable="bottom"> 
                                         <field class="lh-m" name="fecha" readonly="1"/>
                                         <field class="lh-m" name="progreso" readonly="1"/>
                                         <field class="lh-m" name="comentarios" readonly="1"/>
