@@ -1223,45 +1223,45 @@ class Evaluacion(models.Model):
 
         """
         if len(self.niveles) == 0:
-            raise ValidationError("Debe haber al menos un nivel en la ponderación.")
+            raise ValidationError(_("Debe haber al menos un nivel en la ponderación."))
 
         if len(self.niveles) < 2:
             raise ValidationError(
-                "Debe haber al menos dos niveles en la ponderación."
+                _("Debe haber al menos dos niveles en la ponderación.")
             )
 
         for nivel in self.niveles:
             
             if nivel.techo <= 0:
                 raise ValidationError(
-                    "El valor de la ponderación no debe ser menor o igual a 0."
+                    _("El valor de la ponderación no debe ser menor o igual a 0.")
                 )
 
             techos = self.niveles.filtered(lambda n: n.id != nivel.id).mapped("techo")
 
             if nivel.techo in techos:
                 raise ValidationError(
-                    "No puede haber valores duplicados en la ponderación."
+                    _("No puede haber valores duplicados en la ponderación.")
                 )
 
         todos_techos = self.niveles.mapped("techo")
 
         if len(todos_techos) > 10:
             raise ValidationError(
-                "No puede haber más de 10 valores de ponderación."
+                _("No puede haber más de 10 valores de ponderación.")
             )
         
         if todos_techos != sorted(todos_techos):
             raise ValidationError(
-                "Los valores de la ponderación deben estar en orden ascendente."
+                _("Los valores de la ponderación deben estar en orden ascendente.")
             )
 
         if todos_techos[-1] > 100:
             raise ValidationError(
-                "El valor de la ponderación no puede ser mayor a 100."
+                _("El valor de la ponderación no puede ser mayor a 100.")
             )
         if todos_techos[-1] != 100:
-            raise ValidationError("El último valor de la ponderación debe ser 100.")
+            raise ValidationError(_("El último valor de la ponderación debe ser 100."))
 
     @api.constrains("niveles")
     def checar_color(self):
@@ -1275,7 +1275,7 @@ class Evaluacion(models.Model):
             colores = self.niveles.filtered(lambda n: n.id != nivel.id).mapped("color")
             if nivel.color in colores:
                 raise ValidationError(
-                    "No puede haber colores duplicados en la ponderación."
+                    _("No puede haber colores duplicados en la ponderación.")
                 )
 
 
