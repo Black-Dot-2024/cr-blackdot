@@ -85,6 +85,7 @@
             <form string="Objetivo">
                 <header>
                     <field name="estado" widget="statusbar" statusbar_visible="rojo, amarillo, verde, azul" />
+                    <button name="rmodificar_progreso_action" string="Modificar Progreso" type="object" class="btn-primary" context="{'actual_objetivo_id': active_id}"/>
                 </header>
                 <sheet>
                     <div style="width: 100%;">
