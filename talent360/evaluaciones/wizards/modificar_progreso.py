@@ -27,16 +27,14 @@ class ModificarProgreso(models.TransientModel):
     @api.constrains("progreso")
     def _validar_progreso(self):
         """
-        Método para validar que el progreso no sea negativo o mayor a 100
+        Método para validar que el progreso no sea negativo
 
-        Si el progreso es negativo o mayor a 100, se levanta una excepción
+        Si el progreso es negativo, se levanta una excepción
         """
 
         for registro in self:
             if registro.progreso < 0:
                 raise exceptions.ValidationError(_("El progreso no puede ser menor a 0"))
-            elif registro.progreso > 100:
-                raise exceptions.ValidationError(_("El progreso no puede ser mayor a 100"))
             
     @api.constrains("progreso")
     def _validar_cambios(self):
