@@ -120,6 +120,8 @@ class Objetivo(models.Model):
         De no ser el caso, el sistema manda un error al usuario.
         """
         for registro in self:
+            if registro.piso_maximo == registro.piso_minimo:
+                raise ValidationError(_("El piso mínimo no puede ser igual al piso máximo"))
             if registro.orden == "ascendente":
                 if registro.piso_minimo >= registro.piso_maximo:
                     raise ValidationError(_("El piso mínimo debe ser menor al piso máximo para objetivos ascendentes"))
@@ -192,7 +194,7 @@ class Objetivo(models.Model):
                 registro.estado = "rojo"
                 continue
 
-            if registro.orden == "ascendente":
+            if registro.orden == "ascendente" and registro.piso_maximo != registro.piso_minimo:
                 ratio = (registro.resultado - registro.piso_minimo) / (registro.piso_maximo - registro.piso_minimo) if registro.piso_maximo != 0 else 0
                 if 0 <= ratio <= 0.6:
                     registro.estado = "rojo"
@@ -203,7 +205,7 @@ class Objetivo(models.Model):
                 elif ratio > 1:
                     registro.estado = "azul"
                 registro.porcentaje = ratio
-            else:
+            elif registro.piso_maximo != registro.piso_minimo:
                 ratio = 1 - ((registro.resultado - registro.piso_maximo) / (registro.piso_minimo - registro.piso_maximo)) if registro.piso_minimo != 0 else 0
                 if 0 <= ratio <= 0.6:
                     registro.estado = "rojo"
