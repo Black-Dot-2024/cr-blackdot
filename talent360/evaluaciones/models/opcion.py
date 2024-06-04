@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 
 class Opcion(models.Model):
@@ -18,3 +19,12 @@ class Opcion(models.Model):
     pregunta_id = fields.Many2one("pregunta", string="Pregunta")
     opcion_texto = fields.Char("Opción", required=True)
     valor = fields.Integer(required=True, default=0)
+
+    @api.constrains("opcion_texto")
+    def checar_texto(self):
+        """
+        Método para verificar que el texto de la opción no sea vacío.
+        """
+        if self.opcion_texto:
+            if "\"" in self.opcion_texto or "\'" in self.opcion_texto:
+                raise ValidationError("El texto de la opción no puede contener comillas simples o dobles.")

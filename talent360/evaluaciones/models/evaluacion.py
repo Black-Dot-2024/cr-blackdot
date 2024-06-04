@@ -33,7 +33,7 @@ class Evaluacion(models.Model):
     _name = "evaluacion"
     _description = "Evaluacion de personal"
     _rec_name = "nombre"
-    nombre = fields.Char(string="Título de la evaluación", required=True)
+    nombre = fields.Char(string="Título de la evaluación", required=True, size=50)
     escalar_format = fields.Selection([
         ("numericas", "Numéricas"),
         ("textuales", "Textuales"),
@@ -51,7 +51,7 @@ class Evaluacion(models.Model):
         required=True,
         default="generico",
     )
-    descripcion = fields.Text(string="Descripción")
+    descripcion = fields.Text(string="Descripción", size=255)
     estado = fields.Selection(
         [
             ("borrador", "Borrador"),
@@ -116,6 +116,13 @@ class Evaluacion(models.Model):
         string="Incluir datos demográficos", default=True
     )
 
+    @api.constrains("descripcion")
+    def _checar_largo(self):
+        for registro in self:
+            if len(registro.descripcion or "") > 255:
+                raise ValidationError(_("La descripción no puede tener más de 255 caracteres."))
+
+
     @api.constrains("fecha_inicio", "fecha_final")
     def checar_fechas(self):
         """
@@ -151,98 +158,67 @@ class Evaluacion(models.Model):
                         _("La fecha de inicio debe ser anterior a la fecha final")
                     )
 
-    # Método para copiar preguntas de la plantilla a la evaluación
-    def copiar_preguntas_de_template(self):
+    @api.constrains("pregunta_ids")
+    def checar_preguntas(self):
         """
-        Copia preguntas de un template de evaluación predeterminado a una nueva evaluación.
-
-        Este método verifica si el objeto actual está vacío (self). Si lo está, crea una nueva
-        evaluación con un nombre predeterminado y asigna este nuevo objeto a self. Luego, limpia
-        las preguntas existentes y copia todas las preguntas de un template con ID predefinido
-        (en este caso, 332) al objeto evaluación actual.
-
-        Returns:
-        object: Retorna el objeto evaluación actualizado con las preguntas copiadas del template.
+        Valida que la evaluación tenga al menos una pregunta.
         """
+        for record in self:
+            if not record.pregunta_ids:
+                raise exceptions.ValidationError(
+                    _("La evaluación debe tener al menos una pregunta.")
+                )
 
-        if not self:
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super(Evaluacion, self).default_get(fields_list)
 
-            ultimo_id = self.env["evaluacion"].search(
-                [], order="id desc", limit=1)
+        # Obtener tipo del contexto
+        tipo = self._context.get("tipo", "generico")
 
-            new_evaluation = self.env["evaluacion"].create(
-                {
-                    "nombre": str(ultimo_id.id + 1) + " Evaluación Clima",
-                    "descripcion": "La evaluación Clima es una herramienta de medición de clima organizacional, cuyo objetivo es conocer la percepción que tienen las personas que laboran en los centros de trabajo, sobre aquellos aspectos sociales que conforman su entorno laboral y que facilitan o dificultan su desempeño.",
-                    "tipo": "CLIMA",
-                    "fecha_inicio": fields.Date.today(),
-                    "fecha_final": fields.Date.today(),
-                    "niveles": [
-                        (0, 0, {"descripcion_nivel": "Muy malo", "techo": 20, "color": "#ff4747"}),
-                        (0, 0, {"descripcion_nivel": "Malo", "techo": 40, "color": "#ffa446"}),
-                        (0, 0, {"descripcion_nivel": "Regular", "techo": 60, "color": "#ebae14"}),
-                        (0, 0, {"descripcion_nivel": "Bueno", "techo": 80, "color": "#5aaf2b"}),
-                        (0, 0, {"descripcion_nivel": "Muy bueno", "techo": 100, "color": "#2894a7"}),
-                    ],
-                }
+        ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
+
+        defaults["fecha_inicio"] = fields.Date.today()
+        defaults["fecha_final"] = fields.Date.today()
+
+        template_id = False
+
+        if tipo == "clima":
+            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación Clima"
+            defaults["descripcion"] = "La evaluación Clima es una herramienta de medición de clima organizacional, cuyo objetivo es conocer la percepción que tienen las personas que laboran en los centros de trabajo, sobre aquellos aspectos sociales que conforman su entorno laboral y que facilitan o dificultan su desempeño."
+            defaults["tipo"] = "CLIMA"
+
+            defaults["niveles"] = [
+                (0, 0, {"descripcion_nivel": "Muy malo", "techo": 20, "color": "#ff4747"}),
+                (0, 0, {"descripcion_nivel": "Malo", "techo": 40, "color": "#ffa446"}),
+                (0, 0, {"descripcion_nivel": "Regular", "techo": 60, "color": "#ebae14"}),
+                (0, 0, {"descripcion_nivel": "Bueno", "techo": 80, "color": "#5aaf2b"}),
+                (0, 0, {"descripcion_nivel": "Muy bueno", "techo": 100, "color": "#2894a7"}),
+            ]
+            template_id = self.env["ir.model.data"]._xmlid_to_res_id(
+                "evaluaciones.template_clima"
             )
-            self = new_evaluation
 
-        self.pregunta_ids = [(5,)]
-
-        template_id = self.env["ir.model.data"]._xmlid_to_res_id(
-            "evaluaciones.template_clima"
-        )
+        elif tipo == "nom035":
+            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación NOM 035"
+            defaults["descripcion"] = "La NOM 035 tiene como objetivo establecer los elementos para identificar, analizar y prevenir los factores de riesgo psicosocial, así como para promover un entorno organizacional favorable en los centros de trabajo."
+            defaults["tipo"] = "NOM_035"
+            defaults["fecha_inicio"] = fields.Date.today()
+            defaults["fecha_final"] = fields.Date.today()
+            template_id = self.env["ir.model.data"]._xmlid_to_res_id(
+                "evaluaciones.template_nom035"
+            )
+        elif tipo == "generico":
+            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación Genérica"
+            defaults["tipo"] = "generico"
 
         if template_id:
             template = self.env["template"].browse(template_id)
             if template:
                 pregunta_ids = template.pregunta_ids.ids
-                self.pregunta_ids = [(6, 0, pregunta_ids)]
+                defaults["pregunta_ids"] = [(6, 0, pregunta_ids)]
 
-        return self
-
-    def copiar_preguntas_de_template_nom035(self):
-        """
-        Copia preguntas de un template de evaluación predeterminado a una nueva evaluación.
-
-        Este método verifica si el objeto actual está vacío (self). Si lo está, crea una nueva
-        evaluación con un nombre predeterminado y asigna este nuevo objeto a self. Luego, limpia
-        las preguntas existentes y copia todas las preguntas de un template con ID predefinido
-        (en este caso, 331) al objeto evaluación actual.
-
-        :return: object: Retorna el objeto evaluación actualizado con las preguntas copiadas del template.
-        """
-
-        if not self:
-
-            ultimo_id = self.env["evaluacion"].search(
-                [], order="id desc", limit=1)
-
-            new_evaluation = self.env["evaluacion"].create(
-                {
-                    "nombre": str(ultimo_id.id + 1) + " Evaluación NOM 035",
-                    "descripcion": "La NOM 035 tiene como objetivo establecer los elementos para identificar, analizar y prevenir los factores de riesgo psicosocial, así como para promover un entorno organizacional favorable en los centros de trabajo.",
-                    "tipo": "NOM_035",
-                    "fecha_inicio": fields.Date.today(),
-                    "fecha_final": fields.Date.today(),
-                }
-            )
-            self = new_evaluation
-
-        self.pregunta_ids = [(5,)]
-
-        template_id = self.env["ir.model.data"]._xmlid_to_res_id(
-            "evaluaciones.template_nom035"
-        )
-
-        if template_id:
-            template = self.env["template"].browse(template_id)
-            if template:
-                pregunta_ids = template.pregunta_ids.ids
-                self.pregunta_ids = [(6, 0, pregunta_ids)]
-
-        return self
+        return defaults
 
     def evaluacion_clima_action_form(self):
         """
@@ -258,8 +234,6 @@ class Evaluacion(models.Model):
 
         """
 
-        self = self.copiar_preguntas_de_template()
-
         # Retornar la acción con la vista como destino
         return {
             "type": "ir.actions.act_window",
@@ -268,7 +242,7 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "view_id": self.env.ref("evaluaciones.evaluacion_clima_view_form").id,
             "target": "current",
-            "res_id": self.id,
+            "context": {"tipo": "clima"},
         }
 
     def evaluacion_nom035_action_form(self):
@@ -284,8 +258,6 @@ class Evaluacion(models.Model):
         evaluación en una vista de formulario específica de Odoo.
 
         """
-        self = self.copiar_preguntas_de_template_nom035()
-
         return {
             "type": "ir.actions.act_window",
             "name": "NOM 035",
@@ -293,7 +265,7 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "view_id": self.env.ref("evaluaciones.evaluacion_nom035_view_form").id,
             "target": "current",
-            "res_id": self.id,
+            "context": {"tipo": "nom035"},
         }
 
     def evaluacion_360_action_form(self):
@@ -1200,13 +1172,6 @@ class Evaluacion(models.Model):
                 )
                 respuestas.unlink()
 
-        for record in self:
-            if record.tipo == "generico" and len(record.pregunta_ids) < 1:
-                raise exceptions.ValidationError(
-                    _("La evaluación debe tener al menos una pregunta."))
-            if record.tipo == "generico" and len(record.usuario_ids) < 1:
-                raise exceptions.ValidationError(
-                    _("La evaluación debe tener al menos una persona asignada."))
 
         return resultado
 
@@ -1228,42 +1193,70 @@ class Evaluacion(models.Model):
     def checar_techo(self):
         """
         Verifica que los valores de la ponderación sean válidos.
-        Validación 1: Verifica que el valor de la ponderación no sea menor o igual a 0.
-        Validación 2: Verifica que no haya valores duplicados en la ponderación para la misma evaluación.
-        Validación 3: Verifica que no haya más de 10 techos.
-        Validación 4: Verifica que los valores de la ponderación estén en orden ascendente.
-        Validación 5: Verifica que el valor de las ponderaciones no sean mayores a 100 y que el último sea 100.
+        Validación 1: Verifica que si haya niveles en la ponderación.
+        Validación 2: Verifica que mínimo haya dos niveles en la ponderación.
+        Validación 3: Verifica que el valor de la ponderación no sea menor o igual a 0.
+        Validación 4: Verifica que no haya valores duplicados en la ponderación.
+        Validación 5: Verifica que no haya más de 10 techos.
+        Validación 6: Verifica que los valores de la ponderación estén en orden ascendente.
+        Validación 7: Verifica que el valor de las ponderaciones no sean mayores a 100 y que el último sea 100.
 
         """
+        if len(self.niveles) == 0:
+            raise ValidationError(_("Debe haber al menos un nivel en la ponderación."))
+
+        if len(self.niveles) < 2:
+            raise ValidationError(
+                _("Debe haber al menos dos niveles en la ponderación.")
+            )
+
         for nivel in self.niveles:
+            
             if nivel.techo <= 0:
                 raise ValidationError(
-                    "El valor de la ponderación no debe ser menor o igual a 0."
+                    _("El valor de la ponderación no debe ser menor o igual a 0.")
                 )
 
             techos = self.niveles.filtered(lambda n: n.id != nivel.id).mapped("techo")
+
             if nivel.techo in techos:
                 raise ValidationError(
-                    "No puede haber valores duplicados en la ponderación."
+                    _("No puede haber valores duplicados en la ponderación.")
                 )
 
         todos_techos = self.niveles.mapped("techo")
+
         if len(todos_techos) > 10:
             raise ValidationError(
-                "No puede haber más de 10 valores de ponderación."
+                _("No puede haber más de 10 valores de ponderación.")
             )
         
         if todos_techos != sorted(todos_techos):
             raise ValidationError(
-                "Los valores de la ponderación deben estar en orden ascendente."
+                _("Los valores de la ponderación deben estar en orden ascendente.")
             )
 
         if todos_techos[-1] > 100:
             raise ValidationError(
-                "El valor de la ponderación no puede ser mayor a 100."
+                _("El valor de la ponderación no puede ser mayor a 100.")
             )
         if todos_techos[-1] != 100:
-            raise ValidationError("El último valor de la ponderación debe ser 100.")
+            raise ValidationError(_("El último valor de la ponderación debe ser 100."))
+
+    @api.constrains("niveles")
+    def checar_color(self):
+        """
+        Verifica que los valores de los colores sean válidos.
+
+        """
+
+        for nivel in self.niveles:
+
+            colores = self.niveles.filtered(lambda n: n.id != nivel.id).mapped("color")
+            if nivel.color in colores:
+                raise ValidationError(
+                    _("No puede haber colores duplicados en la ponderación.")
+                )
 
 
     def actualizar_estados_eval(self):
@@ -1316,18 +1309,6 @@ class Evaluacion(models.Model):
 
         """
 
-        ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
-
-        nueva_evaluacion = self.env["evaluacion"].create(
-            {
-                "nombre": str(ultimo_id.id + 1) + " Evaluación Genérica",
-                "tipo": "generico",
-                "fecha_inicio": fields.Date.today(),
-                "fecha_final": fields.Date.today(),
-            }
-        )
-        self = nueva_evaluacion
-
         return {
             "type": "ir.actions.act_window",
             "name": "General",
@@ -1335,7 +1316,7 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "view_id": self.env.ref("evaluaciones.evaluacion_general_view_form").id,
             "target": "current",
-            "res_id": self.id,
+            "context": {"default_tipo": "generico"},
         }
 
     def get_escalar_format(self):
