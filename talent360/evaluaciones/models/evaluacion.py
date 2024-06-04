@@ -1313,5 +1313,19 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "target": "new",
         }
+
+    def previsualizacion_action(self):
+        """
+        Este método genera una previsualización de la evaluación.
+
+        :return: una acción de redirección a la previsualización de la evaluación
+
+        """
+
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/evaluacion/responder/{self.id}",
+            "target": "new",
+        }
     
     
