@@ -49,8 +49,14 @@ function generarPlanAccion() {
 
 }
 
+function Alturatextarea(textarea) {
+    // Reset the height so that the scrollHeight is correctly calculated
+    textarea.style.height = 'auto';
+    // Set the height to match the scrollHeight
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
 
-"Guardar plan de accion modificado"
+//Guardar plan de accion modificado
 
 function guardarPlanAccion() {
     console.log("guardando plan")
