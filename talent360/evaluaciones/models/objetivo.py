@@ -24,6 +24,7 @@ class Objetivo(models.Model):
     :param usuario_ids(fields.Many2Many): Arreglo de usuarios asignado a un objetivo
     :param evaluador(fields.Char): Nombre del evaluador del objetivo
     :param avances(fields.One2Many): Avances del objetivo
+    :param progreso(fields.One2Many): Progreso del objetivo
     """
 
     _name = "objetivo"
@@ -86,7 +87,7 @@ class Objetivo(models.Model):
         default=fields.Datetime.today(),
         help="Fecha en la que se debe cumplir el objetivo",
     )
-    resultado = fields.Integer(store=True)
+    resultado = fields.Float(store=True, digits=(12, 2))
     porcentaje = fields.Float(store=True)
     estado = fields.Selection(
         [
@@ -111,6 +112,8 @@ class Objetivo(models.Model):
     evaluador = fields.Char()
 
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
+
+    progreso = fields.One2many("objetivo.progreso", "objetivo_id", string="Progreso")
 
     @api.constrains("descripcion")
     def _chechar_largo(self):
@@ -243,6 +246,18 @@ class Objetivo(models.Model):
             "name": "Registrar Avance",
             "type": "ir.actions.act_window",
             "res_model": "registrar.avance.wizard",
+            "view_mode": "form",
+            "target": "new",
+        }
+    
+    def modificar_progreso_action(self):
+        """
+        Método para llamar la funcionalidad de modificación de progreso.
+        """
+        return {
+            "name": "Modificar Progreso",
+            "type": "ir.actions.act_window",
+            "res_model": "modificar.progreso.wizard",
             "view_mode": "form",
             "target": "new",
         }
