@@ -100,7 +100,7 @@
         <field name="name">evaluacion.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
-            <form create="false" duplicate="0">
+            <form create="false" duplicate="0" delete="false">
                 <field name="tipo" invisible="1" readonly="1"/>
                 <field name="porcentaje_respuestas" invisible="1" readonly="1"/>
                 <header>
@@ -120,16 +120,16 @@
                     
                     <br></br>
                     <group>
-                        <field name="nombre"/>
+                        <field name="nombre" placeholder="Escribe aquí el título para tu evaluación"/>
                     </group>
                     <group>
                         <field name="estado" invisible="1"/>
                     </group>
                     <group>
-                        <field name="descripcion"/>
+                        <field name="descripcion" placeholder="Escribe aquí la descripción para tu evaluación"/>
                     </group>
                     <group>
-                        <field name="fecha_inicio">
+                        <field name="fecha_inicio" readonly="porcentaje_respuestas > 0">
                             <widget name="date"/>
                         </field>
                         <field name="fecha_final">
@@ -142,7 +142,7 @@
                     </group>
                         <notebook>
                             <page string="Preguntas">
-                                <field class="lh-lg w-100" name="pregunta_ids" domain="[('tipo', '=', False)]" invisible="tipo != 'generico'">
+                                <field class="lh-lg w-100" name="pregunta_ids" domain="[('tipo', '=', False)]" invisible="tipo != 'generico'" readonly="estado != 'borrador'">
                                     <tree create="true" delete="true" editable="bottom">
                                         <control>
                                             <create name="add_filtro" string="Agregar pregunta "/>
@@ -211,7 +211,7 @@
                                     <tree editable="bottom">
                                         <field name="techo" />
                                         <field name="color" widget="color" />
-                                        <field name="descripcion_nivel" />
+                                        <field name="descripcion_nivel" placeholder="Cambiar descripción"/>
                                     </tree>
                                 </field>
                         </page>
@@ -329,7 +329,7 @@
         <field name="name">evaluacion.nom035.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
-            <form string="NOM035" create="false" duplicate="0">
+            <form string="NOM035" create="false" duplicate="0" delete="false" >
                 <header>
                     <button class="btn btn-primary" name="action_asignar_usuarios_externos" string="Asignar usuarios externos" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
                     <field name="estado" widget="statusbar" statusbar_visible="borrador, publicado, finalizado" />
@@ -343,13 +343,13 @@
                     </h1>
                     <br></br>
                     <group>
-                        <field name="nombre"/>
+                        <field name="nombre" placeholder="Escribe aquí el título para tu evaluación"/>
                     </group>
                     <group>
                         <field name="estado" invisible="1"/>
                     </group>
                     <group>
-                        <field name="descripcion"/>
+                        <field name="descripcion" placeholder="Escribe aquí la descripción para tu evaluación"/>
                     </group>
                     <group>
                         <field name="fecha_inicio">
@@ -435,7 +435,7 @@
         <field name="name">evaluacion.generica.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
-            <form string="Evaluación genérica" create="false" duplicate="0">
+            <form string="Evaluación genérica" create="false" duplicate="0" delete="false"  >
                 <header>
                     <button class="btn btn-primary" name="action_asignar_usuarios_externos" string="Asignar usuarios externos" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
                     <field name="estado" widget="statusbar" statusbar_visible="borrador, publicado, finalizado" />
@@ -450,7 +450,7 @@
                     </h1>
                     <br></br>
                     <group>
-                        <field name="nombre"/>
+                        <field name="nombre" placeholder="Escribe aquí el título para tu evaluación"/>
                     </group>
                     <group>
                         <field name="estado" invisible="1"/>

@@ -117,7 +117,7 @@
                                 </div>
                                 <div class="survey_section container-fluid text-center" style="page-break-inside: avoid;">
                                     <h4 style="font-size: 2em; text-align: center;">Resumen por departamentos</h4>
-                                    <div class="survey_graph container-fluid d-flex justify-content-center" t-att-id="'grafica_radar_departamentos_' + categoria['nombre']" t-att-data-graph-type="'col'" t-att-data-label="'Resultados por departamento'" t-att-data-graph-data="categoria['departamentos']" style="max-height: 200px; max-width: 400px;">
+                                    <div class="survey_graph container-fluid d-flex justify-content-center" t-att-id="'grafica_radar_departamentos_' + categoria['nombre']" t-att-data-graph-type="'col_departamentos'" t-att-data-label="'Resultados por departamento'" t-att-data-graph-data="categoria['departamentos']" style="max-height: 200px; max-width: 400px;">
                                         <canvas t-att-id="'canvas_radar_departamentos_' + categoria['nombre']"></canvas>
                                     </div>
                                 </div>

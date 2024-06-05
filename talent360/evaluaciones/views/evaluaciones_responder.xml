@@ -314,7 +314,7 @@
 
     <!-- Open question -->
     <template id="question_text_box" name="Preguntas: pregunta abierta">
-        <div t-att-id="question.id">
+        <div t-att-id="question.id" style="max-width: 100%; word-wrap: break-word;">
             <div class="o_survey_question_title mb-3" style="font-size: 20px;">
                 <span t-esc="str(numero_pregunta) + '.- '" class="o_survey_question_number"/>
                 <span t-field="question.pregunta_texto"/>
@@ -331,7 +331,7 @@
 
     <!-- Simple choice question -->
     <template id="question_simple_choice" name="Pregunta: Opcion multiple">
-        <div t-att-id="question.id">
+        <div t-att-id="question.id" style="max-width: 100%; word-wrap: break-word;">
             <div class="o_survey_question_title mb-3" style="font-size: 20px;">
                 <span t-esc="str(numero_pregunta) + '.- '" class="o_survey_question_number"/>
                 <span t-field="question.pregunta_texto"/>
@@ -354,7 +354,7 @@
     
     <!-- scale question -->
     <template id="question_scale" name="Pregunta: escala">
-        <div t-att-id="question.id">
+        <div t-att-id="question.id"  style="max-width: 100%; word-wrap: break-word;">
             <t t-set="format" t-value="evaluacion.escalar_format"/>
             <t t-if="format == 'textuales'">
                 <t t-set="opciones" t-value="['Nunca', 'Casi nunca', 'A veces', 'Casi siempre', 'Siempre']"/>
@@ -438,7 +438,7 @@
 
     <!-- Conditional question -->
     <template id="conditional_question" name="Pregunta: Condicional">
-        <div t-att-id="question.id" t-att-data-pregunta-id="question.id" t-att-data-respuesta-trigger="question.respuesta_trigger.id" t-att-data-preguntas-desbloqueadas="question.preguntas_desbloqueadas.ids">
+        <div t-att-id="question.id" t-att-data-pregunta-id="question.id" t-att-data-respuesta-trigger="question.respuesta_trigger.id" t-att-data-preguntas-desbloqueadas="question.preguntas_desbloqueadas.ids"  style="max-width: 100%; word-wrap: break-word;">
             <div class="o_survey_question_title mb-3" style="font-size: 20px;">
                 <span t-esc="str(numero_pregunta) + '.- '" class="o_survey_question_number"/>
                 <span t-field="question.pregunta_texto"/>
