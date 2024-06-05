@@ -100,7 +100,7 @@
         <field name="name">evaluacion.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
-            <form create="false" duplicate="0">
+            <form create="false" duplicate="0" delete="FALSE">
                 <field name="tipo" invisible="1" readonly="1"/>
                 <field name="porcentaje_respuestas" invisible="1" readonly="1"/>
                 <header>
