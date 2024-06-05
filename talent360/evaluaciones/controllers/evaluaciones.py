@@ -131,6 +131,30 @@ class EvaluacionesController(http.Controller):
         # Renderiza la plantilla con la evaluación
         return request.render("evaluaciones.evaluaciones_responder", parametros)
 
+    @http.route(
+        "/evaluacion/previsualizar/<int:evaluacion_id>",
+        type="http",
+        auth="public",
+        website=True,
+    )
+    def previsualizar_evaluacion_controller(self, evaluacion_id):
+        """Método para desplegar una previsualización de la evaluación.
+
+        :return: html renderizado del template con los datos del formulario
+        """
+
+        evaluacion = request.env["evaluacion"].sudo().browse(evaluacion_id)
+        
+        if not evaluacion.exists():
+            return request.not_found()
+
+        # Obtén la evaluación basada en el ID
+        parametros = evaluacion.get_evaluaciones_action(evaluacion_id)
+        parametros["previsualizar"] = True
+
+        # Renderiza la plantilla con la evaluación
+        return request.render("evaluaciones.evaluaciones_responder", parametros)
+
     @http.route("/evaluacion/contestada", type="http", auth="public", website=True)
     def evaluacion_contestada_controller(self, **post):
         """Método para desplegar un mensaje de que la evaluación ya fue contestada.

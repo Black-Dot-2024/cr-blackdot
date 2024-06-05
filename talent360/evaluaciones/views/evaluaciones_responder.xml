@@ -43,6 +43,7 @@
 
             <div class="o_survey_form_content w-100">
                 <t t-if="len(evaluacion.pregunta_ids) == 0" t-call="evaluaciones.evaluacion_responder_form_validation"/>
+                <t t-elif="previsualizar == True" t-call="evaluaciones.evaluacion_responder_form_start"/>
                 <t t-elif="contestada == 'contestada'"  t-call="evaluaciones.evaluacion_responder_form_done"/>
                 <t t-elif="evaluacion.estado == 'finalizado'" t-call="evaluaciones.evaluacion_responder_form_closed"/>
                 <t t-elif="evaluacion.estado == 'publicado'" t-call="evaluaciones.evaluacion_responder_form_start"/>
@@ -69,9 +70,11 @@
     <template id="evaluacion_responder_form_enviar" name="Evaluacion: enviar">
         <div class="wrap o_survey_start">
             <div class='mb32'>
-                <button onclick="handleResponse(event)" value="start" class="btn btn-primary btn-lg">
-                   Enviar
-                </button>
+                <t t-if="not previsualizar">
+                    <button onclick="handleResponse(event)" value="start" class="btn btn-primary btn-lg">
+                    Enviar
+                    </button>
+                </t>
             </div>
         </div>
     </template>

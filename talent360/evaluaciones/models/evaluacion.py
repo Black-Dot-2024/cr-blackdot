@@ -1417,3 +1417,17 @@ class Evaluacion(models.Model):
             'url': f'/web/content/{attachment.id}?download=true',
             'target': 'self',
         }
+
+    def previsualizacion_action(self):
+        """
+        Este método genera una previsualización de la evaluación.
+
+        :return: una acción de redirección a la previsualización de la evaluación.
+
+        """
+
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/evaluacion/previsualizar/{self.id}",
+            "target": "new",
+        }
