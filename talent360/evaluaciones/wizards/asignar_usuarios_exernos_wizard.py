@@ -18,8 +18,9 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
         """
         Método para validar que el archivo cargado sea un archivo CSV
         """
-        if self.nombre_archivo and not self.nombre_archivo.lower().endswith(".csv"):
-            raise exceptions.ValidationError(_("Solo se aceptan archivos CSV."))
+        for registro in self:
+            if registro.nombre_archivo and not registro.nombre_archivo.lower().endswith(".csv"):
+                raise exceptions.ValidationError(_("Solo se aceptan archivos CSV."))
 
     def procesar_csv(self):
         """

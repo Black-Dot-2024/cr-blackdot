@@ -87,12 +87,13 @@ class RegistrarAvance(models.TransientModel):
 
         archivos_permitidos = ["csv", "xlsx", "txt", "pdf", "png", "jpeg", "jpg"]
 
-        for archivo in self.archivos:
-            if '.' not in archivo.name:
-                raise exceptions.ValidationError(_("No se pueden subir archivos sin extensión"))
-            nombre, tipo_archivo = archivo.name.rsplit('.', 1)
-            if tipo_archivo.lower() not in archivos_permitidos:
-                    raise exceptions.ValidationError(_("Solo se pueden subir archivos con extensión pdf, xlsx, csv, txt, png, jpeg"))
+        for registro in self:
+            for archivo in registro.archivos:
+                if '.' not in archivo.name:
+                    raise exceptions.ValidationError(_("No se pueden subir archivos sin extensión"))
+                nombre, tipo_archivo = archivo.name.rsplit('.', 1)
+                if tipo_archivo.lower() not in archivos_permitidos:
+                        raise exceptions.ValidationError(_("Solo se pueden subir archivos con extensión pdf, xlsx, csv, txt, png, jpeg"))
     
     @api.constrains("comentarios")
     def _validar_comentarios(self):
