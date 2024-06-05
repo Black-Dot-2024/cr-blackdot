@@ -28,16 +28,15 @@ class PlanAccion(models.Model):
         :return: Respuesta guardada en la base de datos
         """
         
-        resp = None
+        respuesta = None
         
-        resp = self.env["plan.accion"].create(
+        respuesta = self.env["plan.accion"].create(
             {
                 "descripcion": descripcion,
                 "evaluacion_id": evaluacion_id,
             }
         )
         
-        return resp
+        return respuesta
     
-    
-    
+

@@ -2,13 +2,27 @@ from odoo import http, _
 from odoo.http import request
 from odoo.exceptions import AccessError, ValidationError
 import requests
+import json
 
 class PlanAccion(http.Controller):
     """Controlador para manejar las solicitudes relacionadas con los planes de acción."""
     
+    @http.route("/plan_accion/guardar/<int:evaluacion_id>", type="json", auth="user", methods=['POST'], website=True)
+    def guardar_plan_accion(self, evaluacion_id, **post):
+        """
+        Método para actualizar el plan de acción en la base de datos.
+        
+        :param evaluacion_id: ID de la evaluación para la cual se actualiza el plan.
+        :return: Mensaje de confirmación o error.
+        """
+        data = json.loads(request.httprequest.data)
+        plan = data.get("plan_accion")
+        plan_accion_modelo = request.env['plan.accion']
+        
+        plan_accion_modelo.sudo().guardar_plan_accion_action(evaluacion_id, plan)
+
+
     @http.route("/plan_accion/reporte/<model('evaluacion'):evaluacion>", type="http", auth="user")
-
-
     def generar_plan_action(self, evaluacion):
         """
         Método para obtener texto de prueba.

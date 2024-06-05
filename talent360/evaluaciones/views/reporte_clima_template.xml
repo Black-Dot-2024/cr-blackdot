@@ -131,12 +131,17 @@
                     <h4>
                         Necesidad de acción
                     </h4>
-                    <button onclick="generarPlanAccion()" value="start" class="btn btn-primary btn-lg">
-                        <i class="fa fa-cogs"></i> Generar Plan de Acción
-                    </button>
+                    <div class="container-fluid">
+                        <button onclick="guardarPlanAccion()" value="start" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Guardar
+                        </button> 
+                        <button onclick="generarPlanAccion()" value="start" class="btn btn-success">
+                            <i class="fa fa-cogs"></i> Generar Plan de Acción
+                        </button>
+                    </div>
                     <textarea id="plan_accion_textarea" class="form-control" rows="10" style="width: 100%; resize: none;"
                               placeholder="Aquí se mostrará el plan de acción generado..."
-                              t-att-value="evaluacion.plan_accion"/>
+                              t-att-value="evaluacion.plan_accion"></textarea>
                 </div>
             </div>
         </template>
