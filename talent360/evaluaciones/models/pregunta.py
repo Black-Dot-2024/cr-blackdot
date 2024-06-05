@@ -138,3 +138,8 @@ class Pregunta(models.Model):
         if self.condicional and respuesta == self.respuesta_trigger:
             return self.preguntas_desbloqueadas
         return False
+
+    def copy(self, default=None):
+        default = dict(default or {})
+        default['opcion_ids'] = [(0, 0, option.copy_data()[0]) for option in self.opcion_ids]
+        return super(Pregunta, self).copy(default)
