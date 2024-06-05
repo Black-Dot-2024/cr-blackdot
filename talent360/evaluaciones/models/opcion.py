@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
 
@@ -28,4 +28,4 @@ class Opcion(models.Model):
         for registro in self:
             if registro.opcion_texto:
                 if "\"" in registro.opcion_texto or "\'" in registro.opcion_texto:
-                    raise ValidationError("El texto de la opción no puede contener comillas simples o dobles.")
+                    raise ValidationError(_("El texto de la opción no puede contener comillas simples o dobles."))
