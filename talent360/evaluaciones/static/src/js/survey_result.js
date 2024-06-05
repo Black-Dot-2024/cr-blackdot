@@ -111,7 +111,6 @@ publicWidget.registry.SurveyResultChart = publicWidget.Widget.extend({
             
             // Asegurarse de que graphData es un array de objetos
             if (typeof self.graphData === 'string') {
-                let temp = self.graphData.replace(/'/g, '"');
                 try{
                     self.graphData = JSON.parse(self.graphData.replace(/'/g, '"'));
                 }

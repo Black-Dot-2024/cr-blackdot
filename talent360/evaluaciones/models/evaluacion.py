@@ -173,15 +173,12 @@ class Evaluacion(models.Model):
         # Obtener tipo del contexto
         tipo = self._context.get("tipo", "generico")
 
-        ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
-
         defaults["fecha_inicio"] = fields.Date.today()
         defaults["fecha_final"] = fields.Date.today()
 
         template_id = False
 
         if tipo == "clima":
-            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación Clima"
             defaults["descripcion"] = "La evaluación Clima es una herramienta de medición de clima organizacional, cuyo objetivo es conocer la percepción que tienen las personas que laboran en los centros de trabajo, sobre aquellos aspectos sociales que conforman su entorno laboral y que facilitan o dificultan su desempeño."
             defaults["tipo"] = "CLIMA"
 
@@ -197,7 +194,6 @@ class Evaluacion(models.Model):
             )
 
         elif tipo == "nom035":
-            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación NOM 035"
             defaults["descripcion"] = "La NOM 035 tiene como objetivo establecer los elementos para identificar, analizar y prevenir los factores de riesgo psicosocial, así como para promover un entorno organizacional favorable en los centros de trabajo."
             defaults["tipo"] = "NOM_035"
             defaults["fecha_inicio"] = fields.Date.today()
@@ -206,7 +202,6 @@ class Evaluacion(models.Model):
                 "evaluaciones.template_nom035"
             )
         elif tipo == "generico":
-            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación Genérica"
             defaults["tipo"] = "generico"
 
         if template_id:
@@ -1038,7 +1033,9 @@ class Evaluacion(models.Model):
             if datos["anio_nacimiento"] != "N/A"
             else "N/A"
         )
-        datos["departamento"] = self.obtener_dato(usuario.department_id.name)
+        department_id = usuario.department_id.id
+        departamento = self.env['hr.department'].with_context(lang="en_US").browse(department_id).name
+        datos["departamento"] = self.obtener_dato(departamento)
 
         # Falta
         # Nivel Jerarquico
