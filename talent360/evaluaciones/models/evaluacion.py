@@ -207,7 +207,7 @@ class Evaluacion(models.Model):
         if template_id:
             template = self.env["template"].browse(template_id)
             if template:
-                pregunta_ids = template.pregunta_ids.ids
+                pregunta_ids = template.pregunta_ids.copy_multi().ids
                 defaults["pregunta_ids"] = [(6, 0, pregunta_ids)]
 
         return defaults
