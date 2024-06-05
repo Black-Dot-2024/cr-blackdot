@@ -30,7 +30,8 @@ class ObjetivoAvance(models.Model):
         default="aceptado"
     )
     
-    @api.onchange('avance')
-    def _onchange_avance(self):
-        if self.objetivo_id:
-            self.objetivo_id._compute_resultado()
+    @api.depends('avance')
+    def _compute_resultado(self):
+        for objetivo in self:
+            avances = self.search([('objetivo_id', '=', objetivo.objetivo_id.id)])
+            objetivo.objetivo_id.resultado = sum(avance.avance for avance in avances)
