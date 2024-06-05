@@ -667,8 +667,6 @@ class Evaluacion(models.Model):
                 categoria["color"] = self.asignar_color_clima(categoria["valor"])
 
             for departamento in departamentos:
-                deps = [dept["nombre"] for dept in categoria["departamentos"]]
-                print("Departamentos", deps, departamento)
                 if not departamento in [
                     dept["nombre"] for dept in categoria["departamentos"]
                 ]:
