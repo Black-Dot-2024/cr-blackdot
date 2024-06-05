@@ -18,6 +18,6 @@ class Niveles(models.Model):
     _description = "Niveles de semaforización"
 
     evaluacion_id = fields.Many2one("evaluacion", string="Evaluación")
-    descripcion_nivel = fields.Char(string="Descripción", default="Muy malo")
-    techo = fields.Integer(string="Ponderación", default=0)
-    color = fields.Char(string="Color", default="red")
+    descripcion_nivel = fields.Char(string="Descripción", default="Cambiar descripción", size=20)
+    techo = fields.Float(string="Ponderación", default=100)
+    color = fields.Char(string="Color", default="white")
