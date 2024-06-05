@@ -216,8 +216,17 @@ class Evaluacion(models.Model):
         if template_id:
             template = self.env["template"].browse(template_id)
             if template:
-                pregunta_ids = template.pregunta_ids.copy_multi().ids
-                defaults["pregunta_ids"] = [(6, 0, pregunta_ids)]
+                new_pregunta_ids = []
+                for pregunta in template.pregunta_ids:
+                    new_pregunta = pregunta.copy()
+                    for opcion in pregunta.opcion_ids:
+                        new_opcion = opcion.copy()
+                        try:
+                            new_pregunta.opcion_ids = [(4, new_opcion.id)]
+                        except Exception as e:
+                            pass
+                    new_pregunta_ids.append(new_pregunta.id)
+                defaults["pregunta_ids"] = [(6, 0, new_pregunta_ids)]
 
         return defaults
 
