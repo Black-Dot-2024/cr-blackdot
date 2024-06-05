@@ -86,7 +86,7 @@ class Objetivo(models.Model):
         default=fields.Datetime.today(),
         help="Fecha en la que se debe cumplir el objetivo",
     )
-    resultado = fields.Integer(store=True)
+    resultado = fields.Integer(compute="_compute_resultado", store=True)
     porcentaje = fields.Float(store=True)
     estado = fields.Selection(
         [
@@ -281,3 +281,9 @@ class Objetivo(models.Model):
         if vals.get("orden") == "descendente":
             vals["resultado"] = vals.get("piso_minimo")
         return super(Objetivo, self).create(vals)
+    
+    @api.depends('avances')
+    def _compute_resultado(self):
+        for objetivo in self:
+            avances = self.env['objetivo.avances'].search([('objetivo_id', '=', objetivo.id)])
+            objetivo.resultado = sum(avance.avance for avance in avances)
