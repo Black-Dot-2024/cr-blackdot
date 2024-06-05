@@ -87,7 +87,7 @@ class Objetivo(models.Model):
         default=fields.Datetime.today(),
         help="Fecha en la que se debe cumplir el objetivo",
     )
-    resultado = fields.Float(store=True)
+    resultado = fields.Float(store=True, digits=(12, 2))
     porcentaje = fields.Float(store=True)
     estado = fields.Selection(
         [
