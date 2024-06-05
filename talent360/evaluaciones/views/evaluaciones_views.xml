@@ -100,7 +100,7 @@
         <field name="name">evaluacion.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
-            <form create="false" duplicate="0" delete="FALSE">
+            <form create="false" duplicate="0" delete="false">
                 <field name="tipo" invisible="1" readonly="1"/>
                 <field name="porcentaje_respuestas" invisible="1" readonly="1"/>
                 <header>
@@ -328,7 +328,7 @@
         <field name="name">evaluacion.nom035.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
-            <form string="NOM035" create="false" duplicate="0" delete="FALSE" >
+            <form string="NOM035" create="false" duplicate="0" delete="false" >
                 <header>
                     <button class="btn btn-primary" name="action_asignar_usuarios_externos" string="Asignar usuarios externos" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
                     <field name="estado" widget="statusbar" statusbar_visible="borrador, publicado, finalizado" />
@@ -429,7 +429,7 @@
         <field name="name">evaluacion.generica.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
-            <form string="Evaluación genérica" create="false" duplicate="0" delete="FALSE"  >
+            <form string="Evaluación genérica" create="false" duplicate="0" delete="false"  >
                 <header>
                     <button class="btn btn-primary" name="action_asignar_usuarios_externos" string="Asignar usuarios externos" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
                     <field name="estado" widget="statusbar" statusbar_visible="borrador, publicado, finalizado" />

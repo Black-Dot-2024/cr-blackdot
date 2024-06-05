@@ -4,7 +4,7 @@
         <field name="name">evaluacion_clima.form</field>
         <field name="model">evaluacion</field>
         <field name="arch" type="xml">
-            <form string="Clima" create="false" duplicate="0" delete="FALSE" >
+            <form string="Clima" create="false" duplicate="0" delete="false" >
                 <header>
                     <button class="btn btn-primary" name="action_asignar_usuarios_externos" string="Asignar usuarios externos" type="object" groups="evaluaciones.evaluaciones_cliente_cr_group_user"/>
                     <button class=" btn btn-primary" name="action_importar_preguntas_clima" string="Agregar catálogo de preguntas" type="object" />
