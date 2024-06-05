@@ -27,13 +27,15 @@
                     <field name="estado" widget="statusbar" statusbar_visible="rojo, amarillo, verde, azul"/>
                 </header>
                 <sheet>
-                    <div style="width: 100%;">
+                    <group >
                         <h1>
                             <field name="titulo" readonly="1"/>
                         </h1>
-                        <label for="descripcion" string="Descripción"/>
+                    </group>
+                    <group>
                         <field name="descripcion" readonly="1"/>
-                    </div>
+                    </group>
+
                     <notebook>
                         <page string="Detalles">
                             <group>

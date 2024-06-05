@@ -25,7 +25,7 @@ class Pregunta(models.Model):
     _description = "Pregunta para una evaluación"
     _rec_name = "pregunta_texto"
 
-    pregunta_texto = fields.Char("Pregunta", required=True)
+    pregunta_texto = fields.Char("Pregunta", required=True, size=255)
     tipo = fields.Selection(
         [
             ("multiple_choice", "Opción múltiple"),
@@ -92,8 +92,9 @@ class Pregunta(models.Model):
         """
         Verifica que haya al menos una opción de respuesta para las preguntas de tipo 'multiple_choice'.
         """
-        if self.tipo == "multiple_choice" and len(self.opcion_ids) < 2:
-            raise ValidationError(_("Debe haber al menos dos opciones de respuesta."))
+        for registro in self:
+            if registro.tipo == "multiple_choice" and len(registro.opcion_ids) < 2:
+                raise ValidationError(_("Debe haber al menos dos opciones de respuesta."))
 
     def _calculate_valor_maximo(self):
         if self.tipo == "escala":
