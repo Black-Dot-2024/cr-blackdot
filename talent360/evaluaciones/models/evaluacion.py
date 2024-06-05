@@ -1544,5 +1544,3 @@ class Evaluacion(models.Model):
             "url": f"/evaluacion/previsualizar/{self.id}",
             "target": "new",
         }
-    
-    
