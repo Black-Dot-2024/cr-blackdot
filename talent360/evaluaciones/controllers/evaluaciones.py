@@ -122,7 +122,7 @@ class EvaluacionesController(http.Controller):
 
         # Obtén la evaluación basada en el ID
         parametros = evaluacion.get_evaluaciones_action(evaluacion_id)
-        parametros["preview"] = True
+        parametros["previsualizar"] = True
 
         # Renderiza la plantilla con la evaluación
         return request.render("evaluaciones.evaluaciones_responder", parametros)
