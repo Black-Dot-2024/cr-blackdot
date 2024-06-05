@@ -48,9 +48,9 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
 
         datos = StringIO()
 
-        csv_writer = csv.writer(datos)
+        escritor_csv = csv.writer(datos)
 
-        csv_writer.writerow(atributos_nombres)
+        escritor_csv.writerow(atributos_nombres)
 
         # "Nombre Completo", "Correo", "Puesto", "Departamento", "Genero", "Fecha de nacimiento"
         datos_prueba_base = ["Juan Perez", "juanperez@test.com", "Gerente", "Ventas", "Masculino", "01/01/1990"]
@@ -75,20 +75,20 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
             else:
                 datos_prueba_base.append("Datos de prueba (Texto)")
 
-        csv_writer.writerow(datos_prueba_base)
+        escritor_csv.writerow(datos_prueba_base)
 
         datos = datos.getvalue()
 
         nombre_archivo = "template_usuarios_externos.csv"
 
-        attachment = self.env["ir.attachment"].search(
+        adjunto = self.env["ir.attachment"].search(
             [("name", "=", nombre_archivo), ("res_model", "=", self._name)], limit=1
         )
 
-        if attachment:
-            attachment.write({"datas": base64.b64encode(datos.encode("utf-8"))})
+        if adjunto:
+            adjunto.write({"datas": base64.b64encode(datos.encode("utf-8"))})
         else:
-            attachment = self.env["ir.attachment"].create(
+            adjunto = self.env["ir.attachment"].create(
                 {
                     "name": nombre_archivo,
                     "type": "binary",
@@ -100,6 +100,6 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
 
         return {
             "type": "ir.actions.act_url",
-            "url": f"/web/content/{str(attachment.id)}?download=true",
+            "url": f"/web/content/{str(adjunto.id)}?download=true",
             "target": "new",
         }

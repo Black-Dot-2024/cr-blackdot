@@ -790,14 +790,14 @@ class Evaluacion(models.Model):
             for categoria, valor in dato.items():
                 atributos[categoria][valor] += 1
 
-        ans = {}
+        respuestas = {}
         for categoria, valores in atributos.items():
-            ans[categoria] = [
+            respuestas[categoria] = [
                 {"nombre": nombre, "valor": conteo}
                 for nombre, conteo in valores.items()
             ]
 
-        return ans
+        return respuestas
 
     def asignar_color(self, valor, categoria=None, dominio=None):
         """

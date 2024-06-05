@@ -130,7 +130,7 @@ class UsuarioExterno(models.Model):
 
         :return: Un diccionario con los atributos extra del usuario externo.
         """
-        atributos = list(map(lambda attr: attr["nombre"], self.obtener_atributos()[6:]))
+        atributos = list(map(lambda atributo: atributo["nombre"], self.obtener_atributos()[6:]))
         atributos_extra = {}
 
         for atributo in self.atributos_extra_ids:
@@ -187,10 +187,10 @@ class UsuarioExterno(models.Model):
             .browse(self.env.company.id)
             .employee_properties_definition
         )
-        for attr in atributos_extra:
-            if attr["type"] in ["separator", "many2one", "many2many", "tags"]:
+        for atributo in atributos_extra:
+            if atributo["type"] in ["separator", "many2one", "many2many", "tags"]:
                 continue
-            atributos.append({"nombre": attr["string"], "tipo": attr["type"]})
+            atributos.append({"nombre": atributo["string"], "tipo": atributo["type"]})
 
         return atributos
 
@@ -207,7 +207,7 @@ class UsuarioExterno(models.Model):
 
         except Exception as e:
             raise ValidationError(
-                f"Error al procesar el archivo: {str(e)}. Verifica que el archivo sea un CSV válido."
+                _(f"Error al procesar el archivo: {str(e)}. Verifica que el archivo sea un CSV válido.")
             )
 
         campos = self.env["usuario.externo"].obtener_atributos()
@@ -274,7 +274,7 @@ class UsuarioExterno(models.Model):
             mensaje += f"Las siguientes columnas no son soportadas: {', '.join(columnas_extra)}\n"
 
         if mensaje:
-            raise ValidationError(mensaje)
+            raise ValidationError(_(mensaje))
 
     @api.model
     def _construir_usuario(self, fila: dict, campos_obligatorios, campos_opcionales):
@@ -292,7 +292,7 @@ class UsuarioExterno(models.Model):
         for campo in map(lambda c: c["nombre"], campos_obligatorios):
             if not fila.get(campo):
                 raise ValidationError(
-                    f"El campo {campo} es requerido. Por favor verifica que todos los campos obligatorios estén presentes."
+                    _(f"El campo {campo} es requerido. Por favor verifica que todos los campos obligatorios estén presentes.")
                 )
 
         try:
@@ -353,7 +353,7 @@ class UsuarioExterno(models.Model):
         elif campo["tipo"] == "boolean":
             if valor.lower() not in ["si", "no", "n/a"]:
                 raise ValidationError(
-                    f"El campo {campo['nombre']} debe ser 'Si' o 'No'."
+                    _(f"El campo {campo['nombre']} debe ser 'Si' o 'No'.")
                 )
         elif campo["tipo"] == "integer":
             try:

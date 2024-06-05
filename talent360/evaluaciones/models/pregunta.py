@@ -92,8 +92,8 @@ class Pregunta(models.Model):
         """
         Verifica que haya al menos una opción de respuesta para las preguntas de tipo 'multiple_choice'.
         """
-        for record in self:
-            if record.tipo == "multiple_choice" and len(record.opcion_ids) < 2:
+        for registro in self:
+            if registro.tipo == "multiple_choice" and len(registro.opcion_ids) < 2:
                 raise ValidationError(_("Debe haber al menos dos opciones de respuesta."))
 
     def _calculate_valor_maximo(self):

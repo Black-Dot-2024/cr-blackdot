@@ -80,7 +80,6 @@ class Users(models.Model):
 
     def _obtener_atributos_extra(self):
         atributos = self.employee_id._read_format(["employee_properties"])[0]["employee_properties"]
-        print("atributos", atributos)
         atributos_extra = {}
         for attr in atributos:
             if attr["type"] in ["separator", "many2one", "many2many", "tags"]:
