@@ -21,6 +21,7 @@ class ModificarProgreso(models.TransientModel):
     )
 
     comentarios = fields.Text(
+        required=True,
         help="Comentarios de retroalimentación del progreso registrado."
     )
 
