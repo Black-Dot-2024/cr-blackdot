@@ -83,9 +83,10 @@
         <field name="model">objetivo</field>
         <field name="arch" type="xml">
             <form string="Objetivo">
+                <field name="id" invisible="1"/>
                 <header>
                     <field name="estado" widget="statusbar" statusbar_visible="rojo, amarillo, verde, azul" />
-                    <button name="modificar_progreso_action" string="Modificar Progreso" type="object" class="btn-primary" context="{'actual_objetivo_id': active_id}"/>
+                    <button name="modificar_progreso_action" string="Modificar Progreso" type="object" class="btn-primary" context="{'actual_objetivo_id': active_id}" invisible="not (id > 0)"/>
                 </header>
                 <sheet>
                     <div style="width: 100%;">
