@@ -25,6 +25,7 @@ class Opcion(models.Model):
         """
         Método para verificar que el texto de la opción no sea vacío.
         """
-        if self.opcion_texto:
-            if "\"" in self.opcion_texto or "\'" in self.opcion_texto:
-                raise ValidationError("El texto de la opción no puede contener comillas simples o dobles.")
+        for registro in self:
+            if registro.opcion_texto:
+                if "\"" in registro.opcion_texto or "\'" in registro.opcion_texto:
+                    raise ValidationError("El texto de la opción no puede contener comillas simples o dobles.")
