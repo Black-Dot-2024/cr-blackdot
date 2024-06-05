@@ -18,4 +18,6 @@ from . import reporte_resumen
 from . import usuario_externo
 from . import niveles
 from . import objetivo_avances
+from . import objetivo_progreso
+from . import res_company
 from . import plan_accion

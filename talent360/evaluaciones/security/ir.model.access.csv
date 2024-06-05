@@ -36,3 +36,9 @@
 "access_objetivo_avances_cliente_cr","access.objetivo.avances","model_objetivo_avances","evaluaciones.evaluaciones_cliente_cr_group_user",1,1,1,1
 "access_objetivo_avances_colaborador_cr","access.objetivo.avances","model_objetivo_avances","evaluaciones.evaluaciones_colaborador_cr_group_user",1,1,1,1
 "access_plan_accion_cliente_cr","access.plan_accion","model_plan_accion","evaluaciones.evaluaciones_cliente_cr_group_user",1,1,1,1
+"access_objetivo_progreso_cliente_cr","access.objetivo.progreso","model_objetivo_progreso","evaluaciones.evaluaciones_cliente_cr_group_user",1,1,1,1
+"access_objetivo_progreso_colaborador_cr","access.objetivo.progreso","model_objetivo_progreso","evaluaciones.evaluaciones_colaborador_cr_group_user",1,1,1,1
+"access_modificar_progreso_wizard_colaborador_cr","access.modificar.progreso.wizard","model_modificar_progreso_wizard","evaluaciones.evaluaciones_colaborador_cr_group_user",1,1,1,1
+"access_modificar_progreso_wizard_cliente_cr","access.modificar.progreso.wizard","model_modificar_progreso_wizard","evaluaciones.evaluaciones_cliente_cr_group_user",1,1,1,1
+"access_atributos_extra_cliente_cr","access.atributos.extra","model_atributos_extra","evaluaciones.evaluaciones_cliente_cr_group_user",1,1,1,1
+"access_atributos_extra_colaborador_cr","access.atributos.extra","model_atributos_extra","evaluaciones.evaluaciones_colaborador_cr_group_user",1,1,1,1
