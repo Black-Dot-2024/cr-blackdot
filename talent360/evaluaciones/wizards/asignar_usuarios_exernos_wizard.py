@@ -30,8 +30,9 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
 
     @api.constrains("nombre_archivo")
     def _validar_nombre_archivo(self):
-        if self.nombre_archivo and not self.nombre_archivo.lower().endswith(".csv"):
-            raise exceptions.ValidationError(_("Solo se aceptan archivos CSV."))
+        for registro in self:
+            if registro.nombre_archivo and not registro.nombre_archivo.lower().endswith(".csv"):
+                raise exceptions.ValidationError(_("Solo se aceptan archivos CSV."))
 
     def procesar_csv(self):
 

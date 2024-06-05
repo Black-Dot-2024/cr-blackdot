@@ -125,12 +125,12 @@ class Evaluacion(models.Model):
         """
         Valida que la fecha de inicio sea anterior a la fecha final.
         """
-        for record in self:
+        for registro in self:
 
             # Si ya se creo, se compara contra la fecha de creación
-            if record.create_date:
-                fecha_creacion = record.create_date.date() - timedelta(days=1)
-                if record.fecha_inicio < fecha_creacion:
+            if registro.create_date:
+                fecha_creacion = registro.create_date.date() - timedelta(days=1)
+                if registro.fecha_inicio < fecha_creacion:
                     raise exceptions.ValidationError(
                         _(
                             f"La fecha de inicio debe ser igual o posterior a la fecha de creación de la evaluación ({fecha_creacion.strftime('%d/%m/%Y')})."
@@ -139,18 +139,18 @@ class Evaluacion(models.Model):
             # Si es nuevo, se compara contra la fecha actual
             else:
                 fecha_actual = fields.Date.today() - timedelta(days=1)
-                if record.fecha_inicio:
+                if registro.fecha_inicio:
                     # Verifica que la fecha de inicio no sea menor a la fecha actual
-                    if record.fecha_inicio < fecha_actual:
+                    if registro.fecha_inicio < fecha_actual:
                         raise exceptions.ValidationError(
                             _(
                                 "La fecha de inicio debe ser igual o posterior a la fecha actual."
                             )
                         )
 
-            if record.fecha_inicio and record.fecha_final:
+            if registro.fecha_inicio and registro.fecha_final:
                 # Verifica que la fecha de inicio sea antes de la fecha final
-                if record.fecha_inicio > record.fecha_final:
+                if registro.fecha_inicio > registro.fecha_final:
                     raise exceptions.ValidationError(
                         _("La fecha de inicio debe ser anterior a la fecha final")
                     )
@@ -160,8 +160,8 @@ class Evaluacion(models.Model):
         """
         Valida que la evaluación tenga al menos una pregunta.
         """
-        for record in self:
-            if not record.pregunta_ids:
+        for registro in self:
+            if not registro.pregunta_ids:
                 raise exceptions.ValidationError(
                     _("La evaluación debe tener al menos una pregunta.")
                 )
@@ -173,15 +173,12 @@ class Evaluacion(models.Model):
         # Obtener tipo del contexto
         tipo = self._context.get("tipo", "generico")
 
-        ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
-
         defaults["fecha_inicio"] = fields.Date.today()
         defaults["fecha_final"] = fields.Date.today()
 
         template_id = False
 
         if tipo == "clima":
-            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación Clima"
             defaults["descripcion"] = "La evaluación Clima es una herramienta de medición de clima organizacional, cuyo objetivo es conocer la percepción que tienen las personas que laboran en los centros de trabajo, sobre aquellos aspectos sociales que conforman su entorno laboral y que facilitan o dificultan su desempeño."
             defaults["tipo"] = "CLIMA"
 
@@ -197,7 +194,6 @@ class Evaluacion(models.Model):
             )
 
         elif tipo == "nom035":
-            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación NOM 035"
             defaults["descripcion"] = "La NOM 035 tiene como objetivo establecer los elementos para identificar, analizar y prevenir los factores de riesgo psicosocial, así como para promover un entorno organizacional favorable en los centros de trabajo."
             defaults["tipo"] = "NOM_035"
             defaults["fecha_inicio"] = fields.Date.today()
@@ -206,13 +202,12 @@ class Evaluacion(models.Model):
                 "evaluaciones.template_nom035"
             )
         elif tipo == "generico":
-            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación Genérica"
             defaults["tipo"] = "generico"
 
         if template_id:
             template = self.env["template"].browse(template_id)
             if template:
-                pregunta_ids = template.pregunta_ids.ids
+                pregunta_ids = template.pregunta_ids.copy_multi().ids
                 defaults["pregunta_ids"] = [(6, 0, pregunta_ids)]
 
         return defaults
@@ -569,6 +564,8 @@ class Evaluacion(models.Model):
             "Condiciones Generales de Trabajo",
         ]
 
+        departamentos = []
+
         # Estructura de datos para las categorías
         detalles_categorias = [
             {
@@ -645,6 +642,7 @@ class Evaluacion(models.Model):
                     None,
                 )
                 if departamento is None:
+                    departamentos.append(nombre_departamento)
                     departamento = {
                         "nombre": nombre_departamento,
                         "color": "#2894a7",
@@ -668,10 +666,25 @@ class Evaluacion(models.Model):
                 ) * 100
                 categoria["color"] = self.asignar_color_clima(categoria["valor"])
 
+            for departamento in departamentos:
+                if not departamento in [
+                    dept["nombre"] for dept in categoria["departamentos"]
+                ]:
+                    categoria["departamentos"].append(
+                        {
+                            "nombre": departamento,
+                            "color": "#2894a7",
+                            "puntos": 0,
+                            "puntos_maximos": 0,
+                        }
+                    )
+
             for dept in categoria["departamentos"]:
                 if dept["puntos_maximos"] > 0:
                     dept["valor"] = (dept["puntos"] / dept["puntos_maximos"]) * 100
                     dept["color"] = self.asignar_color_clima(dept["valor"])
+                else:
+                    dept["valor"] = 0
 
         total_porcentaje = round(
             (
@@ -1038,7 +1051,9 @@ class Evaluacion(models.Model):
             if datos["anio_nacimiento"] != "N/A"
             else "N/A"
         )
-        datos["departamento"] = self.obtener_dato(usuario.department_id.name)
+        department_id = usuario.department_id.id
+        departamento = self.env['hr.department'].with_context(lang="en_US").browse(department_id).name
+        datos["departamento"] = self.obtener_dato(departamento)
 
         # Falta
         # Nivel Jerarquico
@@ -1193,46 +1208,48 @@ class Evaluacion(models.Model):
         Validación 7: Verifica que el valor de las ponderaciones no sean mayores a 100 y que el último sea 100.
 
         """
-        if len(self.niveles) == 0:
-            raise ValidationError(_("Debe haber al menos un nivel en la ponderación."))
 
-        if len(self.niveles) < 2:
-            raise ValidationError(
-                _("Debe haber al menos dos niveles en la ponderación.")
-            )
+        for registro in self:
+            if len(registro.niveles) == 0:
+                raise ValidationError(_("Debe haber al menos un nivel en la ponderación."))
 
-        for nivel in self.niveles:
+            if len(registro.niveles) < 2:
+                raise ValidationError(
+                    _("Debe haber al menos dos niveles en la ponderación.")
+                )
+
+            for nivel in registro.niveles:
+                
+                if nivel.techo <= 0:
+                    raise ValidationError(
+                        _("El valor de la ponderación no debe ser menor o igual a 0.")
+                    )
+
+                techos = registro.niveles.filtered(lambda n: n.id != nivel.id).mapped("techo")
+
+                if nivel.techo in techos:
+                    raise ValidationError(
+                        _("No puede haber valores duplicados en la ponderación.")
+                    )
+
+            todos_techos = registro.niveles.mapped("techo")
+
+            if len(todos_techos) > 10:
+                raise ValidationError(
+                    _("No puede haber más de 10 valores de ponderación.")
+                )
             
-            if nivel.techo <= 0:
+            if todos_techos != sorted(todos_techos):
                 raise ValidationError(
-                    _("El valor de la ponderación no debe ser menor o igual a 0.")
+                    _("Los valores de la ponderación deben estar en orden ascendente.")
                 )
 
-            techos = self.niveles.filtered(lambda n: n.id != nivel.id).mapped("techo")
-
-            if nivel.techo in techos:
+            if todos_techos[-1] > 100:
                 raise ValidationError(
-                    _("No puede haber valores duplicados en la ponderación.")
+                    _("El valor de la ponderación no puede ser mayor a 100.")
                 )
-
-        todos_techos = self.niveles.mapped("techo")
-
-        if len(todos_techos) > 10:
-            raise ValidationError(
-                _("No puede haber más de 10 valores de ponderación.")
-            )
-        
-        if todos_techos != sorted(todos_techos):
-            raise ValidationError(
-                _("Los valores de la ponderación deben estar en orden ascendente.")
-            )
-
-        if todos_techos[-1] > 100:
-            raise ValidationError(
-                _("El valor de la ponderación no puede ser mayor a 100.")
-            )
-        if todos_techos[-1] != 100:
-            raise ValidationError(_("El último valor de la ponderación debe ser 100."))
+            if todos_techos[-1] != 100:
+                raise ValidationError(_("El último valor de la ponderación debe ser 100."))
 
     @api.constrains("niveles")
     def checar_color(self):
@@ -1240,14 +1257,14 @@ class Evaluacion(models.Model):
         Verifica que los valores de los colores sean válidos.
 
         """
+        for registro in self:
+            for nivel in registro.niveles:
 
-        for nivel in self.niveles:
-
-            colores = self.niveles.filtered(lambda n: n.id != nivel.id).mapped("color")
-            if nivel.color in colores:
-                raise ValidationError(
-                    _("No puede haber colores duplicados en la ponderación.")
-                )
+                colores = registro.niveles.filtered(lambda n: n.id != nivel.id).mapped("color")
+                if nivel.color in colores:
+                    raise ValidationError(
+                        _("No puede haber colores duplicados en la ponderación.")
+                    )
 
 
     def actualizar_estados_eval(self):
