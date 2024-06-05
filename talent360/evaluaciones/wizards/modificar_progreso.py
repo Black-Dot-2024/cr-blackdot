@@ -36,20 +36,6 @@ class ModificarProgreso(models.TransientModel):
         for registro in self:
             if registro.progreso < 0:
                 raise exceptions.ValidationError(_("El progreso no puede ser menor a 0"))
-            
-    @api.constrains("progreso")
-    def _validar_cambios(self):
-        """
-        Método para validar que se haga una modificación 
-        
-        en el progreso. Si no se realiza una modificación, 
-        
-        se levanta una excepción.
-        """
-
-        for registro in self:
-            if not registro.progreso:
-                raise exceptions.ValidationError(_("Por favor realiza una modificación en el progreso del objetivo"))
     
     @api.constrains("comentarios")
     def _validar_comentarios(self):
