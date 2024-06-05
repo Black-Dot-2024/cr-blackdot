@@ -145,6 +145,9 @@ publicWidget.registry.SurveyResultChart = publicWidget.Widget.extend({
                         case 'col':
                             self.chartConfig = self._getColChartConfig();
                             break;
+                        case 'col_departamentos':
+                            self.chartConfig = self._getColDepartamentosChartConfig();
+                            break;
                         case 'pie':
                             self.chartConfig = self._getPieChartConfig();
                             break;
@@ -271,7 +274,69 @@ publicWidget.registry.SurveyResultChart = publicWidget.Widget.extend({
             },
         };
     },
-    
+    _getColDepartamentosChartConfig: function () {
+        self = this;
+        let dataset_base = {
+            label: "Conteo",
+            data: this.counts,
+            backgroundColor: this.counts.map(function (val, index) {
+                return self.color[index] || D3_COLORS[index % 20];
+            }),
+        }
+        let datasets_complemento = {
+            label: "",
+            data: [],
+            backgroundColor: "#9C9C9C",
+        }
+        for (let conteo of this.counts) {
+            console.log(conteo)
+            datasets_complemento.data.push(100 - conteo)
+        }
+
+        console.log("Dataset Base", dataset_base)
+        console.log("Dataset Complemento", datasets_complemento)
+
+        return {
+            type: 'bar',
+            data: {
+                labels: this.labels,
+                datasets:[dataset_base, datasets_complemento]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                    tooltip: {
+                        enabled: false,
+                    },
+                },
+                indexAxis: 'y',
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function (val, index) {
+                                // For a category axis, the val is the index so the lookup via getLabelForValue is needed
+                                const value = this.getLabelForValue(val);
+                                const tickLimit = 35;
+                                return value?.length > tickLimit
+                                    ? `${value.slice(0, tickLimit)}...`
+                                    : value;
+                            },
+                        },
+                        stacked: true,
+                    },
+                    x: {
+                        ticks: {
+                            precision: 0,
+                        },
+                        beginAtZero: true,
+                        stacked: true,
+                    },
+                },
+            },
+        };
+    },
     /**
      * Returns a standard pie chart configuration.
      *

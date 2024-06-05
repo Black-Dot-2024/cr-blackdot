@@ -564,6 +564,8 @@ class Evaluacion(models.Model):
             "Condiciones Generales de Trabajo",
         ]
 
+        departamentos = []
+
         # Estructura de datos para las categorías
         detalles_categorias = [
             {
@@ -640,6 +642,7 @@ class Evaluacion(models.Model):
                     None,
                 )
                 if departamento is None:
+                    departamentos.append(nombre_departamento)
                     departamento = {
                         "nombre": nombre_departamento,
                         "color": "#2894a7",
@@ -663,10 +666,27 @@ class Evaluacion(models.Model):
                 ) * 100
                 categoria["color"] = self.asignar_color_clima(categoria["valor"])
 
+            for departamento in departamentos:
+                deps = [dept["nombre"] for dept in categoria["departamentos"]]
+                print("Departamentos", deps, departamento)
+                if not departamento in [
+                    dept["nombre"] for dept in categoria["departamentos"]
+                ]:
+                    categoria["departamentos"].append(
+                        {
+                            "nombre": departamento,
+                            "color": "#2894a7",
+                            "puntos": 0,
+                            "puntos_maximos": 0,
+                        }
+                    )
+
             for dept in categoria["departamentos"]:
                 if dept["puntos_maximos"] > 0:
                     dept["valor"] = (dept["puntos"] / dept["puntos_maximos"]) * 100
                     dept["color"] = self.asignar_color_clima(dept["valor"])
+                else:
+                    dept["valor"] = 0
 
         total_porcentaje = round(
             (
