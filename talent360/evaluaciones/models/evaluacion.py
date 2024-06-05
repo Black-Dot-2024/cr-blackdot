@@ -373,20 +373,25 @@ class Evaluacion(models.Model):
 
         datos_demograficos = self.generar_datos_demograficos()
 
-        categorias = [
-            ("Departamento", "departamentos", "departamento"),
-            ("Generación", "generaciones", "generacion"),
-            ("Puesto", "puestos", "puesto"),
-            ("Género", "generos", "genero"),
-        ]
-
         filtros_ids = []
 
-        for categoria, nombre_grupal, nombre_individual in categorias:
+        mapeo_categorias = {
+            "departamento": "Departamento",
+            "generacion": "Generación",
+            "puesto": "Puesto",
+            "genero": "Género",
+        }
+
+        for categoria, valores in datos_demograficos.items():
+            if categoria in ["nombre", "anio_nacimiento"]:
+                continue
+
+            nombre = mapeo_categorias.get(categoria, categoria)
+
             filtro_id = self.env["filtro.wizard"].create(
                 {
-                    "categoria": categoria,
-                    "categoria_interna": nombre_individual,
+                    "categoria": nombre,
+                    "categoria_interna": categoria,
                 }
             )
             filtros_ids.append(filtro_id.id)
@@ -394,11 +399,11 @@ class Evaluacion(models.Model):
             self.env["filtro.seleccion.wizard"].create(
                 [
                     {
-                        "texto": dep["nombre"],
-                        "categoria": categoria,
+                        "texto": valor["nombre"],
+                        "categoria": nombre,
                         "filtro_original_id": filtro_id.id,
                     }
-                    for dep in datos_demograficos[nombre_grupal]
+                    for valor in valores
                 ]
             )
 
@@ -634,8 +639,8 @@ class Evaluacion(models.Model):
                 elif respuesta.usuario_externo_id:
                     usuario_externo = respuesta.usuario_externo_id
                     nombre_departamento = (
-                        usuario_externo.direccion
-                        if usuario_externo.direccion
+                        usuario_externo.departamento
+                        if usuario_externo.departamento
                         else "Sin departamento"
                     )
                 else:
@@ -719,24 +724,20 @@ class Evaluacion(models.Model):
                 return False
 
             if respuesta.usuario_id:
-                datos_demograficos = self.obtener_datos_demograficos(
-                    respuesta.usuario_id
-                )
+                datos_demograficos = respuesta.usuario_id.obtener_datos_demograficos()
             elif respuesta.usuario_externo_id:
-                usuario_externo = respuesta.usuario_externo_id
-                datos_demograficos = self.obtener_datos_demograficos_externos(
-                    usuario_externo
+                datos_demograficos = (
+                    respuesta.usuario_externo_id.obtener_datos_demograficos()
                 )
             else:
                 return False
 
         for _, filtro in filtros.items():
             categoria = filtro["categoria_interna"]
-
             if not (categoria in datos_demograficos.keys()):
                 continue
 
-            if not datos_demograficos[filtro["categoria_interna"]] in filtro["valores"]:
+            if not datos_demograficos[categoria] in filtro["valores"]:
                 return False
 
         return True
@@ -758,8 +759,7 @@ class Evaluacion(models.Model):
         )
 
         for usuario in usuario_evaluacion.mapped("usuario_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos(
-                usuario)
+            datos_demograficos_usuario = usuario.obtener_datos_demograficos()
             if filtros and not self.validar_filtro(
                 filtros, datos_demograficos=datos_demograficos_usuario
             ):
@@ -776,9 +776,7 @@ class Evaluacion(models.Model):
         )
 
         for usuario_externo in usuario_evaluacion_externo.mapped("usuario_externo_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos_externos(
-                usuario_externo
-            )
+            datos_demograficos_usuario = usuario_externo.obtener_datos_demograficos()
             if filtros and not self.validar_filtro(
                 filtros, datos_demograficos=datos_demograficos_usuario
             ):
@@ -786,35 +784,20 @@ class Evaluacion(models.Model):
 
             datos_demograficos.append(datos_demograficos_usuario)
 
-        departamentos = defaultdict(int)
-        generaciones = defaultdict(int)
-        puestos = defaultdict(int)
-        generos = defaultdict(int)
+        atributos = defaultdict(lambda: defaultdict(int))
 
         for dato in datos_demograficos:
-            departamentos[dato["departamento"]] += 1
-            generaciones[dato["generacion"]] += 1
-            puestos[dato["puesto"]] += 1
-            generos[dato["genero"]] += 1
+            for categoria, valor in dato.items():
+                atributos[categoria][valor] += 1
 
-        return {
-            "departamentos": [
+        respuestas = {}
+        for categoria, valores in atributos.items():
+            respuestas[categoria] = [
                 {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in departamentos.items()
-            ],
-            "generaciones": [
-                {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in generaciones.items()
-            ],
-            "puestos": [
-                {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in puestos.items()
-            ],
-            "generos": [
-                {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in generos.items()
-            ],
-        }
+                for nombre, conteo in valores.items()
+            ]
+
+        return respuestas
 
     def asignar_color(self, valor, categoria=None, dominio=None):
         """
@@ -989,99 +972,6 @@ class Evaluacion(models.Model):
         for nivel in self.niveles:
             if valor <= nivel.techo:
                 return nivel.color
-
-    def obtener_dato(self, dato):
-        """
-        Obtiene un dato y devuelve 'N/A' si es nulo.
-
-        Este método recibe un dato y verifica si es nulo. Si es nulo, devuelve 'N/A'.
-
-        :param dato: El dato a verificar.
-
-        :return: El dato si no es nulo, 'N/A' si es nulo.
-        """
-        if not dato:
-            return "N/A"
-
-        return dato
-
-    def obtener_generacion(self, anio_nacimiento):
-        """
-        Obtiene la generación a la que pertenece una persona de acuerdo al año de nacimiento.
-        :param anio_nacimiento: El año de nacimiento de la persona.
-
-        :return: La generación a la que pertenece la persona.
-        """
-
-        if 1946 <= anio_nacimiento <= 1964:
-            return "Baby Boomers"
-        elif 1965 <= anio_nacimiento <= 1980:
-            return "Generación X"
-        elif 1981 <= anio_nacimiento <= 1999:
-            return "Millenials"
-        elif 2000 <= anio_nacimiento <= 2015:
-            return "Generacion Z"
-        else:
-            return "N/A"
-
-    def obtener_datos_demograficos(self, usuario):
-        """
-        Obtiene los datos demográficos de un usuario.
-
-        Este método recibe un usuario y obtiene sus datos demográficos, como nombre, género, puesto, año de nacimiento, generación, departamento, nivel jerárquico, gerencia, jefatura, fecha de ingreso y ubicación/región.
-
-        :param usuario: El usuario del que se obtendrán los datos demográficos.
-
-        :return: Un diccionario con los datos demográficos del usuario.
-        """
-
-        datos = {}
-
-        datos["nombre"] = self.obtener_dato(usuario.name)
-        datos["genero"] = self.obtener_dato(usuario.gender).capitalize()
-        datos["puesto"] = self.obtener_dato(usuario.job_title)
-        datos["anio_nacimiento"] = usuario.birthday.year if usuario.birthday else "N/A"
-        datos["generacion"] = (
-            self.obtener_generacion(datos["anio_nacimiento"])
-            if datos["anio_nacimiento"] != "N/A"
-            else "N/A"
-        )
-        datos["departamento"] = self.obtener_dato(usuario.department_id.name)
-
-        # Falta
-        # Nivel Jerarquico
-        # Gerencia
-        # Jefatura
-        # Fecha de ingreso
-        # Ubicación/Region
-
-        return datos
-
-    def obtener_datos_demograficos_externos(self, usuario):
-        """
-        Obtiene los datos demográficos de un usuario externo.
-        :param usuario: El usuario externo del que se obtendrán los datos demográficos.
-
-        :return: Un diccionario con los datos demográficos del usuario externo. Incluye nombre, género, puesto, año de nacimiento, generación y departamento.
-        """
-
-        datos = {}
-
-        datos["nombre"] = self.obtener_dato(usuario.nombre)
-        datos["genero"] = self.obtener_dato(usuario.genero).capitalize()
-        datos["puesto"] = self.obtener_dato(usuario.puesto)
-        datos["anio_nacimiento"] = (
-            usuario.fecha_nacimiento.year if usuario.fecha_nacimiento else "N/A"
-        )
-        datos["generacion"] = (
-            self.obtener_generacion(datos["anio_nacimiento"])
-            if datos["anio_nacimiento"] != "N/A"
-            else "N/A"
-        )
-        datos["departamento"] = self.obtener_dato(usuario.direccion)
-
-        return datos
-
     def get_evaluaciones_action(self, evaluacion_id):
         """
         Obtiene las preguntas asociadas a la evaluación.
@@ -1432,8 +1322,7 @@ class Evaluacion(models.Model):
         )
 
         for usuario in usuario_evaluacion.mapped("usuario_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos(
-                usuario)
+            datos_demograficos_usuario = usuario.obtener_datos_demograficos()
             datos_demograficos_usuario["id"] = usuario.id.__str__()
             datos_demograficos.append(datos_demograficos_usuario)
 
@@ -1446,8 +1335,7 @@ class Evaluacion(models.Model):
         )
 
         for usuario_externo in usuario_evaluacion_externo.mapped("usuario_externo_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos_externos(
-                usuario_externo)
+            datos_demograficos_usuario = usuario_externo.obtener_datos_demograficos()
             datos_demograficos_usuario["id"] = "E" + \
                 usuario_externo.id.__str__()
             datos_demograficos.append(datos_demograficos_usuario)
@@ -1478,15 +1366,14 @@ class Evaluacion(models.Model):
         datos_demograficos = []
 
         for demografico in demograficos:
-            datos_demograficos.append({
+            entrada = {
                 "UsuarioID": demografico["id"],
-                "Nombre": demografico["nombre"],
-                "Genero": demografico["genero"],
-                "Puesto": demografico["puesto"],
-                "Año de Nacimiento": demografico["anio_nacimiento"],
-                "Generación": demografico["generacion"],
-                "Departamento": demografico["departamento"],
-            })
+            }
+            for categoria, valor in demografico.items():
+                if categoria != "id":
+                    entrada[categoria] = valor
+
+            datos_demograficos.append(entrada)
 
         df_demograficos = pd.DataFrame(datos_demograficos)
 

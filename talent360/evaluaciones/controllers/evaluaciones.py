@@ -9,7 +9,7 @@ class EvaluacionesController(http.Controller):
     """Controlador para manejar las solicitudes relacionadas con las evaluaciones."""
 
     @http.route(
-        "/evaluacion/reporte/<model('evaluacion'):evaluacion>", type="http", auth="user"
+        "/evaluacion/reporte/<model('evaluacion'):evaluacion>", type="http", auth="user", website=True
     )
     def reporte_controller(self, evaluacion, filtros=None):
         """Método para generar y mostrar un reporte de evaluación.
@@ -50,7 +50,35 @@ class EvaluacionesController(http.Controller):
             return request.render("evaluaciones.encuestas_reporte_no_respuestas", parametros)        
 
         if evaluacion.incluir_demograficos:
-            parametros.update(evaluacion.generar_datos_demograficos(filtros))
+            datos_demograficos = evaluacion.generar_datos_demograficos(filtros)
+            mapeo_categorias = {
+                "departamento": "Departamento",
+                "generacion": "Generación",
+                "puesto": "Puesto",
+                "genero": "Género",
+            }
+            
+            parametros["datos_demograficos"] = []
+
+            for categoria, valores in datos_demograficos.items():
+                # Si todos los datos son N/A, omitir la categoría
+                if len(valores) == 1 and valores[0]["nombre"] == "N/A":
+                    continue
+
+                if categoria in ["nombre", "anio_nacimiento"]:
+                    continue
+
+                nombre = mapeo_categorias.get(categoria, categoria)
+
+                parametros["datos_demograficos"].append(
+                    {
+                        "categoria": nombre,
+                        "valores": json.dumps(valores),
+                    }
+                )
+                
+            parametros.update(datos_demograficos)
+            print("parametros", parametros)
         if evaluacion.tipo == "NOM_035":
             parametros.update(evaluacion.generar_datos_reporte_NOM_035_action(filtros))
             return request.render("evaluaciones.encuestas_reporte_nom_035", parametros)

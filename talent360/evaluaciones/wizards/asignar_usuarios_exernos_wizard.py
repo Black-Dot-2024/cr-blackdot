@@ -1,10 +1,8 @@
 import base64
 import csv
-from datetime import datetime
 from io import StringIO
 
 from odoo import fields, models, api, exceptions, _
-import os
 
 
 class AsignarUsuariosExternosWizard(models.TransientModel):
@@ -14,27 +12,19 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
 
     nombre_archivo = fields.Char()
 
-    campos_obligatorios = [
-        "Nombre Completo",
-        "Correo",
-        "Puesto",
-        "Nivel Jerarquico",
-        "Direccion",
-        "Gerencia",
-        "Jefatura",
-        "Genero",
-        "Fecha de ingreso",
-        "Fecha de nacimiento",
-        "Ubicacion/Region",
-    ]
 
     @api.constrains("nombre_archivo")
     def _validar_nombre_archivo(self):
+        """
+        Método para validar que el archivo cargado sea un archivo CSV
+        """
         if self.nombre_archivo and not self.nombre_archivo.lower().endswith(".csv"):
             raise exceptions.ValidationError(_("Solo se aceptan archivos CSV."))
 
     def procesar_csv(self):
-
+        """
+        Método para procesar el archivo CSV y crear los usuarios externos
+        """
         evaluacion = self.env["evaluacion"].browse(self._context.get("active_id"))
 
         if not evaluacion:
@@ -43,126 +33,73 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
             )
 
         # Procesa el archivo CSV y crea los usuarios externos
-        try:
-            contenidos = base64.b64decode(self.archivo)
-            archivo = StringIO(contenidos.decode("utf-8"))
-            csv_lector = csv.DictReader(archivo)
+        usuarios_db = self.env["usuario.externo"].cargar_csv(self.archivo)
+        usuario_ids = [(4, usuario.id) for usuario in usuarios_db]
+        evaluacion.write({"usuario_externo_ids": usuario_ids})
+        
 
-        except Exception as e:
-            raise exceptions.ValidationError(
-                f"Error al procesar el archivo: {str(e)}. Verifica que el archivo sea un CSV válido."
-            )
+    def descargar_template_usuarios(self):
+        """
+        Método para generar y descargar el template de usuarios externos
+        """
 
-        usuarios = []
+        atributos = self.env["usuario.externo"].obtener_atributos()
+        atributos_nombres = [atributo["nombre"] for atributo in atributos]
 
-        self.validar_columnas(csv_lector.fieldnames)
+        datos = StringIO()
 
-        for i, fila in enumerate(csv_lector):
-            if i >= 50000:
-                raise exceptions.ValidationError(
-                    _("Error: No se pueden cargar más de 50,000 usuarios.")
-                )
-            try:
-                fecha_ingreso = datetime.strptime(
-                    fila["Fecha de ingreso"], "%d/%m/%Y"
-                ).date()
-                fecha_nacimiento = datetime.strptime(
-                    fila["Fecha de nacimiento"], "%d/%m/%Y"
-                ).date()
-            except ValueError:
-                raise exceptions.ValidationError(
-                    _(
-                        "El formato de las fechas debe ser dd/mm/yyyy. Verifica las fechas de nacimiento e ingreso."
-                    )
-                )
+        escritor_csv = csv.writer(datos)
 
-            self.validar_fila(fila)
+        escritor_csv.writerow(atributos_nombres)
 
-            usuarios.append(
+        # "Nombre Completo", "Correo", "Puesto", "Departamento", "Genero", "Fecha de nacimiento"
+        datos_prueba_base = ["Juan Perez", "juanperez@test.com", "Gerente", "Ventas", "Masculino", "01/01/1990"]
+
+        idx = len(datos_prueba_base)
+
+        for atributo in atributos[idx:]:
+            if atributo["tipo"] == "char":
+                datos_prueba_base.append("Texto")
+            elif atributo["tipo"] == "boolean":
+                datos_prueba_base.append("Si/No")
+            elif atributo["tipo"] == "integer":
+                datos_prueba_base.append("Número entero (1, 2, 3)")
+            elif atributo["tipo"] == "float":
+                datos_prueba_base.append("Número decimal separado por punto (1.2, 3.4)")
+            elif atributo["tipo"] == "date":
+                datos_prueba_base.append("Fecha (dd/mm/yyyy)")
+            elif atributo["tipo"] == "datetime":
+                datos_prueba_base.append("Fecha y hora (dd/mm/yyyy hh:mm:ss)")
+            elif atributo["tipo"] == "selection":
+                datos_prueba_base.append("Texto")
+            else:
+                datos_prueba_base.append("Datos de prueba (Texto)")
+
+        escritor_csv.writerow(datos_prueba_base)
+
+        datos = datos.getvalue()
+
+        nombre_archivo = "template_usuarios_externos.csv"
+
+        adjunto = self.env["ir.attachment"].search(
+            [("name", "=", nombre_archivo), ("res_model", "=", self._name)], limit=1
+        )
+
+        if adjunto:
+            adjunto.write({"datas": base64.b64encode(datos.encode("utf-8"))})
+        else:
+            adjunto = self.env["ir.attachment"].create(
                 {
-                    "nombre": fila["Nombre Completo"],
-                    "email": fila["Correo"],
-                    "puesto": fila["Puesto"],
-                    "nivel_jerarquico": fila["Nivel Jerarquico"],
-                    "direccion": fila["Direccion"],
-                    "gerencia": fila["Gerencia"],
-                    "jefatura": fila["Jefatura"],
-                    "genero": fila["Genero"],
-                    "fecha_ingreso": fecha_ingreso,
-                    "fecha_nacimiento": fecha_nacimiento,
-                    "region": fila["Ubicacion/Region"],
+                    "name": nombre_archivo,
+                    "type": "binary",
+                    "datas": base64.b64encode(datos.encode("utf-8")),
+                    "res_model": nombre_archivo,
+                    "res_id": self.id,
                 }
             )
 
-        usuarios_db = self.env["usuario.externo"].create(usuarios)
-
-        usuario_ids = [(4, usuario.id) for usuario in usuarios_db]
-        evaluacion.write({"usuario_externo_ids": usuario_ids})
-
-    def validar_columnas(self, columnas: list[str]):
-        # Valida que las columnas del archivo CSV sean las correctas
-
-        columnas_faltantes = []
-        columnas_duplicadas = []
-
-        for columna in self.campos_obligatorios:
-            if columna not in columnas:
-                columnas_faltantes.append(columna)
-
-                if columnas.count(columna) > 1:
-                    columnas_duplicadas.append(columna)
-
-        mensaje = ""
-
-        if columnas_faltantes:
-            mensaje += f"Las siguientes columnas son requeridas: {', '.join(columnas_faltantes)}\n"
-
-        if columnas_duplicadas:
-            mensaje += f"Las siguientes columnas están duplicadas: {', '.join(columnas_duplicadas)}\n"
-
-        if mensaje:
-            raise exceptions.ValidationError(mensaje)
-
-    def validar_fila(self, row: dict):
-        campos = []
-        for campo in self.campos_obligatorios:
-            if not row.get(campo):
-                campos.append(campo)
-
-        if campos:
-            raise exceptions.ValidationError(
-                f"Los siguientes campos son requeridos: {', '.join(campos)}"
-            )
-
-    def descargar_template_usuarios(self):
-        # Descarga el archivo /evaluaciones/static/csv/template_usuarios_externos.csv
-        current_path = os.path.dirname(os.path.abspath(__file__))
-        ruta_archivo = os.path.join(
-            current_path, "../static/csv/template_usuarios_externos.csv"
-        )
-        with open(ruta_archivo, "r") as archivo:
-            datos = archivo.read()
-            nombre_archivo = "template_usuarios_externos.csv"
-
-            attachment = self.env["ir.attachment"].search(
-                [("name", "=", nombre_archivo), ("res_model", "=", self._name)], limit=1
-            )
-
-            if attachment:
-                attachment.write({"datas": base64.b64encode(datos.encode("utf-8"))})
-            else:
-                attachment = self.env["ir.attachment"].create(
-                    {
-                        "name": nombre_archivo,
-                        "type": "binary",
-                        "datas": base64.b64encode(datos.encode("utf-8")),
-                        "res_model": nombre_archivo,
-                        "res_id": self.id,
-                    }
-                )
-
         return {
             "type": "ir.actions.act_url",
-            "url": f"/web/content/{str(attachment.id)}?download=true",
+            "url": f"/web/content/{str(adjunto.id)}?download=true",
             "target": "new",
         }

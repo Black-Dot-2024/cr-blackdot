@@ -52,3 +52,69 @@ class Users(models.Model):
             raise ValidationError(
                 _("No se encontraron respuestas para el usuario seleccionado.")
             )
+
+    def obtener_datos_demograficos(self):
+        """
+        Obtiene los datos demográficos de un usuario.
+
+        Este método obtiene los datos demográficos, como nombre, género, puesto, año de nacimiento, generación, departamento, nivel jerárquico, gerencia, jefatura, fecha de ingreso y ubicación/región.
+
+        :return: Un diccionario con los datos demográficos del usuario.
+        """
+
+        datos = {}
+        datos["nombre"] = self.name if self.name else "N/A"
+        datos["genero"] = self.gender.capitalize() if self.gender else "N/A"
+        datos["puesto"] = self.job_title if self.job_title else "N/A"
+        datos["anio_nacimiento"] = self.birthday.year if self.birthday else "N/A"
+        datos["generacion"] = (
+            self.obtener_generacion(datos["anio_nacimiento"])
+            if datos["anio_nacimiento"] != "N/A"
+            else "N/A"
+        )
+        datos["departamento"] = self.department_id.name if self.department_id else "N/A"
+
+        datos.update(self._obtener_atributos_extra())
+
+        return datos
+
+    def _obtener_atributos_extra(self):
+        atributos = self.employee_id._read_format(["employee_properties"])[0]["employee_properties"]
+        atributos_extra = {}
+        for attr in atributos:
+            if attr["type"] in ["separator", "many2one", "many2many", "tags"]:
+                continue
+
+            if attr["type"] == "selection":
+                valor = "N/A"
+                if attr["value"]:
+                    for option in attr["selection"]:
+                        if option[0] == attr["value"]:
+                            valor = option[1]
+                            break
+                atributos_extra[attr["string"]] = valor
+            elif attr["type"] == "boolean":
+                atributos_extra[attr["string"]] = "Si" if attr["value"] else "No"
+            else:    
+                atributos_extra[attr["string"]] = attr["value"] if attr["value"] else "N/A"
+
+        return atributos_extra
+    
+    def obtener_generacion(self, anio_nacimiento):
+        """
+        Obtiene la generación a la que pertenece una persona de acuerdo al año de nacimiento.
+        :param anio_nacimiento: El año de nacimiento de la persona.
+
+        :return: La generación a la que pertenece la persona.
+        """
+
+        if 1946 <= anio_nacimiento <= 1964:
+            return "Baby Boomers"
+        elif 1965 <= anio_nacimiento <= 1980:
+            return "Generación X"
+        elif 1981 <= anio_nacimiento <= 1999:
+            return "Millenials"
+        elif 2000 <= anio_nacimiento <= 2015:
+            return "Generacion Z"
+        else:
+            return "N/A"
