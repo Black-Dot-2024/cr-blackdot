@@ -40,6 +40,8 @@ class PlanAccion(http.Controller):
         
         respuesta = requests.get(str(url))
 
+        
+
         if respuesta.status_code == 200:
             data = respuesta.json()
             

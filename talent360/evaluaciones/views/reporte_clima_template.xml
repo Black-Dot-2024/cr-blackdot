@@ -132,10 +132,10 @@
                         Necesidad de acción
                     </h4>
                     <div class="container-fluid">
-                        <button onclick="guardarPlanAccion()" value="start" class="btn btn-primary">
+                        <button id="boton_guardar" onclick="guardarPlanAccion()" value="start" class="btn btn-primary">
                             <i class="fa fa-save"></i> Guardar
                         </button> 
-                        <button onclick="generarPlanAccion()" value="start" class="btn btn-success">
+                        <button id="boton_generar" onclick="generarPlanAccion()" value="start" class="btn btn-success">
                             <i class="fa fa-cogs"></i> Generar Plan de Acción
                         </button>
                     </div>

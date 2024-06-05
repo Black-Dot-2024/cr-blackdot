@@ -9,11 +9,23 @@ function generarPlanAccion() {
     xhr.setRequestHeader('Content-Type', 'application/json');
 
     var textarea = document.querySelector('#plan_accion_textarea');
+    var guardarBtn = document.querySelector('button[onclick="guardarPlanAccion()"]');
+    var generarBtn = document.querySelector('button[onclick="generarPlanAccion()"]');
 
+    // Deshabilitar los botones
+    guardarBtn.disabled = true;
+    generarBtn.disabled = true;
+    textarea.disabled = true;
+    textarea.value = "Generando plan de accion...";
+    
     xhr.onload = function() {
         if (xhr.status >= 200 && xhr.status < 400) {
 
-            var response = xhr.responseText; 
+            var response = xhr.responseText;
+            
+            guardarBtn.disabled = false;
+            generarBtn.disabled = false;
+            textarea.disabled = false;
 
             if (textarea) {
                 textarea.value = response;
@@ -56,25 +68,26 @@ function guardarPlanAccion() {
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify(data));
 
-    // xhr.onload = function() {
-    //     if (xhr.status >= 200 && xhr.status < 400) {
+    var guardarBtn = document.querySelector('button[onclick="guardarPlanAccion()"]');
+    var generarBtn = document.querySelector('button[onclick="generarPlanAccion()"]');
+    var textarea = document.querySelector('#plan_accion_textarea');
 
-    //         var response = xhr.responseText; 
+    // Deshabilitar los botones
+    guardarBtn.disabled = true;
+    generarBtn.disabled = true;
+    textarea.disabled = true;
 
-    //         console.log(response);
 
-    //     } else {
-
-    //         // Errores del request
-    //         console.error("Error en la solicitud: " + xhr.status);
-    //     }
-    // };
-
-    // xhr.onerror = function() {
-    //     // Aquí manejas los errores de la conexión
-    //     console.error("Error de conexión");
-    // };
-
-    // xhr.send(JSON.stringify(data));
+    // al obtener respuesta del servidor 200, habilitar de nuevo los botones
+    
+    xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 400) {
+            guardarBtn.disabled = false;
+            generarBtn.disabled = false;
+            textarea.disabled = false;
+        } else {
+            console.error("Error en la solicitud: " + xhr.status);
+        }
+    };
 }
 
