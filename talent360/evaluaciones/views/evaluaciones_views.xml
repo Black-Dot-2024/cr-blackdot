@@ -128,7 +128,7 @@
                         <field name="descripcion"/>
                     </group>
                     <group>
-                        <field name="fecha_inicio">
+                        <field name="fecha_inicio" readonly="porcentaje_respuestas > 0">
                             <widget name="date"/>
                         </field>
                         <field name="fecha_final">
@@ -141,7 +141,7 @@
                     </group>
                         <notebook>
                             <page string="Preguntas">
-                                <field class="lh-lg w-100" name="pregunta_ids" domain="[('tipo', '=', False)]" invisible="tipo != 'generico'">
+                                <field class="lh-lg w-100" name="pregunta_ids" domain="[('tipo', '=', False)]" invisible="tipo != 'generico'" readonly="estado != 'borrador'">
                                     <tree create="true" delete="true" editable="bottom">
                                         <control>
                                             <create name="add_filtro" string="Agregar pregunta "/>

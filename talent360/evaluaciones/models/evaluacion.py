@@ -165,6 +165,15 @@ class Evaluacion(models.Model):
                 raise exceptions.ValidationError(
                     _("La evaluación debe tener al menos una pregunta.")
                 )
+                
+    @api.constrains("niveles")
+    def checar_niveles(self):
+        for registro in self:
+            for nivel in registro.niveles:
+                if nivel.descripcion_nivel == "Cambiar descripción":
+                    raise exceptions.ValidationError(
+                        _("En la semaforización, debes cambiar las descripciones de los niveles con descripción de 'Cambiar descripción'.")
+                    )
 
     @api.model
     def default_get(self, fields_list):
