@@ -9,7 +9,7 @@ class EvaluacionesController(http.Controller):
     """Controlador para manejar las solicitudes relacionadas con las evaluaciones."""
 
     @http.route(
-        "/evaluacion/reporte/<model('evaluacion'):evaluacion>", type="http", auth="user"
+        "/evaluacion/reporte/<model('evaluacion'):evaluacion>", type="http", auth="user", website=True
     )
     def reporte_controller(self, evaluacion, filtros=None):
         """Método para generar y mostrar un reporte de evaluación.
@@ -47,11 +47,19 @@ class EvaluacionesController(http.Controller):
 
         parametros["plan"] = plan_accion
 
-        tiene_respuestas = True
+        plan_accion = request.env["plan.accion"].sudo().search(
+            [
+                ("evaluacion_id.id", "=", evaluacion.id)
+            ], order="id desc", limit=1
+        )
+
+        parametros["plan"] = plan_accion
+
+        tiene_respuestas = False
 
         for pregunta in parametros["preguntas"]:
-            if not pregunta["respuestas"]:
-                tiene_respuestas = False
+            if pregunta["respuestas"]:
+                tiene_respuestas = True
                 break
     
         if not tiene_respuestas:
