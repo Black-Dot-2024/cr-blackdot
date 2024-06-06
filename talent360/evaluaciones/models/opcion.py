@@ -16,8 +16,8 @@ class Opcion(models.Model):
     _name = "opcion"
     _description = "Opcion para una pregunta"
 
-    pregunta_id = fields.Many2one("pregunta", string="Pregunta", size=50)
-    opcion_texto = fields.Char("Opción", required=True)
+    pregunta_id = fields.Many2one("pregunta", string="Pregunta")
+    opcion_texto = fields.Char("Opción", required=True, size=50)
     valor = fields.Integer(required=True, default=0)
 
     @api.constrains("opcion_texto")
