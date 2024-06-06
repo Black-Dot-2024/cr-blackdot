@@ -291,9 +291,7 @@ class Objetivo(models.Model):
     @api.model
     def create(self, vals):
         if vals.get("orden") == "descendente":
-            print("Entro a descendente")
             vals["resultado"] = vals.get("piso_minimo")
-        print(vals.get("resultado"))
         return super(Objetivo, self).create(vals)
 
     @api.depends('avances')
