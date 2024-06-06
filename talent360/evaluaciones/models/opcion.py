@@ -17,7 +17,7 @@ class Opcion(models.Model):
     _description = "Opcion para una pregunta"
 
     pregunta_id = fields.Many2one("pregunta", string="Pregunta")
-    opcion_texto = fields.Char("Opción", required=True)
+    opcion_texto = fields.Char("Opción", required=True, size=25)
     valor = fields.Integer(required=True, default=0)
 
     @api.constrains("opcion_texto")
@@ -29,3 +29,7 @@ class Opcion(models.Model):
             if registro.opcion_texto:
                 if "\"" in registro.opcion_texto or "\'" in registro.opcion_texto:
                     raise ValidationError(_("El texto de la opción no puede contener comillas simples o dobles."))
+        for registro in self:
+            if len(registro.opcion_texto or "") > 25:
+                raise ValidationError(_("La opción no puede tener más de 25 caracteres."))
+    

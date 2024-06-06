@@ -86,6 +86,11 @@ class Pregunta(models.Model):
             ("violencia", "Violencia"),
         ],
     )
+    @api.constrains("pregunta_texto")
+    def _chechar_largo(self):
+        for registro in self:
+            if len(registro.pregunta_texto or "") > 255:
+                raise ValidationError(_("La pregunta no puede tener más de 255 caracteres."))
 
     @api.constrains("opcion_ids")
     def checkar_opciones(self):
