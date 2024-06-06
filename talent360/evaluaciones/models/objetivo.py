@@ -294,11 +294,11 @@ class Objetivo(models.Model):
             vals["resultado"] = vals.get("piso_minimo")
         return super(Objetivo, self).create(vals)
 
-    @api.depends('avances')
+    @api.depends("avances")
     def _compute_resultado(self):
         for objetivo in self:
             orden = objetivo.orden
-            avances = self.env['objetivo.avances'].search([('objetivo_id', '=', objetivo.id)])
+            avances = self.env["objetivo.avances"].search([("objetivo_id", "=", objetivo.id)])
             if orden == "ascendente":
                 objetivo.resultado = sum(avance.avance for avance in avances)
             else:
