@@ -50,9 +50,6 @@ class Objetivo(models.Model):
         string="Métrica", compute="_compute_metrica_mostrar", store="True", size=20
     )
 
-
-   
-
     tipo = fields.Selection(
         [
             ("puesto", "Del puesto"),
@@ -281,8 +278,8 @@ class Objetivo(models.Model):
         if vals.get("orden") == "descendente":
             vals["resultado"] = vals.get("piso_minimo")
         return super(Objetivo, self).create(vals)
-    
-    @api.depends('avances')
+
+    @api.depends('avances', 'avances.avance')
     def _compute_resultado(self):
         for objetivo in self:
             avances = self.env['objetivo.avances'].search([('objetivo_id', '=', objetivo.id)])

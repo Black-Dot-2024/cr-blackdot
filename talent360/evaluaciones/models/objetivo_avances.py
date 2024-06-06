@@ -22,16 +22,3 @@ class ObjetivoAvance(models.Model):
     comentarios = fields.Text(string="Comentarios")
     archivos = fields.Many2many(comodel_name="ir.attachment", string="Archivos")
     comentarios_evaluador = fields.Text(string="Retroalimentación")
-    estatus = fields.Selection(
-        [
-            ("aceptado", "Aceptado"),
-            ("rechazado", "Rechazado")
-        ],
-        default="aceptado"
-    )
-    
-    @api.depends('avance')
-    def _compute_resultado(self):
-        for objetivo in self:
-            avances = self.search([('objetivo_id', '=', objetivo.objetivo_id.id)])
-            objetivo.objetivo_id.resultado = sum(avance.avance for avance in avances)
