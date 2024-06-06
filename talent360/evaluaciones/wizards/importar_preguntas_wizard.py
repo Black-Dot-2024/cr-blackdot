@@ -179,7 +179,7 @@ class ImportarPreguntasWizard(models.TransientModel):
                     )
                 if len(opcion) > 25:
                     raise exceptions.ValidationError(
-                        "Las opciones no tienen que tener más de 25 caracteres."
+                        f"La opción '{opcion}' tiene más de 25 caracteres."
                     )
         else:
     
