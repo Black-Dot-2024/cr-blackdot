@@ -27,7 +27,7 @@
         "data/template.csv",
         "data/data.xml",
     ],
-    "depends": ["base", "mail", "hr"],
+    "depends": ["base", "mail", "hr", "web"],
     "assets": {
         "evaluaciones.evaluaciones_assets": [
             ("include", "web.chartjs_lib"),
@@ -41,6 +41,7 @@
             "web/static/lib/bootstrap/scss/_variables.scss",
             "evaluaciones/static/src/scss/survey_templates_form.scss",
             "evaluaciones/static/src/scss/survey_templates_results.scss",
+            "evaluaciones/static/src/js/generar_plan_accion.js",
         ],
     },
 }

@@ -39,6 +39,14 @@ class EvaluacionesController(http.Controller):
 
         parametros["filtros"] = filtros
 
+        plan_accion = request.env["plan.accion"].sudo().search(
+            [
+                ("evaluacion_id.id", "=", evaluacion.id)
+            ], order="id desc", limit=1
+        )
+
+        parametros["plan"] = plan_accion
+
         tiene_respuestas = False
 
         for pregunta in parametros["preguntas"]:

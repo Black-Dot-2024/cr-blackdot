@@ -1,3 +1,4 @@
+from venv import logger
 from odoo import api, models, fields, _
 from collections import defaultdict, Counter
 from odoo import exceptions
@@ -115,6 +116,8 @@ class Evaluacion(models.Model):
     incluir_demograficos = fields.Boolean(
         string="Incluir datos demográficos", default=True
     )
+    
+    plan_accion = fields.Text(string="Plan de acción")
 
     @api.constrains("descripcion")
     def _checar_largo(self):
