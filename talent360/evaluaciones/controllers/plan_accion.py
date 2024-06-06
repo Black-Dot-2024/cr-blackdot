@@ -17,7 +17,7 @@ class PlanAccion(http.Controller):
         """
         data = json.loads(request.httprequest.data)
         plan = data.get("plan_accion")
-        plan_accion_modelo = request.env['plan.accion']
+        plan_accion_modelo = request.env["plan.accion"]
         plan_accion_modelo.sudo().guardar_plan_accion_action(evaluacion_id, plan)
 
     @http.route("/plan_accion/reporte/<model('evaluacion'):evaluacion>", type="http", auth="user")

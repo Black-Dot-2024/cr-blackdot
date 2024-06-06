@@ -1,5 +1,15 @@
 function generarPlanAccion() {
-    console.log("generando plan")
+
+/*
+  Función para generar un plan de acción.
+ 
+  Esta función envía una solicitud a la base de datos para generar un plan de acción basado en el `evaluacion_id`.
+  Mientras se procesa la solicitud, se deshabilitan los botones de guardar y generar, y el área de texto se muestra
+  con un mensaje de "Generando plan de acción...". Al recibir la respuesta del servidor, el área de texto se actualiza
+  con el plan de acción generado y se vuelven a habilitar los botones y el área de texto.
+ 
+*/
+
 
     var evaluacion_id = document.querySelector('input[name="evaluacion_id"]').value;
 
@@ -29,8 +39,6 @@ function generarPlanAccion() {
 
             if (textarea) {
                 textarea.value = response;
-            } else {
-                console.error("No se encontró el textarea con id 'plan_accion_textarea'");
             }
         } else {
 
@@ -59,7 +67,6 @@ function Alturatextarea(textarea) {
 //Guardar plan de accion modificado
 
 function guardarPlanAccion() {
-    console.log("guardando plan")
 
     var evaluacion_id = document.querySelector('input[name="evaluacion_id"]').value;
     var plan_accion = document.querySelector('#plan_accion_textarea').value;
@@ -85,7 +92,6 @@ function guardarPlanAccion() {
 
 
     // al obtener respuesta del servidor 200, habilitar de nuevo los botones
-    
     xhr.onload = function() {
         if (xhr.status >= 200 && xhr.status < 400) {
             guardarBtn.disabled = false;
