@@ -112,6 +112,8 @@ class Objetivo(models.Model):
 
     progreso = fields.One2many("objetivo.progreso", "objetivo_id", string="Progreso")
 
+    objetivo_progreso_ids = fields.One2many("objetivo.progreso", "objetivo_id", string="Progreso")
+
     @api.constrains("descripcion")
     def _chechar_largo(self):
         for registro in self:
@@ -160,6 +162,7 @@ class Objetivo(models.Model):
         """
         if "piso_minimo" in vals or "piso_maximo" in vals or "orden" in vals:
             nuevo_piso_minimo = vals.get("piso_minimo", self.piso_minimo)
+            self.nuevo_piso_registro = nuevo_piso_minimo
             nuevo_piso_maximo = vals.get("piso_maximo", self.piso_maximo)
             nuevo_orden = vals.get("orden", self.orden)
             if nuevo_orden == "ascendente":
@@ -294,12 +297,26 @@ class Objetivo(models.Model):
             vals["resultado"] = vals.get("piso_minimo")
         return super(Objetivo, self).create(vals)
 
-    @api.depends("avances")
+    @api.depends("avances", "avances.avance", "progreso")
     def _compute_resultado(self):
+        print("ENTRO A COMPUTE RESULTADO")
         for objetivo in self:
             orden = objetivo.orden
-            avances = self.env["objetivo.avances"].search([("objetivo_id", "=", objetivo.id)])
-            if orden == "ascendente":
-                objetivo.resultado = sum(avance.avance for avance in avances)
+            if len(objetivo.objetivo_progreso_ids) > 0:
+                ultimo_progreso = objetivo.objetivo_progreso_ids.sorted(key=lambda x: x.fecha, reverse=True)[0]
+
+                if orden == "ascendente":
+                    nuevo_resultado =  (objetivo.piso_maximo * ultimo_progreso.progreso / 100)
+                else:
+                    nuevo_resultado = objetivo.piso_minimo - (objetivo.piso_minimo * ultimo_progreso.progreso / 100)
+                    if nuevo_resultado <= 0:
+                        nuevo_resultado = 0
+                
+                objetivo.resultado = nuevo_resultado
+
             else:
-                objetivo.resultado = objetivo.piso_minimo - sum(avance.avance for avance in avances)
+                avances = self.env["objetivo.avances"].search([("objetivo_id", "=", objetivo.id)])
+                if orden == "ascendente":
+                    objetivo.resultado = sum(avance.avance for avance in avances)
+                else:
+                    objetivo.resultado = objetivo.piso_minimo - sum(avance.avance for avance in avances)
