@@ -24,6 +24,7 @@ class Objetivo(models.Model):
     :param usuario_ids(fields.Many2Many): Arreglo de usuarios asignado a un objetivo
     :param evaluador(fields.Char): Nombre del evaluador del objetivo
     :param avances(fields.One2Many): Avances del objetivo
+    :param progreso(fields.One2Many): Progreso del objetivo
     """
 
     _name = "objetivo"
@@ -83,7 +84,7 @@ class Objetivo(models.Model):
         default=fields.Datetime.today(),
         help="Fecha en la que se debe cumplir el objetivo",
     )
-    resultado = fields.Integer(compute="_compute_resultado", store=True)
+    resultado = fields.Float(compute="_compute_resultado", store=True, digits=(12, 2))
     porcentaje = fields.Float(store=True)
     estado = fields.Selection(
         [
@@ -109,6 +110,8 @@ class Objetivo(models.Model):
 
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
 
+    progreso = fields.One2many("objetivo.progreso", "objetivo_id", string="Progreso")
+
     @api.constrains("descripcion")
     def _chechar_largo(self):
         for registro in self:
@@ -123,6 +126,8 @@ class Objetivo(models.Model):
         De no ser el caso, el sistema manda un error al usuario.
         """
         for registro in self:
+            if registro.piso_maximo == registro.piso_minimo:
+                raise ValidationError(_("El piso mínimo no puede ser igual al piso máximo"))
             if registro.orden == "ascendente":
                 if registro.piso_minimo >= registro.piso_maximo:
                     raise ValidationError(_("El piso mínimo debe ser menor al piso máximo para objetivos ascendentes"))
@@ -195,7 +200,7 @@ class Objetivo(models.Model):
                 registro.estado = "rojo"
                 continue
 
-            if registro.orden == "ascendente":
+            if registro.orden == "ascendente" and registro.piso_maximo != registro.piso_minimo:
                 ratio = (registro.resultado - registro.piso_minimo) / (registro.piso_maximo - registro.piso_minimo) if registro.piso_maximo != 0 else 0
                 if 0 <= ratio <= 0.6:
                     registro.estado = "rojo"
@@ -206,7 +211,7 @@ class Objetivo(models.Model):
                 elif ratio > 1:
                     registro.estado = "azul"
                 registro.porcentaje = ratio
-            else:
+            elif registro.piso_maximo != registro.piso_minimo:
                 ratio = 1 - ((registro.resultado - registro.piso_maximo) / (registro.piso_minimo - registro.piso_maximo)) if registro.piso_minimo != 0 else 0
                 if 0 <= ratio <= 0.6:
                     registro.estado = "rojo"
@@ -244,6 +249,18 @@ class Objetivo(models.Model):
             "target": "new",
         }
     
+    def modificar_progreso_action(self):
+        """
+        Método para llamar la funcionalidad de modificación de progreso.
+        """
+        return {
+            "name": "Modificar Progreso",
+            "type": "ir.actions.act_window",
+            "res_model": "modificar.progreso.wizard",
+            "view_mode": "form",
+            "target": "new",
+        }
+    
     @api.onchange("metrica")
     def _onchange_metrica(self):
         if self.metrica != "otro":
@@ -267,8 +284,8 @@ class Objetivo(models.Model):
 
     @api.constrains("metrica", "nueva_metrica")
     def _check_nueva_metrica(self):
-        for record in self:
-            if record.metrica == "otro" and (not record.nueva_metrica or record.nueva_metrica.strip() == ''):
+        for registro in self:
+            if registro.metrica == "otro" and (not registro.nueva_metrica or registro.nueva_metrica.strip() == ''):
                 raise ValidationError(("El campo 'Métrica Personalizada' no puede estar vacío."))
                 
     @api.model

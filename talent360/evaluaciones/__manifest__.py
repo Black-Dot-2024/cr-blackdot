@@ -10,6 +10,7 @@
         "views/crear_evaluacion_clima.xml",
         "views/objetivos_views.xml",
         "views/mis_objetivos_views.xml",
+        "views/modificar_progreso_wizard.xml",
         "views/portada_reporte_template.xml",
         "views/reporte_clima_template.xml",
         "views/reporte_nom_035_template.xml",
@@ -24,6 +25,7 @@
         "data/competencia.csv",
         "data/opcion.csv",
         "data/template.csv",
+        "data/data.xml",
     ],
     "depends": ["base", "mail", "hr"],
     "assets": {

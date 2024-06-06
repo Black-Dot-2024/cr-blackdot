@@ -11,11 +11,12 @@ from . import template
 from . import res_users
 from . import opcion
 from . import evaluacion_360
-from . import evaluacion_clima
 from . import objetivo
 from . import pregunta_escala
 from . import reporte_resumen
 from . import usuario_externo
 from . import niveles
 from . import objetivo_avances
+from . import objetivo_progreso
+from . import res_company
 from . import plan_accion

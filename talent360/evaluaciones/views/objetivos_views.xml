@@ -83,8 +83,10 @@
         <field name="model">objetivo</field>
         <field name="arch" type="xml">
             <form string="Objetivo">
+                <field name="id" invisible="1"/>
                 <header>
                     <field name="estado" widget="statusbar" statusbar_visible="rojo, amarillo, verde, azul" />
+                    <button name="modificar_progreso_action" string="Modificar Progreso" type="object" class="btn-primary" context="{'actual_objetivo_id': active_id}" invisible="not (id > 0)"/>
                 </header>
                 <sheet>
                     <div style="width: 100%;">
@@ -168,6 +170,17 @@
                                     </group>
                                 </form>
                             </field>
+                        </page>
+                        <page string="Historial">
+                            <group>
+                                <field class="lh-lg w-100" colspan="2" name="progreso" nolabel="1">
+                                    <tree create="false" edit="false" delete="false" editable="bottom"> 
+                                        <field class="lh-m" name="fecha" readonly="1"/>
+                                        <field class="lh-m" name="progreso" readonly="1"/>
+                                        <field class="lh-m" name="comentarios" readonly="1"/>
+                                    </tree>
+                                </field>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>

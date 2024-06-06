@@ -92,8 +92,9 @@ class Pregunta(models.Model):
         """
         Verifica que haya al menos una opción de respuesta para las preguntas de tipo 'multiple_choice'.
         """
-        if self.tipo == "multiple_choice" and len(self.opcion_ids) < 2:
-            raise ValidationError(_("Debe haber al menos dos opciones de respuesta."))
+        for registro in self:
+            if registro.tipo == "multiple_choice" and len(registro.opcion_ids) < 2:
+                raise ValidationError(_("Debe haber al menos dos opciones de respuesta."))
 
     def _calculate_valor_maximo(self):
         if self.tipo == "escala":
@@ -137,3 +138,8 @@ class Pregunta(models.Model):
         if self.condicional and respuesta == self.respuesta_trigger:
             return self.preguntas_desbloqueadas
         return False
+
+    def copy(self, default=None):
+        default = dict(default or {})
+        default['opcion_ids'] = [(0, 0, option.copy_data()[0]) for option in self.opcion_ids]
+        return super(Pregunta, self).copy(default)

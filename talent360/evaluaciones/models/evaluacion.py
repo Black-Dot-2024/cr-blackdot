@@ -2,6 +2,9 @@ from odoo import api, models, fields, _
 from collections import defaultdict, Counter
 from odoo import exceptions
 from datetime import timedelta
+from io import BytesIO
+import pandas as pd
+import base64
 from odoo.exceptions import ValidationError
 import logging
 
@@ -48,7 +51,7 @@ class Evaluacion(models.Model):
         required=True,
         default="generico",
     )
-    descripcion = fields.Text(string="Descripción", size=255)
+    descripcion = fields.Text(string="Descripción", size=300)
     estado = fields.Selection(
         [
             ("borrador", "Borrador"),
@@ -116,8 +119,8 @@ class Evaluacion(models.Model):
     @api.constrains("descripcion")
     def _checar_largo(self):
         for registro in self:
-            if len(registro.descripcion or "") > 255:
-                raise ValidationError(_("La descripción no puede tener más de 255 caracteres."))
+            if len(registro.descripcion or "") > 300:
+                raise ValidationError(_("La descripción no puede tener más de 300 caracteres."))
 
 
     @api.constrains("fecha_inicio", "fecha_final")
@@ -125,12 +128,12 @@ class Evaluacion(models.Model):
         """
         Valida que la fecha de inicio sea anterior a la fecha final.
         """
-        for record in self:
+        for registro in self:
 
             # Si ya se creo, se compara contra la fecha de creación
-            if record.create_date:
-                fecha_creacion = record.create_date.date() - timedelta(days=1)
-                if record.fecha_inicio < fecha_creacion:
+            if registro.create_date:
+                fecha_creacion = registro.create_date.date() - timedelta(days=1)
+                if registro.fecha_inicio < fecha_creacion:
                     raise exceptions.ValidationError(
                         _(
                             f"La fecha de inicio debe ser igual o posterior a la fecha de creación de la evaluación ({fecha_creacion.strftime('%d/%m/%Y')})."
@@ -139,18 +142,18 @@ class Evaluacion(models.Model):
             # Si es nuevo, se compara contra la fecha actual
             else:
                 fecha_actual = fields.Date.today() - timedelta(days=1)
-                if record.fecha_inicio:
+                if registro.fecha_inicio:
                     # Verifica que la fecha de inicio no sea menor a la fecha actual
-                    if record.fecha_inicio < fecha_actual:
+                    if registro.fecha_inicio < fecha_actual:
                         raise exceptions.ValidationError(
                             _(
                                 "La fecha de inicio debe ser igual o posterior a la fecha actual."
                             )
                         )
 
-            if record.fecha_inicio and record.fecha_final:
+            if registro.fecha_inicio and registro.fecha_final:
                 # Verifica que la fecha de inicio sea antes de la fecha final
-                if record.fecha_inicio > record.fecha_final:
+                if registro.fecha_inicio > registro.fecha_final:
                     raise exceptions.ValidationError(
                         _("La fecha de inicio debe ser anterior a la fecha final")
                     )
@@ -160,11 +163,20 @@ class Evaluacion(models.Model):
         """
         Valida que la evaluación tenga al menos una pregunta.
         """
-        for record in self:
-            if not record.pregunta_ids:
+        for registro in self:
+            if not registro.pregunta_ids:
                 raise exceptions.ValidationError(
                     _("La evaluación debe tener al menos una pregunta.")
                 )
+                
+    @api.constrains("niveles")
+    def checar_niveles(self):
+        for registro in self:
+            for nivel in registro.niveles:
+                if nivel.descripcion_nivel == "Cambiar descripción":
+                    raise exceptions.ValidationError(
+                        _("En la semaforización, debes cambiar las descripciones de los niveles con descripción de 'Cambiar descripción'.")
+                    )
 
     @api.model
     def default_get(self, fields_list):
@@ -173,15 +185,12 @@ class Evaluacion(models.Model):
         # Obtener tipo del contexto
         tipo = self._context.get("tipo", "generico")
 
-        ultimo_id = self.env["evaluacion"].search([], order="id desc", limit=1)
-
         defaults["fecha_inicio"] = fields.Date.today()
         defaults["fecha_final"] = fields.Date.today()
 
         template_id = False
 
         if tipo == "clima":
-            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación Clima"
             defaults["descripcion"] = "La evaluación Clima es una herramienta de medición de clima organizacional, cuyo objetivo es conocer la percepción que tienen las personas que laboran en los centros de trabajo, sobre aquellos aspectos sociales que conforman su entorno laboral y que facilitan o dificultan su desempeño."
             defaults["tipo"] = "CLIMA"
 
@@ -197,7 +206,6 @@ class Evaluacion(models.Model):
             )
 
         elif tipo == "nom035":
-            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación NOM 035"
             defaults["descripcion"] = "La NOM 035 tiene como objetivo establecer los elementos para identificar, analizar y prevenir los factores de riesgo psicosocial, así como para promover un entorno organizacional favorable en los centros de trabajo."
             defaults["tipo"] = "NOM_035"
             defaults["fecha_inicio"] = fields.Date.today()
@@ -206,13 +214,12 @@ class Evaluacion(models.Model):
                 "evaluaciones.template_nom035"
             )
         elif tipo == "generico":
-            defaults["nombre"] = str(ultimo_id.id + 1) + " Evaluación Genérica"
             defaults["tipo"] = "generico"
 
         if template_id:
             template = self.env["template"].browse(template_id)
             if template:
-                pregunta_ids = template.pregunta_ids.ids
+                pregunta_ids = template.pregunta_ids.copy_multi().ids
                 defaults["pregunta_ids"] = [(6, 0, pregunta_ids)]
 
         return defaults
@@ -370,20 +377,25 @@ class Evaluacion(models.Model):
 
         datos_demograficos = self.generar_datos_demograficos()
 
-        categorias = [
-            ("Departamento", "departamentos", "departamento"),
-            ("Generación", "generaciones", "generacion"),
-            ("Puesto", "puestos", "puesto"),
-            ("Género", "generos", "genero"),
-        ]
-
         filtros_ids = []
 
-        for categoria, nombre_grupal, nombre_individual in categorias:
+        mapeo_categorias = {
+            "departamento": "Departamento",
+            "generacion": "Generación",
+            "puesto": "Puesto",
+            "genero": "Género",
+        }
+
+        for categoria, valores in datos_demograficos.items():
+            if categoria in ["nombre", "anio_nacimiento"]:
+                continue
+
+            nombre = mapeo_categorias.get(categoria, categoria)
+
             filtro_id = self.env["filtro.wizard"].create(
                 {
-                    "categoria": categoria,
-                    "categoria_interna": nombre_individual,
+                    "categoria": nombre,
+                    "categoria_interna": categoria,
                 }
             )
             filtros_ids.append(filtro_id.id)
@@ -391,11 +403,11 @@ class Evaluacion(models.Model):
             self.env["filtro.seleccion.wizard"].create(
                 [
                     {
-                        "texto": dep["nombre"],
-                        "categoria": categoria,
+                        "texto": valor["nombre"],
+                        "categoria": nombre,
                         "filtro_original_id": filtro_id.id,
                     }
-                    for dep in datos_demograficos[nombre_grupal]
+                    for valor in valores
                 ]
             )
 
@@ -443,7 +455,8 @@ class Evaluacion(models.Model):
                     lambda r: self.validar_filtro(filtros, r)
                 )
 
-            respuestas = [respuesta.respuesta_mostrar for respuesta in respuesta_ids]
+            respuestas = [
+                respuesta.respuesta_mostrar for respuesta in respuesta_ids]
             respuestas_tabuladas = dict(Counter(respuestas))
             datos_pregunta = {
                 "pregunta": pregunta,
@@ -496,7 +509,8 @@ class Evaluacion(models.Model):
             categoria = dict(pregunta._fields["categoria"].selection).get(
                 pregunta.categoria
             )
-            dominio = dict(pregunta._fields["dominio"].selection).get(pregunta.dominio)
+            dominio = dict(pregunta._fields["dominio"].selection).get(
+                pregunta.dominio)
             valor_pregunta = 0
 
             respuesta_ids = self.env["respuesta"].search(
@@ -569,6 +583,8 @@ class Evaluacion(models.Model):
             "Condiciones Generales de Trabajo",
         ]
 
+        departamentos = []
+
         # Estructura de datos para las categorías
         detalles_categorias = [
             {
@@ -629,8 +645,8 @@ class Evaluacion(models.Model):
                 elif respuesta.usuario_externo_id:
                     usuario_externo = respuesta.usuario_externo_id
                     nombre_departamento = (
-                        usuario_externo.direccion
-                        if usuario_externo.direccion
+                        usuario_externo.departamento
+                        if usuario_externo.departamento
                         else "Sin departamento"
                     )
                 else:
@@ -645,6 +661,7 @@ class Evaluacion(models.Model):
                     None,
                 )
                 if departamento is None:
+                    departamentos.append(nombre_departamento)
                     departamento = {
                         "nombre": nombre_departamento,
                         "color": "#2894a7",
@@ -666,12 +683,29 @@ class Evaluacion(models.Model):
                 categoria["valor"] = (
                     categoria["puntuacion"] / categoria["puntuacion_maxima"]
                 ) * 100
-                categoria["color"] = self.asignar_color_clima(categoria["valor"])
+                categoria["color"] = self.asignar_color_clima(
+                    categoria["valor"])
+
+            for departamento in departamentos:
+                if not departamento in [
+                    dept["nombre"] for dept in categoria["departamentos"]
+                ]:
+                    categoria["departamentos"].append(
+                        {
+                            "nombre": departamento,
+                            "color": "#2894a7",
+                            "puntos": 0,
+                            "puntos_maximos": 0,
+                        }
+                    )
 
             for dept in categoria["departamentos"]:
                 if dept["puntos_maximos"] > 0:
-                    dept["valor"] = (dept["puntos"] / dept["puntos_maximos"]) * 100
+                    dept["valor"] = (dept["puntos"] /
+                                     dept["puntos_maximos"]) * 100
                     dept["color"] = self.asignar_color_clima(dept["valor"])
+                else:
+                    dept["valor"] = 0
 
         total_porcentaje = round(
             (
@@ -712,24 +746,20 @@ class Evaluacion(models.Model):
                 return False
 
             if respuesta.usuario_id:
-                datos_demograficos = self.obtener_datos_demograficos(
-                    respuesta.usuario_id
-                )
+                datos_demograficos = respuesta.usuario_id.obtener_datos_demograficos()
             elif respuesta.usuario_externo_id:
-                usuario_externo = respuesta.usuario_externo_id
-                datos_demograficos = self.obtener_datos_demograficos_externos(
-                    usuario_externo
+                datos_demograficos = (
+                    respuesta.usuario_externo_id.obtener_datos_demograficos()
                 )
             else:
                 return False
 
         for _, filtro in filtros.items():
             categoria = filtro["categoria_interna"]
-
             if not (categoria in datos_demograficos.keys()):
                 continue
 
-            if not datos_demograficos[filtro["categoria_interna"]] in filtro["valores"]:
+            if not datos_demograficos[categoria] in filtro["valores"]:
                 return False
 
         return True
@@ -751,7 +781,7 @@ class Evaluacion(models.Model):
         )
 
         for usuario in usuario_evaluacion.mapped("usuario_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos(usuario)
+            datos_demograficos_usuario = usuario.obtener_datos_demograficos()
             if filtros and not self.validar_filtro(
                 filtros, datos_demograficos=datos_demograficos_usuario
             ):
@@ -768,9 +798,7 @@ class Evaluacion(models.Model):
         )
 
         for usuario_externo in usuario_evaluacion_externo.mapped("usuario_externo_id"):
-            datos_demograficos_usuario = self.obtener_datos_demograficos_externos(
-                usuario_externo
-            )
+            datos_demograficos_usuario = usuario_externo.obtener_datos_demograficos()
             if filtros and not self.validar_filtro(
                 filtros, datos_demograficos=datos_demograficos_usuario
             ):
@@ -778,35 +806,20 @@ class Evaluacion(models.Model):
 
             datos_demograficos.append(datos_demograficos_usuario)
 
-        departamentos = defaultdict(int)
-        generaciones = defaultdict(int)
-        puestos = defaultdict(int)
-        generos = defaultdict(int)
+        atributos = defaultdict(lambda: defaultdict(int))
 
         for dato in datos_demograficos:
-            departamentos[dato["departamento"]] += 1
-            generaciones[dato["generacion"]] += 1
-            puestos[dato["puesto"]] += 1
-            generos[dato["genero"]] += 1
+            for categoria, valor in dato.items():
+                atributos[categoria][valor] += 1
 
-        return {
-            "departamentos": [
+        respuestas = {}
+        for categoria, valores in atributos.items():
+            respuestas[categoria] = [
                 {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in departamentos.items()
-            ],
-            "generaciones": [
-                {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in generaciones.items()
-            ],
-            "puestos": [
-                {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in puestos.items()
-            ],
-            "generos": [
-                {"nombre": nombre, "valor": conteo}
-                for nombre, conteo in generos.items()
-            ],
-        }
+                for nombre, conteo in valores.items()
+            ]
+
+        return respuestas
 
     def asignar_color(self, valor, categoria=None, dominio=None):
         """
@@ -981,99 +994,7 @@ class Evaluacion(models.Model):
         for nivel in self.niveles:
             if valor <= nivel.techo:
                 return nivel.color
-
-    def obtener_dato(self, dato):
-        """
-        Obtiene un dato y devuelve 'N/A' si es nulo.
-
-        Este método recibe un dato y verifica si es nulo. Si es nulo, devuelve 'N/A'.
-
-        :param dato: El dato a verificar.
-
-        :return: El dato si no es nulo, 'N/A' si es nulo.
-        """
-        if not dato:
-            return "N/A"
-
-        return dato
-
-    def obtener_generacion(self, anio_nacimiento):
-        """
-        Obtiene la generación a la que pertenece una persona de acuerdo al año de nacimiento.
-        :param anio_nacimiento: El año de nacimiento de la persona.
-
-        :return: La generación a la que pertenece la persona.
-        """
-
-        if 1946 <= anio_nacimiento <= 1964:
-            return "Baby Boomers"
-        elif 1965 <= anio_nacimiento <= 1980:
-            return "Generación X"
-        elif 1981 <= anio_nacimiento <= 1999:
-            return "Millenials"
-        elif 2000 <= anio_nacimiento <= 2015:
-            return "Generacion Z"
-        else:
-            return "N/A"
-
-    def obtener_datos_demograficos(self, usuario):
-        """
-        Obtiene los datos demográficos de un usuario.
-
-        Este método recibe un usuario y obtiene sus datos demográficos, como nombre, género, puesto, año de nacimiento, generación, departamento, nivel jerárquico, gerencia, jefatura, fecha de ingreso y ubicación/región.
-
-        :param usuario: El usuario del que se obtendrán los datos demográficos.
-
-        :return: Un diccionario con los datos demográficos del usuario.
-        """
-
-        datos = {}
-
-        datos["nombre"] = self.obtener_dato(usuario.name)
-        datos["genero"] = self.obtener_dato(usuario.gender).capitalize()
-        datos["puesto"] = self.obtener_dato(usuario.job_title)
-        datos["anio_nacimiento"] = usuario.birthday.year if usuario.birthday else "N/A"
-        datos["generacion"] = (
-            self.obtener_generacion(datos["anio_nacimiento"])
-            if datos["anio_nacimiento"] != "N/A"
-            else "N/A"
-        )
-        datos["departamento"] = self.obtener_dato(usuario.department_id.name)
-
-        # Falta
-        # Nivel Jerarquico
-        # Gerencia
-        # Jefatura
-        # Fecha de ingreso
-        # Ubicación/Region
-
-        return datos
-
-    def obtener_datos_demograficos_externos(self, usuario):
-        """
-        Obtiene los datos demográficos de un usuario externo.
-        :param usuario: El usuario externo del que se obtendrán los datos demográficos.
-
-        :return: Un diccionario con los datos demográficos del usuario externo. Incluye nombre, género, puesto, año de nacimiento, generación y departamento.
-        """
-
-        datos = {}
-
-        datos["nombre"] = self.obtener_dato(usuario.nombre)
-        datos["genero"] = self.obtener_dato(usuario.genero).capitalize()
-        datos["puesto"] = self.obtener_dato(usuario.puesto)
-        datos["anio_nacimiento"] = (
-            usuario.fecha_nacimiento.year if usuario.fecha_nacimiento else "N/A"
-        )
-        datos["generacion"] = (
-            self.obtener_generacion(datos["anio_nacimiento"])
-            if datos["anio_nacimiento"] != "N/A"
-            else "N/A"
-        )
-        datos["departamento"] = self.obtener_dato(usuario.direccion)
-
-        return datos
-
+                
     def get_evaluaciones_action(self, evaluacion_id):
         """
         Obtiene las preguntas asociadas a la evaluación.
@@ -1135,9 +1056,10 @@ class Evaluacion(models.Model):
 
         if "usuario_ids" in vals:
             usuarios_eliminados = list(map(
-                lambda val: val[1], filter(lambda val: val[0] == 3, vals["usuario_ids"])
+                lambda val: val[1], filter(
+                    lambda val: val[0] == 3, vals["usuario_ids"])
             ))
-            
+
             if usuarios_eliminados:
                 respuestas = self.env["respuesta"].search(
                     [
@@ -1184,42 +1106,72 @@ class Evaluacion(models.Model):
     def checar_techo(self):
         """
         Verifica que los valores de la ponderación sean válidos.
-        Validación 1: Verifica que el valor de la ponderación no sea menor o igual a 0.
-        Validación 2: Verifica que no haya valores duplicados en la ponderación para la misma evaluación.
-        Validación 3: Verifica que no haya más de 10 techos.
-        Validación 4: Verifica que los valores de la ponderación estén en orden ascendente.
-        Validación 5: Verifica que el valor de las ponderaciones no sean mayores a 100 y que el último sea 100.
+        Validación 1: Verifica que si haya niveles en la ponderación.
+        Validación 2: Verifica que mínimo haya dos niveles en la ponderación.
+        Validación 3: Verifica que el valor de la ponderación no sea menor o igual a 0.
+        Validación 4: Verifica que no haya valores duplicados en la ponderación.
+        Validación 5: Verifica que no haya más de 10 techos.
+        Validación 6: Verifica que los valores de la ponderación estén en orden ascendente.
+        Validación 7: Verifica que el valor de las ponderaciones no sean mayores a 100 y que el último sea 100.
 
         """
-        for nivel in self.niveles:
-            if nivel.techo <= 0:
+
+        for registro in self:
+            if len(registro.niveles) == 0:
+                raise ValidationError(_("Debe haber al menos un nivel en la ponderación."))
+
+            if len(registro.niveles) < 2:
                 raise ValidationError(
-                    "El valor de la ponderación no debe ser menor o igual a 0."
+                    _("Debe haber al menos dos niveles en la ponderación.")
                 )
 
-            techos = self.niveles.filtered(lambda n: n.id != nivel.id).mapped("techo")
-            if nivel.techo in techos:
+            for nivel in registro.niveles:
+                
+                if nivel.techo <= 0:
+                    raise ValidationError(
+                        _("El valor de la ponderación no debe ser menor o igual a 0.")
+                    )
+
+                techos = registro.niveles.filtered(lambda n: n.id != nivel.id).mapped("techo")
+
+                if nivel.techo in techos:
+                    raise ValidationError(
+                        _("No puede haber valores duplicados en la ponderación.")
+                    )
+
+            todos_techos = registro.niveles.mapped("techo")
+
+            if len(todos_techos) > 10:
                 raise ValidationError(
-                    "No puede haber valores duplicados en la ponderación."
+                    _("No puede haber más de 10 valores de ponderación.")
+                )
+            
+            if todos_techos != sorted(todos_techos):
+                raise ValidationError(
+                    _("Los valores de la ponderación deben estar en orden ascendente.")
                 )
 
-        todos_techos = self.niveles.mapped("techo")
-        if len(todos_techos) > 10:
-            raise ValidationError(
-                "No puede haber más de 10 valores de ponderación."
-            )
-        
-        if todos_techos != sorted(todos_techos):
-            raise ValidationError(
-                "Los valores de la ponderación deben estar en orden ascendente."
-            )
+            if todos_techos[-1] > 100:
+                raise ValidationError(
+                    _("El valor de la ponderación no puede ser mayor a 100.")
+                )
+            if todos_techos[-1] != 100:
+                raise ValidationError(_("El último valor de la ponderación debe ser 100."))
 
-        if todos_techos[-1] > 100:
-            raise ValidationError(
-                "El valor de la ponderación no puede ser mayor a 100."
-            )
-        if todos_techos[-1] != 100:
-            raise ValidationError("El último valor de la ponderación debe ser 100.")
+    @api.constrains("niveles")
+    def checar_color(self):
+        """
+        Verifica que los valores de los colores sean válidos.
+
+        """
+        for registro in self:
+            for nivel in registro.niveles:
+
+                colores = registro.niveles.filtered(lambda n: n.id != nivel.id).mapped("color")
+                if nivel.color in colores:
+                    raise ValidationError(
+                        _("No puede haber colores duplicados en la ponderación.")
+                    )
 
 
     def actualizar_estados_eval(self):
@@ -1285,7 +1237,7 @@ class Evaluacion(models.Model):
     def get_escalar_format(self):
         """
         Devuelve el formato escalar seleccionado para la evaluación actual.
-        
+
         :return: El formato escalar seleccionado para la evaluación.
         """
         return self.escalar_format
@@ -1297,7 +1249,7 @@ class Evaluacion(models.Model):
         :return: Las fechas de inicio y final.
         """
         return {
-            
+
             "type": "ir.actions.report",
             "report_name": "evaluaciones.reporte_template",
             "context": {
@@ -1320,5 +1272,187 @@ class Evaluacion(models.Model):
             "view_mode": "form",
             "target": "new",
         }
-    
-    
+
+    def existen_respuestas(self):
+        """
+        Verifica si existen respuestas para la evaluación.
+
+        :return: True si existen respuestas, False en caso contrario.
+        """
+        return self.env["respuesta"].search_count(
+            [("evaluacion_id.id", "=", self.id)]) > 0
+
+    def get_datos_pregunta(self):
+        """
+        Obtiene los datos de las preguntas de la evaluación.
+
+        :return: Los datos de las preguntas de la evaluación. Incluye las respuestas a cada pregunta y las respuestas tabuladas.
+        """
+
+        preguntas_data = []
+
+        for pregunta in self.pregunta_ids:
+            respuesta_ids = self.env["respuesta"].search(
+                [
+                    ("pregunta_id.id", "=", pregunta.id),
+                    ("evaluacion_id.id", "=", self.id),
+                ]
+            )
+
+            respuestas = []
+            for respuesta in respuesta_ids:
+                id = None
+
+                if respuesta.usuario_externo_id:
+                    id = "E" + respuesta.usuario_externo_id.id.__str__()
+
+                elif respuesta.usuario_id:
+                    id = respuesta.usuario_id.id.__str__()
+
+                respuestas.append({
+                    "usuarioID": id,
+                    "respuesta": respuesta.respuesta_mostrar
+                })
+
+            respuestas_tabuladas = dict(
+                Counter([r["respuesta"] for r in respuestas]))
+
+            datos_pregunta = {
+                "pregunta": pregunta,
+                "respuestas": respuestas,
+                "respuestas_tabuladas": [
+                    {"nombre": nombre, "valor": valor}
+                    for nombre, valor in respuestas_tabuladas.items()
+                ],
+            }
+
+            preguntas_data.append(datos_pregunta)
+
+        return preguntas_data
+
+    def generar_datos_demograficos_individuales(self):
+        """
+        Genera los datos demográficos de la evaluación.
+
+        :return: Los datos demográficos de los usuarios asignados a la evaluación. Incuye departamentos, generaciones, puestos y géneros.
+        """
+        datos_demograficos = []
+
+        usuario_evaluacion = self.env["usuario.evaluacion.rel"].search(
+            [
+                ("evaluacion_id.id", "=", self.id),
+                ("contestada", "=", "contestada"),
+                ("usuario_id.id", "in", self.usuario_ids.mapped("id")),
+            ]
+        )
+
+        for usuario in usuario_evaluacion.mapped("usuario_id"):
+            datos_demograficos_usuario = usuario.obtener_datos_demograficos()
+            datos_demograficos_usuario["id"] = usuario.id.__str__()
+            datos_demograficos.append(datos_demograficos_usuario)
+
+        usuario_evaluacion_externo = self.env["usuario.evaluacion.rel"].search(
+            [
+                ("evaluacion_id.id", "=", self.id),
+                ("contestada", "=", "contestada"),
+                ("usuario_externo_id.id", "in", self.usuario_externo_ids.ids),
+            ]
+        )
+
+        for usuario_externo in usuario_evaluacion_externo.mapped("usuario_externo_id"):
+            datos_demograficos_usuario = usuario_externo.obtener_datos_demograficos()
+            datos_demograficos_usuario["id"] = "E" + \
+                usuario_externo.id.__str__()
+            datos_demograficos.append(datos_demograficos_usuario)
+
+        return datos_demograficos
+
+    def generar_excel(self, preguntas, demograficos):
+        """
+        Genera un archivo de Excel con las respuestas de la evaluación.
+
+        :param preguntas: Los datos de las preguntas de la evaluación.
+        :param demograficos: Los datos demográficos de la evaluación.
+
+        :return: Un archivo de Excel con las respuestas de la evaluación.
+        """
+
+        datos_preguntas = []
+        for pregunta in preguntas:
+            for respuesta in pregunta["respuestas"]:
+                datos_preguntas.append({
+                    "UsuarioID": respuesta["usuarioID"],
+                    "Pregunta": pregunta["pregunta"].pregunta_texto,
+                    "Respuesta": respuesta["respuesta"],
+                })
+
+        df_respuestas = pd.DataFrame(datos_preguntas)
+
+        datos_demograficos = []
+
+        for demografico in demograficos:
+            entrada = {
+                "UsuarioID": demografico["id"],
+            }
+            for categoria, valor in demografico.items():
+                if categoria != "id":
+                    entrada[categoria] = valor
+
+            datos_demograficos.append(entrada)
+
+        df_demograficos = pd.DataFrame(datos_demograficos)
+
+        output = BytesIO()
+
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df_respuestas.to_excel(writer, index=False,
+                                   sheet_name="Respuestas")
+            df_demograficos.to_excel(
+                writer, index=False, sheet_name="Datos Demográficos")
+
+        output.seek(0)
+
+        attachment = self.env['ir.attachment'].create({
+            'name': 'Respuestas.xlsx',
+            'type': 'binary',
+            'datas': base64.b64encode(output.read()),
+            'res_model': 'evaluacion',
+            'res_id': self.id,
+        })
+
+        return attachment
+
+    def action_exportar_excel(self):
+        """
+        Exporta las respuestas de la evaluación a un archivo de Excel.
+
+        :return: Una acción para exportar las respuestas a un archivo de Excel.
+        """
+
+        if not self.existen_respuestas():
+            raise exceptions.ValidationError(
+                _("No hay respuestas para exportar."))
+
+        datos_preguntas = self.get_datos_pregunta()
+        datos_demograficos = self.generar_datos_demograficos_individuales()
+        attachment = self.generar_excel(datos_preguntas, datos_demograficos)
+
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/web/content/{attachment.id}?download=true',
+            'target': 'self',
+        }
+
+    def previsualizacion_action(self):
+        """
+        Este método genera una previsualización de la evaluación.
+
+        :return: una acción de redirección a la previsualización de la evaluación.
+
+        """
+
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/evaluacion/previsualizar/{self.id}",
+            "target": "new",
+        }
