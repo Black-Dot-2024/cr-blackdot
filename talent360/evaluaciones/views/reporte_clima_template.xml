@@ -149,8 +149,7 @@
                     <t t-else="">
                         <textarea id="plan_accion_textarea" class="form-control" rows="10" style="width: 100%; resize: none;"
                                 placeholder="Aquí se mostrará el plan de acción generado..."
-                                oninput="Alturatextarea(this);"
-                                maxlenght="5000">
+                                oninput="Alturatextarea(this);">
                         </textarea>
                     </t>
                 </div>

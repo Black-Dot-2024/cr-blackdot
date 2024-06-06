@@ -18,9 +18,7 @@ class PlanAccion(http.Controller):
         data = json.loads(request.httprequest.data)
         plan = data.get("plan_accion")
         plan_accion_modelo = request.env['plan.accion']
-        
         plan_accion_modelo.sudo().guardar_plan_accion_action(evaluacion_id, plan)
-
 
     @http.route("/plan_accion/reporte/<model('evaluacion'):evaluacion>", type="http", auth="user")
     def generar_plan_action(self, evaluacion):
@@ -37,10 +35,7 @@ class PlanAccion(http.Controller):
         url = "https://corporatelorem.kovah.de/api/3"
         evaluacion_id = evaluacion.id
         prompt = self.generar_prompt(evaluacion)
-        
         respuesta = requests.get(str(url))
-
-        
 
         if respuesta.status_code == 200:
             data = respuesta.json()
@@ -58,7 +53,6 @@ class PlanAccion(http.Controller):
             return plan
         else :
             raise ValidationError(_("Error al obtener el plan de acción"))
-
 
     def generar_prompt(self, evaluacion):
         """

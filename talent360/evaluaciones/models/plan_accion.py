@@ -1,6 +1,7 @@
 from odoo import models, fields
 
 
+
 class PlanAccion(models.Model):
     """
     Modelo para representar un plan de acción.
