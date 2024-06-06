@@ -99,8 +99,8 @@
                         <field placeholder="¿Qué es lo que se espera lograr con este objetivo?" name="descripcion" />
                         <br />
                         <group>
-                            <field name="resultado" readonly="True" string="Progreso"/>
-                           <field name="porcentaje" readonly="True" string="Porcentaje" widget="percentage"/>
+                            <field name="resultado" readonly="True" string="Progreso" />
+                            <field name="porcentaje" readonly="True" string="Porcentaje" widget="percentage"/>
                         </group>
                     </div>
                     <notebook>
@@ -145,6 +145,31 @@
                                     </tree>
                                 </field>
                             </group>
+                        </page>
+                        <page string="Avances">
+                            <field name="avances">
+                                <tree string="Avances" create="false" delete="false" duplicate="false">
+                                    <field name="fecha"/>
+                                    <field name="avance"/>
+                                    <field name="comentarios"/>
+                                    <field name="archivos" widget="many2many_tags"/>
+                                    <field name="comentarios_evaluador"/>
+                                </tree>
+                                <form>
+                                    <h3>Aviso: Los resultados de los avances se mostrarán hasta que se guarde o actualice la página.</h3>
+                                    <group>
+                                        <field name="fecha" readonly="1" />
+                                        <field name="avance"/>
+                                        <field name="archivos" readonly="1">
+                                            <tree create="false" editable="bottom" edit="false">
+                                                <field name="name" string="Nombre del archivo"/>
+                                                <field name="datas" filename="name" widget="binary" string="Descargar Archivo" />
+                                            </tree>
+                                        </field>
+                                        <field name="comentarios_evaluador"/>
+                                    </group>
+                                </form>
+                            </field>
                         </page>
                         <page string="Historial">
                             <group>

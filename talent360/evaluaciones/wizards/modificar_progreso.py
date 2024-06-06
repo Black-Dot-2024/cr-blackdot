@@ -76,13 +76,3 @@ class ModificarProgreso(models.TransientModel):
             "progreso": progreso,
             "comentarios": comentarios,
         })
-        
-        orden = usuario_objetivo.orden
-        if orden == "ascendente":
-            nuevo_resultado =  (usuario_objetivo.piso_maximo * progreso / 100)
-        else:
-            nuevo_resultado = usuario_objetivo.piso_minimo - (usuario_objetivo.piso_minimo * progreso / 100)
-            if nuevo_resultado <= 0:
-                nuevo_resultado = 0
-
-        usuario_objetivo.sudo().write({"resultado": nuevo_resultado})
