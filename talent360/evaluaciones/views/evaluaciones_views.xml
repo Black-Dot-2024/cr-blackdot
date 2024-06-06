@@ -183,6 +183,7 @@
                                             <field name="opcion_ids" placeholder="Opciones" context="{'default_pregunta_id': active_id}" invisible="tipo != 'multiple_choice'" required="True">
                                                 <tree create="true" delete="true" editable="bottom">
                                                     <field name="opcion_texto"/>
+                                                    <field name="valor"/>
                                                 </tree>
                                             </field>
                                         </group>
