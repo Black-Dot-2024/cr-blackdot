@@ -120,6 +120,8 @@ class ImportarPreguntasWizard(models.TransientModel):
     def _validar_fila(self, fila: dict):
         if not fila.get("Pregunta") or not fila["Pregunta"].strip():
             raise exceptions.ValidationError(_("El campo 'Pregunta' es requerido y no puede estar vacío o solo contener espacios en blanco."))
+        if len(fila["Pregunta"]) > 255:
+            raise exceptions.ValidationError(_("La pregunta no puede tener más de 255 caracteres."))
         if not fila.get("Tipo"):
             raise exceptions.ValidationError(_("El campo 'Tipo' es requerido."))
         if not fila.get("Categoria"):
@@ -174,6 +176,10 @@ class ImportarPreguntasWizard(models.TransientModel):
                 if not opcion.strip():
                     raise exceptions.ValidationError(
                         "Las opciones para preguntas de tipo 'multiple_choice' no pueden estar vacías o contener solo espacios en blanco."
+                    )
+                if len(opcion) > 25:
+                    raise exceptions.ValidationError(
+                        "Las opciones no tienen que tener más de 25 caracteres."
                     )
         else:
     

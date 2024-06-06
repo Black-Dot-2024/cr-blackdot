@@ -16,7 +16,7 @@ class Opcion(models.Model):
     _name = "opcion"
     _description = "Opcion para una pregunta"
 
-    pregunta_id = fields.Many2one("pregunta", string="Pregunta")
+    pregunta_id = fields.Many2one("pregunta", string="Pregunta", size=50)
     opcion_texto = fields.Char("Opción", required=True)
     valor = fields.Integer(required=True, default=0)
 
