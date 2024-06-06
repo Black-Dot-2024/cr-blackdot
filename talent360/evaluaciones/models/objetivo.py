@@ -299,7 +299,6 @@ class Objetivo(models.Model):
 
     @api.depends("avances", "avances.avance", "progreso")
     def _compute_resultado(self):
-        print("ENTRO A COMPUTE RESULTADO")
         for objetivo in self:
             orden = objetivo.orden
             if len(objetivo.objetivo_progreso_ids) > 0:
