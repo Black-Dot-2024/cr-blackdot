@@ -109,8 +109,6 @@ class Objetivo(models.Model):
 
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
 
-    revisar = fields.Text()
-
     @api.constrains("descripcion")
     def _chechar_largo(self):
         for registro in self:
@@ -276,11 +274,17 @@ class Objetivo(models.Model):
     @api.model
     def create(self, vals):
         if vals.get("orden") == "descendente":
+            print("Entro a descendente")
             vals["resultado"] = vals.get("piso_minimo")
+        print(vals.get("resultado"))
         return super(Objetivo, self).create(vals)
 
-    @api.depends('avances', 'avances.avance')
+    @api.depends('avances')
     def _compute_resultado(self):
         for objetivo in self:
+            orden = objetivo.orden
             avances = self.env['objetivo.avances'].search([('objetivo_id', '=', objetivo.id)])
-            objetivo.resultado = sum(avance.avance for avance in avances)
+            if orden == "ascendente":
+                objetivo.resultado = sum(avance.avance for avance in avances)
+            else:
+                objetivo.resultado = objetivo.piso_minimo - sum(avance.avance for avance in avances)

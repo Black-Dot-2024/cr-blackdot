@@ -169,7 +169,14 @@ class RegistrarAvance(models.TransientModel):
         #     if nuevo_resultado <= 0:
         #         nuevo_resultado = 0
 
+        orden = usuario_objetivo.orden
         avances = self.env["objetivo.avances"].search([("objetivo_id", "=", usuario_objetivo.id)])
-        nuevo_resultado = sum(avance.avance for avance in avances)
+
+        if orden == "ascendente":
+            nuevo_resultado = sum(avance.avance for avance in avances)
+        else:
+            nuevo_resultado = usuario_objetivo.piso_minimo - sum(avance.avance for avance in avances)
+            if nuevo_resultado <= 0:
+                nuevo_resultado = 0
 
         usuario_objetivo.sudo().write({"resultado": nuevo_resultado})
