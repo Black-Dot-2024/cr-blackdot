@@ -36,8 +36,9 @@ class ImportarPreguntasWizard(models.TransientModel):
 
     @api.constrains("nombre_archivo")
     def _validar_nombre_archivo(self):
-        if self.nombre_archivo and not self.nombre_archivo.lower().endswith(".csv"):
-            raise exceptions.ValidationError(_("Solo se aceptan archivos CSV."))
+        for registro in self:
+            if registro.nombre_archivo and not registro.nombre_archivo.lower().endswith(".csv"):
+                raise exceptions.ValidationError(_("Solo se aceptan archivos CSV."))
 
     def importar_preguntas(self):
         if not self.archivo:
@@ -77,13 +78,18 @@ class ImportarPreguntasWizard(models.TransientModel):
             pregunta = self.env["pregunta"].create(pregunta_data)
 
             if fila["Tipo"] == "multiple_choice":
-                opciones = fila["Opciones"].split(",")
-                for opcion_texto in opciones:
-                    self.env["opcion"].create({
-                        "pregunta_id": pregunta.id,
-                        "opcion_texto": opcion_texto.strip(),
-                        "valor": opciones.index(opcion_texto) + 1
-                    })
+
+                    opciones = fila["Opciones"].split(";")
+                    for opcion in opciones:
+                        partes = opcion.split(",")
+                        opcion_texto = partes[0]
+                        valor = float(partes[1])
+
+                        self.env["opcion"].create({
+                            "pregunta_id": pregunta.id,
+                            "opcion_texto": opcion_texto.strip(),
+                            "valor": valor
+                        })
 
             preguntas.append(pregunta)
 
@@ -119,6 +125,9 @@ class ImportarPreguntasWizard(models.TransientModel):
     def _validar_fila(self, fila: dict):
         if not fila.get("Pregunta") or not fila["Pregunta"].strip():
             raise exceptions.ValidationError(_("El campo 'Pregunta' es requerido y no puede estar vacío o solo contener espacios en blanco."))
+        if len(fila["Pregunta"]) > 255:
+            raise exceptions.ValidationError(_("La pregunta no puede tener más de 255 caracteres."))
+
         if not fila.get("Tipo"):
             raise exceptions.ValidationError(_("El campo 'Tipo' es requerido."))
         if not fila.get("Categoria"):
@@ -155,27 +164,56 @@ class ImportarPreguntasWizard(models.TransientModel):
                 raise exceptions.ValidationError(
                     "Las opciones son requeridas para preguntas de tipo 'multiple_choice'."
                 )
-            opciones = [opcion.strip() for opcion in fila["Opciones"].split(",")]
 
-            if len(opciones) != len(set(opciones)):
-                raise exceptions.ValidationError(
-                    "Las opciones para preguntas de tipo 'multiple_choice' no deben contener duplicados."
-                )
-            
+            opciones = fila["Opciones"].split(";")          
 
             if len(opciones) > 10 or len(opciones) < 2:
                 raise exceptions.ValidationError(
                     "Las opciones para preguntas de tipo 'multiple_choice' tienen que ser más que 2 y menos que 10."
                 )
-
-      
+            
             for opcion in opciones:
-                if not opcion.strip():
+                partes = opcion.split(",")
+                if len(partes) != 2:
                     raise exceptions.ValidationError(
-                        "Las opciones para preguntas de tipo 'multiple_choice' no pueden estar vacías o contener solo espacios en blanco."
+                        _("Las opciones para preguntas de tipo 'multiple_choice' deben tener el formato 'texto,valor' separadas por ';'.")
                     )
+                
+                opcion_texto = partes[0]
+                if not opcion_texto.strip():
+                    raise exceptions.ValidationError(
+                        _("Las opciones para preguntas de tipo 'multiple_choice' no pueden estar vacías o solo contener espacios en blanco.")
+                    )
+                
+                if len(opcion_texto) > 25:
+                    raise exceptions.ValidationError(
+                        _("Las opciones para preguntas de tipo 'multiple_choice' no pueden tener más de 25 caracteres.")
+                    )
+
+                valor = partes[1]
+                try:
+                    valor = float(valor)
+                    if valor % 1 != 0:
+                        raise exceptions.ValidationError(
+                            _("El valor de la opción debe ser un número entero.")
+                        )
+                    
+                    if valor < 0:
+                        raise exceptions.ValidationError(
+                            _("El valor de la opción no puede ser negativo.")
+                        )
+                except Exception as e:
+                    raise exceptions.ValidationError(
+                        _("El valor de la opción debe ser un número entero.")
+                    )
+
+            opciones_texto = [opcion.split(",")[0].strip() for opcion in opciones]
+            if len(opciones_texto) != len(set(opciones_texto)):
+                raise exceptions.ValidationError(
+                    "Las opciones para preguntas de tipo 'multiple_choice' no deben contener duplicados."
+                )
+                    
         else:
-    
             if fila.get("Opciones"):
                 raise exceptions.ValidationError(
                     f"No se permiten opciones para preguntas de tipo '{fila['Tipo']}'."

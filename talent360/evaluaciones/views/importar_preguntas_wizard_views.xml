@@ -30,10 +30,10 @@
                         <ul>
                             <li>Preguntas abiertas ( <strong>open_question </strong>)</li>
                             <li>Preguntas de opción multiple ( <strong>multiple_choice </strong>)</li>
-                            <li>Preguntas de escala ( <strong>escala </strong>) = Son las preguntas de "Siempre, Casi Seimpre, A veces, Casi nunca y Nunca"</li>
+                            <li>Preguntas de escala ( <strong>escala </strong>) = Son las preguntas de "Siempre, Casi Siempre, A veces, Casi nunca y Nunca"</li>
                         </ul>
                         <p><strong>TODAS</strong> las preguntas requieren de una <strong>categoría</strong>.</p>
-                        <p>Para las preguntas de <strong>multiple_choice</strong> serán necesarios que tengan <strong>opciones</strong> las cuales serán delimitadas por <strong>comas</strong> . Ejemplos: A,B,C,D en este existen 4 opciones</p>
+                        <p>Para las preguntas de <strong>multiple_choice</strong> serán necesarios que tengan <strong>opciones con ponderación</strong> las cuales serán delimitadas por <strong>comas y punto y comas</strong> . Ejemplos: A,0;B,1;C,2;D,3 en este existen 4 opciones con sus 4 ponderaciones al lado</p>
                         <p>Las preguntas de tipo <strong>escala</strong> requieren ponderación. Use <strong>ascendente</strong> cuando el valor de "SIEMPRE" es el más alto y <strong>descendente</strong> cuando el valor "NUNCA" es el más alto.</p>
                     </div>
                     <group>

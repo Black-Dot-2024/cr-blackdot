@@ -30,9 +30,9 @@ class Objetivo(models.Model):
     _description = "Objetivos de desempeño"
     _rec_name = "titulo"
 
-    titulo = fields.Char(required=True, string="Título", help="Título del objetivo")
+    titulo = fields.Char(required=True, string="Título", help="Título del objetivo", size=50)
     descripcion = fields.Text(
-        required=True, string="Descripción", help="Descripción del objetivo", size="20"
+        required=True, string="Descripción", help="Descripción del objetivo", size=255
     )
     metrica = fields.Selection(
         [
@@ -112,6 +112,12 @@ class Objetivo(models.Model):
 
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
 
+    @api.constrains("descripcion")
+    def _chechar_largo(self):
+        for registro in self:
+            if len(registro.descripcion or "") > 255:
+                raise ValidationError(_("La descripción no puede tener más de 255 caracteres."))
+
     @api.constrains("piso_minimo", "piso_maximo")
     def _checar_pisos(self):
         """
@@ -120,6 +126,8 @@ class Objetivo(models.Model):
         De no ser el caso, el sistema manda un error al usuario.
         """
         for registro in self:
+            if registro.piso_maximo == registro.piso_minimo:
+                raise ValidationError(_("El piso mínimo no puede ser igual al piso máximo"))
             if registro.orden == "ascendente":
                 if registro.piso_minimo >= registro.piso_maximo:
                     raise ValidationError(_("El piso mínimo debe ser menor al piso máximo para objetivos ascendentes"))
@@ -192,7 +200,7 @@ class Objetivo(models.Model):
                 registro.estado = "rojo"
                 continue
 
-            if registro.orden == "ascendente":
+            if registro.orden == "ascendente" and registro.piso_maximo != registro.piso_minimo:
                 ratio = (registro.resultado - registro.piso_minimo) / (registro.piso_maximo - registro.piso_minimo) if registro.piso_maximo != 0 else 0
                 if 0 <= ratio <= 0.6:
                     registro.estado = "rojo"
@@ -203,7 +211,7 @@ class Objetivo(models.Model):
                 elif ratio > 1:
                     registro.estado = "azul"
                 registro.porcentaje = ratio
-            else:
+            elif registro.piso_maximo != registro.piso_minimo:
                 ratio = 1 - ((registro.resultado - registro.piso_maximo) / (registro.piso_minimo - registro.piso_maximo)) if registro.piso_minimo != 0 else 0
                 if 0 <= ratio <= 0.6:
                     registro.estado = "rojo"
@@ -264,8 +272,8 @@ class Objetivo(models.Model):
 
     @api.constrains("metrica", "nueva_metrica")
     def _check_nueva_metrica(self):
-        for record in self:
-            if record.metrica == "otro" and (not record.nueva_metrica or record.nueva_metrica.strip() == ''):
+        for registro in self:
+            if registro.metrica == "otro" and (not registro.nueva_metrica or registro.nueva_metrica.strip() == ''):
                 raise ValidationError(("El campo 'Métrica Personalizada' no puede estar vacío."))
                 
     @api.model

@@ -25,7 +25,7 @@ class Pregunta(models.Model):
     _description = "Pregunta para una evaluación"
     _rec_name = "pregunta_texto"
 
-    pregunta_texto = fields.Char("Pregunta", required=True)
+    pregunta_texto = fields.Char("Pregunta", required=True, size=255)
     tipo = fields.Selection(
         [
             ("multiple_choice", "Opción múltiple"),
@@ -86,14 +86,20 @@ class Pregunta(models.Model):
             ("violencia", "Violencia"),
         ],
     )
+    @api.constrains("pregunta_texto")
+    def _chechar_largo(self):
+        for registro in self:
+            if len(registro.pregunta_texto or "") > 255:
+                raise ValidationError(_("La pregunta no puede tener más de 255 caracteres."))
 
     @api.constrains("opcion_ids")
     def checkar_opciones(self):
         """
         Verifica que haya al menos una opción de respuesta para las preguntas de tipo 'multiple_choice'.
         """
-        if self.tipo == "multiple_choice" and len(self.opcion_ids) < 2:
-            raise ValidationError(_("Debe haber al menos dos opciones de respuesta."))
+        for registro in self:
+            if registro.tipo == "multiple_choice" and len(registro.opcion_ids) < 2:
+                raise ValidationError(_("Debe haber al menos dos opciones de respuesta."))
 
     def _calculate_valor_maximo(self):
         if self.tipo == "escala":
@@ -137,3 +143,8 @@ class Pregunta(models.Model):
         if self.condicional and respuesta == self.respuesta_trigger:
             return self.preguntas_desbloqueadas
         return False
+
+    def copy(self, default=None):
+        default = dict(default or {})
+        default['opcion_ids'] = [(0, 0, option.copy_data()[0]) for option in self.opcion_ids]
+        return super(Pregunta, self).copy(default)

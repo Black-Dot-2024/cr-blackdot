@@ -42,12 +42,11 @@
             </div>
 
             <div class="o_survey_form_content w-100">
-
-                <t t-if="contestada == 'contestada'"  t-call="evaluaciones.evaluacion_responder_form_done"/>
+                <t t-if="len(evaluacion.pregunta_ids) == 0" t-call="evaluaciones.evaluacion_responder_form_validation"/>
+                <t t-elif="contestada == 'contestada'"  t-call="evaluaciones.evaluacion_responder_form_done"/>
                 <t t-elif="evaluacion.estado == 'finalizado'" t-call="evaluaciones.evaluacion_responder_form_closed"/>
                 <t t-elif="evaluacion.estado == 'publicado'" t-call="evaluaciones.evaluacion_responder_form_start"/>
-                <t t-elif="evaluacion.estado == 'borrador'" t-call="evaluaciones.evaluacion_responder_form_draft"/>
-
+                <t t-elif="evaluacion.estado == 'borrador'" t-call="evaluaciones.evaluacion_responder_form_draft"/> 
             </div>
         </form>
 
@@ -117,6 +116,26 @@
         <t t-call="evaluaciones.preguntas_contenedor"/>
     </template>
 
+    <template id="evaluacion_responder_form_validation" name="Evaluaciones: Terminada">
+        <div class="wrap">
+            <div class="o_survey_finished mt32 mb32">
+                <h1>Esta evaluación aún no tiene preguntas</h1>
+                <div class="row">
+                    <div class="col">
+                        <t t-if="evaluacion.mensaje_agradecimiento">
+                            <div t-field='evaluacion.mensaje_agradecimiento' class="oe_no_empty pb-5 text-break"/>
+                        </t>
+                        <t t-else="">
+                            <div class="o_survey_review">
+                                Vuelve a revisar mas tarde
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
     <!-- Finished (taken and finished) survey page -->
     <template id="evaluacion_responder_form_done" name="Evaluaciones: Terminada">
         <div class="wrap">
@@ -128,7 +147,7 @@
                             <div t-field='evaluacion.mensaje_agradecimiento' class="oe_no_empty pb-5 text-break"/>
                         </t>
                         <t t-else="">
-                            <div class="o_survey_review">
+                            <div class="o_survey_review" style="font-size: 10px">
                                 Gracias por tu tiempo y por compartir tus respuestas con nosotros.
                             </div>
                         </t>
@@ -183,8 +202,8 @@
                 </div>
             </div>
             <div class="row">
-                <div  class="col-lg-10">
-                    <div t-field='evaluacion.descripcion' class="oe_no_empty pb-5 text-break"/>
+                <div  class="col-lg-15">
+                    <div t-field='evaluacion.descripcion' class="oe_no_empty pb-5 text-break" style="font-size: 18px;"/>
                 </div>
             </div>
             <div class="row">
@@ -292,7 +311,7 @@
 
     <!-- Open question -->
     <template id="question_text_box" name="Preguntas: pregunta abierta">
-        <div t-att-id="question.id">
+        <div t-att-id="question.id" style="max-width: 100%; word-wrap: break-word;">
             <div class="o_survey_question_title mb-3" style="font-size: 20px;">
                 <span t-esc="str(numero_pregunta) + '.- '" class="o_survey_question_number"/>
                 <span t-field="question.pregunta_texto"/>
@@ -309,7 +328,7 @@
 
     <!-- Simple choice question -->
     <template id="question_simple_choice" name="Pregunta: Opcion multiple">
-        <div t-att-id="question.id">
+        <div t-att-id="question.id" style="max-width: 100%; word-wrap: break-word;">
             <div class="o_survey_question_title mb-3" style="font-size: 20px;">
                 <span t-esc="str(numero_pregunta) + '.- '" class="o_survey_question_number"/>
                 <span t-field="question.pregunta_texto"/>
@@ -332,7 +351,7 @@
     
     <!-- scale question -->
     <template id="question_scale" name="Pregunta: escala">
-        <div t-att-id="question.id">
+        <div t-att-id="question.id"  style="max-width: 100%; word-wrap: break-word;">
             <t t-set="format" t-value="evaluacion.escalar_format"/>
             <t t-if="format == 'textuales'">
                 <t t-set="opciones" t-value="['Nunca', 'Casi nunca', 'A veces', 'Casi siempre', 'Siempre']"/>
@@ -416,7 +435,7 @@
 
     <!-- Conditional question -->
     <template id="conditional_question" name="Pregunta: Condicional">
-        <div t-att-id="question.id" t-att-data-pregunta-id="question.id" t-att-data-respuesta-trigger="question.respuesta_trigger.id" t-att-data-preguntas-desbloqueadas="question.preguntas_desbloqueadas.ids">
+        <div t-att-id="question.id" t-att-data-pregunta-id="question.id" t-att-data-respuesta-trigger="question.respuesta_trigger.id" t-att-data-preguntas-desbloqueadas="question.preguntas_desbloqueadas.ids"  style="max-width: 100%; word-wrap: break-word;">
             <div class="o_survey_question_title mb-3" style="font-size: 20px;">
                 <span t-esc="str(numero_pregunta) + '.- '" class="o_survey_question_number"/>
                 <span t-field="question.pregunta_texto"/>
