@@ -331,6 +331,11 @@ body {
     display: none;
 }
 
+h1 {
+    white-space: normal; 
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
 .wave-top, .wave-bottom {
     position: absolute;
     width: 100%;
