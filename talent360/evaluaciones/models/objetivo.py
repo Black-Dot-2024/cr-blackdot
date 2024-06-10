@@ -302,7 +302,7 @@ class Objetivo(models.Model):
         for objetivo in self:
             orden = objetivo.orden
             if len(objetivo.objetivo_progreso_ids) > 0:
-                ultimo_progreso = objetivo.objetivo_progreso_ids.sorted(key=lambda x: x.fecha, reverse=True)[0]
+                ultimo_progreso = objetivo.objetivo_progreso_ids.sorted(key=lambda x: x.fecha, reverse=True)[-1]
 
                 if orden == "ascendente":
                     nuevo_resultado =  (objetivo.piso_maximo * ultimo_progreso.progreso / 100)
