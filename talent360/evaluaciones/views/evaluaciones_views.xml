@@ -169,7 +169,7 @@
                                         <!-- <button class="btn btn-outline-primary btn-lg px-4 lh-m" name="ver_respuestas" string="Detalle" type="object"/> -->
                                     </tree>
                                 </field>
-                                <field class="lh-lg w-100" name="pregunta_ids" domain="[('tipo', '=', False)]" invisible="tipo != 'CLIMA'" >
+                                <field class="lh-lg w-100" name="pregunta_ids" domain="[('tipo', '=', False)]" invisible="tipo != 'CLIMA'" readonly="estado != 'borrador'">
                                     <tree create="true" delete="true">
                                     <field name="categoria" string="Categoría"/>
                                     <field name="pregunta_texto"/>
@@ -184,6 +184,7 @@
                                             <field name="opcion_ids" placeholder="Opciones" context="{'default_pregunta_id': active_id}" invisible="tipo != 'multiple_choice'" required="True">
                                                 <tree create="true" delete="true" editable="bottom">
                                                     <field name="opcion_texto"/>
+                                                    <field name="valor"/>
                                                 </tree>
                                             </field>
                                         </group>

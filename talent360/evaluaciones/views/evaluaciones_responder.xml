@@ -150,7 +150,7 @@
                             <div t-field='evaluacion.mensaje_agradecimiento' class="oe_no_empty pb-5 text-break"/>
                         </t>
                         <t t-else="">
-                            <div class="o_survey_review">
+                            <div class="o_survey_review" style="font-size: 10px">
                                 Gracias por tu tiempo y por compartir tus respuestas con nosotros.
                             </div>
                         </t>
@@ -205,8 +205,8 @@
                 </div>
             </div>
             <div class="row">
-                <div  class="col-lg-10">
-                    <div t-field='evaluacion.descripcion' class="oe_no_empty pb-5 text-break"/>
+                <div  class="col-lg-15">
+                    <div t-field='evaluacion.descripcion' class="oe_no_empty pb-5 text-break" style="font-size: 18px;"/>
                 </div>
             </div>
             <div class="row">
