@@ -106,8 +106,6 @@ class Objetivo(models.Model):
         string="Asignados",
     )
 
-    evaluador = fields.Char()
-
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
 
     progreso = fields.One2many("objetivo.progreso", "objetivo_id", string="Progreso")
@@ -302,7 +300,7 @@ class Objetivo(models.Model):
         for objetivo in self:
             orden = objetivo.orden
             if len(objetivo.objetivo_progreso_ids) > 0:
-                ultimo_progreso = objetivo.objetivo_progreso_ids.sorted(key=lambda x: x.fecha, reverse=True)[0]
+                ultimo_progreso = objetivo.objetivo_progreso_ids.sorted(key=lambda x: x.fecha, reverse=True)[-1]
 
                 if orden == "ascendente":
                     nuevo_resultado =  (objetivo.piso_maximo * ultimo_progreso.progreso / 100)

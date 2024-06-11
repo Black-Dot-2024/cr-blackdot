@@ -27,10 +27,14 @@
                     <field name="estado" widget="statusbar" statusbar_visible="rojo, amarillo, verde, azul"/>
                 </header>
                 <sheet>
-                    <group >
-                        <h1>
-                            <field name="titulo" readonly="1"/>
-                        </h1>
+                    <group class="o_inner_group" style="display: flex; width: 100%; flex-grow: 1;">
+                        <div class="o_wrap_field d-flex d-sm-contents flex-column mb-3 mb-sm-0" style="flex: 1; width: 100%;">
+                            <div class="o_cell" style="flex-grow: 1; width: 100%;">
+                                <h1 style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; width: 100%;">
+                                    <field name="titulo" readonly="1"/>
+                                </h1>
+                            </div>
+                        </div>
                     </group>
                     <group>
                         <field name="descripcion" readonly="1"/>
