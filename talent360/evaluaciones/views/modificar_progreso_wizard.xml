@@ -9,7 +9,7 @@
                 <h4>Modificar el progreso del objetivo, adjunta comentarios para ofrecer retroalimentación de la modificación.</h4>
                 <group>
                     <group>
-                        <label for="progreso" string="Progreso (Porcentaje): " />
+                        <label for="progreso" string="Progreso (Cantidad actual): " />
                         <field name="progreso" nolabel="1" />
                     </group>
                     <group>
