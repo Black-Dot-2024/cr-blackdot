@@ -328,6 +328,7 @@
                         t-att-name="'question_' + str(question.id)" 
                         t-att-placeholder="'Responde aqui...'"
                         t-att-data-question-type="question.tipo"
+                        maxlength="500"
                         required="required"></textarea>
             </div>
         </div>

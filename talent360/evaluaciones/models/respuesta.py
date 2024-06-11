@@ -27,11 +27,12 @@ class Respuesta(models.Model):
     usuario_externo_id = fields.Many2one("usuario.externo", string="Usuario externo")
     evaluacion_id = fields.Many2one("evaluacion", string="Evaluacion")
     pregunta_texto = fields.Char(related="pregunta_id.pregunta_texto")
-    respuesta_texto = fields.Char("Respuesta")
+    respuesta_texto = fields.Char("Respuesta", size=500)
     token = fields.Char()
     opcion_id = fields.Many2one("opcion", string="Opción")
 
     respuesta_mostrar = fields.Char(
+
         string="Respuesta", compute="_compute_respuesta_mostrar", search="_buscar_respuesta_mostrar" 
     )
 
