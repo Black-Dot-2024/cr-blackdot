@@ -1,4 +1,5 @@
 from odoo import models, fields
+from odoo.http import request
 
 
 class Respuesta(models.Model):
@@ -31,7 +32,7 @@ class Respuesta(models.Model):
     opcion_id = fields.Many2one("opcion", string="Opción")
 
     respuesta_mostrar = fields.Char(
-        string="Respuesta", compute="_compute_respuesta_mostrar", search="_search_respuesta_mostrar" 
+        string="Respuesta", compute="_compute_respuesta_mostrar", search="_buscar_respuesta_mostrar" 
     )
 
     valor_respuesta = fields.Float(
@@ -40,7 +41,9 @@ class Respuesta(models.Model):
         store=False,
     )
 
-    def _search_respuesta_mostrar(self, operator, value):
+    texto = fields.Char(string="Texto")
+
+    def _buscar_respuesta_mostrar(self, operator, value):
         """
         Método para buscar la respuesta a mostrar en la vista.
 
@@ -51,10 +54,10 @@ class Respuesta(models.Model):
 
         return [
             '|',
-            # '|'
+            '|',
             ('respuesta_texto', operator, value),
             ('opcion_id.opcion_texto', operator, value),
-            # ('pregunta_id.mapeo_valores_escala_str', operator, value)
+            ('texto', operator, value)
         ]
 
 
@@ -165,6 +168,14 @@ class Respuesta(models.Model):
                 respuesta_texto = registro.pregunta_id.mapeo_valores_escala[
                     registro.pregunta_id.ponderacion
                 ][registro.respuesta_texto]
+
+                request.env["respuesta"].sudo().search(
+                    [
+                        ("pregunta_id", "=", registro.pregunta_id.id),
+                        ("evaluacion_id", "=", registro.evaluacion_id.id),
+                        ("usuario_id", "=", registro.usuario_id.id),
+                    ]
+                ).write({"texto": respuesta_texto})
             elif registro.pregunta_id.tipo == "multiple_choice":
                 respuesta_texto = registro.opcion_id.opcion_texto
             else:
