@@ -1,5 +1,6 @@
 {
     "name": "Talent360 - Evaluaciones",
+    'images': ['static/description/icon.png'],
     "application": True,
     "data": [
         "security/evaluaciones_groups.xml",
@@ -40,5 +41,6 @@
             "evaluaciones/static/src/scss/survey_templates_form.scss",
             "evaluaciones/static/src/scss/survey_templates_results.scss",
         ],
+
     },
 }
