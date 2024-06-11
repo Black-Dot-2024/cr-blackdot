@@ -1,6 +1,7 @@
 from odoo import models, fields
 
 
+
 class PlanAccion(models.Model):
     """
     Modelo para representar un plan de acción.
@@ -14,7 +15,7 @@ class PlanAccion(models.Model):
 
     _name = "plan.accion"
     _description = "Respuesta a una pregunta"
-
+    plan_accion = fields.Text(string="Plan de acción")
     descripcion = fields.Text(string="Descripción")
     evaluacion_id = fields.Many2one("evaluacion", string="Evaluación", required=True, ondelete="cascade")
     
@@ -28,15 +29,15 @@ class PlanAccion(models.Model):
         :return: Respuesta guardada en la base de datos
         """
         
-        resp = None
+        respuesta = None
         
-        resp = self.env["plan.accion"].create(
+        respuesta = self.env["plan.accion"].create(
             {
                 "descripcion": descripcion,
                 "evaluacion_id": evaluacion_id,
             }
         )
         
-        return resp
+        return respuesta
     
-    
+

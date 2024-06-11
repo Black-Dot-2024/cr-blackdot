@@ -21,3 +21,4 @@ class ObjetivoAvance(models.Model):
     avance = fields.Integer(string="Avance", required=True)
     comentarios = fields.Text(string="Comentarios")
     archivos = fields.Many2many(comodel_name="ir.attachment", string="Archivos")
+    comentarios_evaluador = fields.Text(string="Retroalimentación")

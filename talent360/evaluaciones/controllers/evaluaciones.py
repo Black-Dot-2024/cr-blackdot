@@ -39,6 +39,14 @@ class EvaluacionesController(http.Controller):
 
         parametros["filtros"] = filtros
 
+        plan_accion = request.env["plan.accion"].sudo().search(
+            [
+                ("evaluacion_id.id", "=", evaluacion.id)
+            ], order="id desc", limit=1
+        )
+
+        parametros["plan"] = plan_accion
+
         tiene_respuestas = False
 
         for pregunta in parametros["preguntas"]:
@@ -50,7 +58,35 @@ class EvaluacionesController(http.Controller):
             return request.render("evaluaciones.encuestas_reporte_no_respuestas", parametros)        
 
         if evaluacion.incluir_demograficos:
-            parametros.update(evaluacion.generar_datos_demograficos(filtros))
+            datos_demograficos = evaluacion.generar_datos_demograficos(filtros)
+            mapeo_categorias = {
+                "departamento": "Departamento",
+                "generacion": "Generación",
+                "puesto": "Puesto",
+                "genero": "Género",
+            }
+            
+            parametros["datos_demograficos"] = []
+
+            for categoria, valores in datos_demograficos.items():
+                # Si todos los datos son N/A, omitir la categoría
+                if len(valores) == 1 and valores[0]["nombre"] == "N/A":
+                    continue
+
+                if categoria in ["nombre", "anio_nacimiento"]:
+                    continue
+
+                nombre = mapeo_categorias.get(categoria, categoria)
+
+                parametros["datos_demograficos"].append(
+                    {
+                        "categoria": nombre,
+                        "valores": json.dumps(valores),
+                    }
+                )
+                
+            parametros.update(datos_demograficos)
+            print("parametros", parametros)
         if evaluacion.tipo == "NOM_035":
             parametros.update(evaluacion.generar_datos_reporte_NOM_035_action(filtros))
             return request.render("evaluaciones.encuestas_reporte_nom_035", parametros)
@@ -99,6 +135,30 @@ class EvaluacionesController(http.Controller):
         )
 
         parametros["token"] = token
+
+        # Renderiza la plantilla con la evaluación
+        return request.render("evaluaciones.evaluaciones_responder", parametros)
+
+    @http.route(
+        "/evaluacion/previsualizar/<int:evaluacion_id>",
+        type="http",
+        auth="public",
+        website=True,
+    )
+    def previsualizar_evaluacion_controller(self, evaluacion_id):
+        """Método para desplegar una previsualización de la evaluación.
+
+        :return: html renderizado del template con los datos del formulario
+        """
+
+        evaluacion = request.env["evaluacion"].sudo().browse(evaluacion_id)
+        
+        if not evaluacion.exists():
+            return request.not_found()
+
+        # Obtén la evaluación basada en el ID
+        parametros = evaluacion.get_evaluaciones_action(evaluacion_id)
+        parametros["previsualizar"] = True
 
         # Renderiza la plantilla con la evaluación
         return request.render("evaluaciones.evaluaciones_responder", parametros)

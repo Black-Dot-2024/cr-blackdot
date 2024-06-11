@@ -27,10 +27,14 @@
                     <field name="estado" widget="statusbar" statusbar_visible="rojo, amarillo, verde, azul"/>
                 </header>
                 <sheet>
-                    <group >
-                        <h1>
-                            <field name="titulo" readonly="1"/>
-                        </h1>
+                    <group class="o_inner_group" style="display: flex; width: 100%; flex-grow: 1;">
+                        <div class="o_wrap_field d-flex d-sm-contents flex-column mb-3 mb-sm-0" style="flex: 1; width: 100%;">
+                            <div class="o_cell" style="flex-grow: 1; width: 100%;">
+                                <h1 style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; width: 100%;">
+                                    <field name="titulo" readonly="1"/>
+                                </h1>
+                            </div>
+                        </div>
                     </group>
                     <group>
                         <field name="descripcion" readonly="1"/>
@@ -56,6 +60,7 @@
                                     <field name="avance"/>
                                     <field name="comentarios"/>
                                     <field name="archivos" widget="many2many_tags"/>
+                                    <field name="comentarios_evaluador"/>
                                 </tree>
                                 <form>
                                     <group>
@@ -67,9 +72,21 @@
                                                 <field name="datas" filename="name" widget="binary" string="Descargar Archivo" />
                                             </tree>
                                         </field>
+                                        <field name="comentarios_evaluador"/>
                                     </group>
                                 </form>
                             </field>
+                        </page>
+                        <page string="Historial">
+                            <group>
+                                <field class="lh-lg w-100" colspan="2" name="progreso" nolabel="1">
+                                    <tree create="false" edit="false" delete="false" editable="bottom">
+                                        <field class="lh-m" name="fecha" readonly="1"/>
+                                        <field class="lh-m" name="progreso" readonly="1"/>
+                                        <field class="lh-m" name="comentarios" readonly="1"/>
+                                    </tree>
+                                </field>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>
