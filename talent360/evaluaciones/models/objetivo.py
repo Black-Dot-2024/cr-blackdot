@@ -110,8 +110,6 @@ class Objetivo(models.Model):
 
     progreso = fields.One2many("objetivo.progreso", "objetivo_id", string="Progreso")
 
-    objetivo_progreso_ids = fields.One2many("objetivo.progreso", "objetivo_id", string="Progreso")
-
     @api.constrains("descripcion")
     def _chechar_largo(self):
         for registro in self:
@@ -299,8 +297,8 @@ class Objetivo(models.Model):
     def _compute_resultado(self):
         for objetivo in self:
             orden = objetivo.orden
-            if len(objetivo.objetivo_progreso_ids) > 0:
-                ultimo_progreso = objetivo.objetivo_progreso_ids.sorted(key=lambda x: x.fecha, reverse=True)[-1]
+            if len(objetivo.progreso) > 0:
+                ultimo_progreso = objetivo.progreso.sorted(key=lambda x: x.fecha, reverse=True)[-1]
 
                 if orden == "ascendente":
                     if ultimo_progreso.progreso <= 0:
