@@ -1,5 +1,6 @@
 {
     "name": "Talent360 - Evaluaciones",
+    'images': ['static/description/icon.png'],
     "application": True,
     "data": [
         "security/evaluaciones_groups.xml",
@@ -10,6 +11,7 @@
         "views/crear_evaluacion_clima.xml",
         "views/objetivos_views.xml",
         "views/mis_objetivos_views.xml",
+        "views/modificar_progreso_wizard.xml",
         "views/portada_reporte_template.xml",
         "views/reporte_clima_template.xml",
         "views/reporte_nom_035_template.xml",
@@ -24,8 +26,9 @@
         "data/competencia.csv",
         "data/opcion.csv",
         "data/template.csv",
+        "data/data.xml",
     ],
-    "depends": ["base", "mail", "hr"],
+    "depends": ["base", "mail", "hr", "web"],
     "assets": {
         "evaluaciones.evaluaciones_assets": [
             ("include", "web.chartjs_lib"),
@@ -39,6 +42,8 @@
             "web/static/lib/bootstrap/scss/_variables.scss",
             "evaluaciones/static/src/scss/survey_templates_form.scss",
             "evaluaciones/static/src/scss/survey_templates_results.scss",
+            "evaluaciones/static/src/js/generar_plan_accion.js",
         ],
+
     },
 }

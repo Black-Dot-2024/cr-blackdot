@@ -11,7 +11,11 @@
                     <field name="estado" widget="statusbar" statusbar_visible="borrador, publicado, finalizado" />
                 </header>
                 <sheet>
-                    <h1>Crear evaluación Clima Laboral</h1>
+                    <h1 style="display: flex; justify-content: space-between; align-items: center;">Crear evaluación Clima Laboral
+                        <button style="align-items: center;" name="previsualizacion_action" type="object">
+                            <i class="fa fa-eye" style="font-size: 20px;"></i>
+                        </button>
+                    </h1>
                     <br></br>
                     <group>
                         <field name="nombre" placeholder="Escribe aquí el título para tu evaluación"/>

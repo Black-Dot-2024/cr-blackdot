@@ -11,7 +11,7 @@
                     <label for="avance" string="Avance: " />
                     <field name="avance" nolabel="1" />
                     <label for="archivos" string="Evidencias: " />
-                    <field name="archivos" nolabel="1" widget="many2one_binary" >
+                    <field name="archivos" nolabel="1" widget="many2one_binary" domain="[('id', '=', False)]">
                         <tree delete="false" duplicate="false">
                             <field name="name" string="Nombre"/>
                             <field name="file_size" string="Tamaño"/>

@@ -24,6 +24,7 @@ class Objetivo(models.Model):
     :param usuario_ids(fields.Many2Many): Arreglo de usuarios asignado a un objetivo
     :param evaluador(fields.Char): Nombre del evaluador del objetivo
     :param avances(fields.One2Many): Avances del objetivo
+    :param progreso(fields.One2Many): Progreso del objetivo
     """
 
     _name = "objetivo"
@@ -49,9 +50,6 @@ class Objetivo(models.Model):
     metrica_mostrar = fields.Char(
         string="Métrica", compute="_compute_metrica_mostrar", store="True", size=20
     )
-
-
-   
 
     tipo = fields.Selection(
         [
@@ -86,7 +84,7 @@ class Objetivo(models.Model):
         default=fields.Datetime.today(),
         help="Fecha en la que se debe cumplir el objetivo",
     )
-    resultado = fields.Integer(store=True)
+    resultado = fields.Float(compute="_compute_resultado", store=True, digits=(12, 2))
     porcentaje = fields.Float(store=True)
     estado = fields.Selection(
         [
@@ -108,9 +106,9 @@ class Objetivo(models.Model):
         string="Asignados",
     )
 
-    evaluador = fields.Char()
-
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
+
+    progreso = fields.One2many("objetivo.progreso", "objetivo_id", string="Progreso")
 
     @api.constrains("descripcion")
     def _chechar_largo(self):
@@ -160,6 +158,7 @@ class Objetivo(models.Model):
         """
         if "piso_minimo" in vals or "piso_maximo" in vals or "orden" in vals:
             nuevo_piso_minimo = vals.get("piso_minimo", self.piso_minimo)
+            self.nuevo_piso_registro = nuevo_piso_minimo
             nuevo_piso_maximo = vals.get("piso_maximo", self.piso_maximo)
             nuevo_orden = vals.get("orden", self.orden)
             if nuevo_orden == "ascendente":
@@ -249,6 +248,18 @@ class Objetivo(models.Model):
             "target": "new",
         }
     
+    def modificar_progreso_action(self):
+        """
+        Método para llamar la funcionalidad de modificación de progreso.
+        """
+        return {
+            "name": "Modificar Progreso",
+            "type": "ir.actions.act_window",
+            "res_model": "modificar.progreso.wizard",
+            "view_mode": "form",
+            "target": "new",
+        }
+    
     @api.onchange("metrica")
     def _onchange_metrica(self):
         if self.metrica != "otro":
@@ -281,3 +292,28 @@ class Objetivo(models.Model):
         if vals.get("orden") == "descendente":
             vals["resultado"] = vals.get("piso_minimo")
         return super(Objetivo, self).create(vals)
+
+    @api.depends("avances", "avances.avance", "progreso")
+    def _compute_resultado(self):
+        for objetivo in self:
+            orden = objetivo.orden
+            if len(objetivo.progreso) > 0:
+                ultimo_progreso = objetivo.progreso.sorted(key=lambda x: x.fecha, reverse=True)[-1]
+
+                if orden == "ascendente":
+                    if ultimo_progreso.progreso <= 0:
+                        nuevo_porcentaje = 0
+                    else:
+                        nuevo_porcentaje =  (objetivo.piso_maximo / ultimo_progreso.progreso * 100)
+                else:
+                    nuevo_porcentaje = 100 - (ultimo_progreso.progreso * 100 / objetivo.piso_minimo )
+
+                objetivo.porcentaje = nuevo_porcentaje
+                objetivo.resultado = ultimo_progreso.progreso
+
+            else:
+                avances = self.env["objetivo.avances"].search([("objetivo_id", "=", objetivo.id)])
+                if orden == "ascendente":
+                    objetivo.resultado = sum(avance.avance for avance in avances)
+                else:
+                    objetivo.resultado = objetivo.piso_minimo - sum(avance.avance for avance in avances)

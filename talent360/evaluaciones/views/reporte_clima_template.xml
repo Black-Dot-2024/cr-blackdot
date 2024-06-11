@@ -14,8 +14,8 @@
             </t>
         </template>
 
-        <!-- AQUÍ COMIENZA CLIMA -->
         <template id="encuestas_reporte_clima_body" name="Reporte de Clima Laboral">
+            <input type="hidden" name="evaluacion_id" t-att-value="evaluacion.id"/>
             <div class="page container-fluid row gap-5 justify-content-between g-2">
                 <div class="d-flex flex-row justify-content-between">
                     <h1>
@@ -32,7 +32,7 @@
                     <t t-foreach="evaluacion.niveles" t-as="nivel">
                         <t t-if="not mostrado and total_porcentaje &lt;= nivel.techo">
                             <span t-attf-style="color: #{nivel.color};" class="category_number">
-                                <t t-esc="total_porcentaje" /> </span>
+                                <t t-esc="total_porcentaje"/> </span>
                                 <span class="fs-5 pill">
                                     <span t-field="nivel.descripcion_nivel"></span>
                                 </span>
@@ -44,7 +44,7 @@
                 <div class="col survey_section w-100" style="page-break-inside: avoid;">
                     <h4>Semáforo</h4>
                     <div class="container-fluid row gap-2 align-items-center">
-                        <t-foreach t-foreach="evaluacion.niveles" t-as="nivel">
+                        <t t-foreach="evaluacion.niveles" t-as="nivel">
                             <div style="display: flex;">
                                 <div class="semaforo-item">
                                     <svg width="22" height="22"
@@ -54,7 +54,7 @@
                                     <span class="col" t-field="nivel.descripcion_nivel"></span>
                                 </div>
                             </div>
-                        </t-foreach>
+                        </t>
                     </div>
                 </div>
             </div>
@@ -126,19 +126,34 @@
                         <div class="page-break"></div>
                     </div>
                 </t>
-
-                <div class="survey_section mb-5" style="page-break-inside: avoid;  margin-top: 50px;">
-                    <h4>Necesidad de acción</h4>
-                    <span class="container-fluid">
-                        <t t-if="total_porcentaje &lt; 20">Se requiere realizar el análisis de cada categoría y dominio para establecer las acciones de intervención apropiadas, mediante un Programa de intervención que deberá incluir evaluaciones específicas, y contemplar campañas de sensibilización, revisar la política de prevención de riesgos psicosociales y programas para la prevención de los factores de riesgo psicosocial, la promoción de un entorno organizacional favorable y la prevención de la violencia laboral, así como reforzar su aplicación y difusión.</t>
-                        <t t-elif="20 &lt;= total_porcentaje &lt; 45">Se requiere realizar un análisis de cada categoría y dominio, de manera que se puedan determinar las acciones de intervención apropiadas a través de un Programa de intervención, que podrá incluir una evaluación específica y deberá incluir una campaña de sensibilización, revisar la política de prevención de riesgos psicosociales y programas para la prevención de los factores de riesgo psicosocial, la promoción de un entorno organizacional favorable y la prevención de la violencia laboral, así como reforzar su aplicación y difusión.</t>
-                        <t t-elif="45 &lt;= total_porcentaje &lt; 70">Se requiere revisar la política de prevención de riesgos psicosociales y programas para la prevención de los factores de riesgo psicosocial, la promoción de un entorno organizacional favorable y la prevención de la violencia laboral, así como reforzar su aplicación y difusión, mediante un Programa de intervención.</t>
-                        <t t-elif="70 &lt;= total_porcentaje &lt; 90">Es necesario una mayor difusión de la política de prevención de riesgos psicosociales y programas para: la prevención de los factores de riesgo psicosocial, la promoción de un entorno organizacional favorable y la prevención de la violencia laboral.</t>
-                        <t t-else="true">El riesgo resulta despreciable por lo que no se requiere medidas adicionales.</t>
-                    </span>
+                
+                <div class="survey_section mb-5" style="page-break-inside: avoid; margin-top: 50px;">
+                    <h4>
+                        Necesidad de acción
+                    </h4>
+                    <div class="container-fluid">
+                        <button id="boton_guardar" onclick="guardarPlanAccion()" value="start" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Guardar
+                        </button> 
+                        <button id="boton_generar" onclick="generarPlanAccion()" value="start" class="btn btn-success">
+                            <i class="fa fa-cogs"></i> Generar Plan de Acción
+                        </button>
+                    </div>
+                    <t t-if="plan">
+                        <textarea id="plan_accion_textarea" class="form-control" rows="10" style="width: 100%; resize: none;"
+                                placeholder="Aquí se mostrará el plan de acción generado..."
+                                t-esc="plan.descripcion"
+                                oninput="Alturatextarea(this);">
+                        </textarea>
+                    </t>
+                    <t t-else="">
+                        <textarea id="plan_accion_textarea" class="form-control" rows="10" style="width: 100%; resize: none;"
+                                placeholder="Aquí se mostrará el plan de acción generado..."
+                                oninput="Alturatextarea(this);">
+                        </textarea>
+                    </t>
                 </div>
             </div>
         </template>
-
     </data>
 </odoo>

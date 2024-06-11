@@ -1,4 +1,5 @@
 from odoo import models, fields
+from odoo.http import request
 
 
 class Respuesta(models.Model):
@@ -19,7 +20,7 @@ class Respuesta(models.Model):
 
     _name = "respuesta"
     _description = "Respuesta a una pregunta"
-    _rec_name = "pregunta_texto"
+    _rec_name = "respuesta_mostrar"
 
     pregunta_id = fields.Many2one("pregunta", string="Preguntas")
     usuario_id = fields.Many2one("res.users", string="Usuario")
@@ -31,7 +32,7 @@ class Respuesta(models.Model):
     opcion_id = fields.Many2one("opcion", string="Opción")
 
     respuesta_mostrar = fields.Char(
-        string="Respuesta", compute="_compute_respuesta_mostrar"
+        string="Respuesta", compute="_compute_respuesta_mostrar", search="_buscar_respuesta_mostrar" 
     )
 
     valor_respuesta = fields.Float(
@@ -39,6 +40,26 @@ class Respuesta(models.Model):
         compute="_compute_valor_respuesta",
         store=False,
     )
+
+    texto = fields.Char(string="Texto")
+
+    def _buscar_respuesta_mostrar(self, operator, value):
+        """
+        Método para buscar la respuesta a mostrar en la vista.
+
+        :param operator: Operador de búsqueda
+        :param value: Valor a buscar
+        :return: Dominio de búsqueda
+        """
+
+        return [
+            '|',
+            '|',
+            ('respuesta_texto', operator, value),
+            ('opcion_id.opcion_texto', operator, value),
+            ('texto', operator, value)
+        ]
+
 
     def guardar_respuesta_action(
         self, radios, texto, evaluacion_id, usuario_id, pregunta_id, token, escala=False
@@ -147,6 +168,14 @@ class Respuesta(models.Model):
                 respuesta_texto = registro.pregunta_id.mapeo_valores_escala[
                     registro.pregunta_id.ponderacion
                 ][registro.respuesta_texto]
+
+                request.env["respuesta"].sudo().search(
+                    [
+                        ("pregunta_id", "=", registro.pregunta_id.id),
+                        ("evaluacion_id", "=", registro.evaluacion_id.id),
+                        ("usuario_id", "=", registro.usuario_id.id),
+                    ]
+                ).write({"texto": respuesta_texto})
             elif registro.pregunta_id.tipo == "multiple_choice":
                 respuesta_texto = registro.opcion_id.opcion_texto
             else:
