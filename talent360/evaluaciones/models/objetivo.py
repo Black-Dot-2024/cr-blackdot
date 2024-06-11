@@ -106,8 +106,6 @@ class Objetivo(models.Model):
         string="Asignados",
     )
 
-    evaluador = fields.Char()
-
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
 
     progreso = fields.One2many("objetivo.progreso", "objetivo_id", string="Progreso")
