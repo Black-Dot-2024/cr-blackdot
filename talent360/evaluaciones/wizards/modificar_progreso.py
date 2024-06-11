@@ -17,7 +17,7 @@ class ModificarProgreso(models.TransientModel):
     fecha = fields.Date(default=fields.Date.today())
     progreso = fields.Float(
         required=True,
-        help="Progreso en forma de procentaje del objetivo"
+        help="Progreso del objetivo de desempeño. Debe ser un número positivo que represente el avance"
     )
 
     comentarios = fields.Text(
