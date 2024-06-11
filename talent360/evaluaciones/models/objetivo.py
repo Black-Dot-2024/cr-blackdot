@@ -106,13 +106,9 @@ class Objetivo(models.Model):
         string="Asignados",
     )
 
-    evaluador = fields.Char()
-
     avances = fields.One2many("objetivo.avances", "objetivo_id", string="Avances")
 
     progreso = fields.One2many("objetivo.progreso", "objetivo_id", string="Progreso")
-
-    objetivo_progreso_ids = fields.One2many("objetivo.progreso", "objetivo_id", string="Progreso")
 
     @api.constrains("descripcion")
     def _chechar_largo(self):
@@ -301,17 +297,19 @@ class Objetivo(models.Model):
     def _compute_resultado(self):
         for objetivo in self:
             orden = objetivo.orden
-            if len(objetivo.objetivo_progreso_ids) > 0:
-                ultimo_progreso = objetivo.objetivo_progreso_ids.sorted(key=lambda x: x.fecha, reverse=True)[0]
+            if len(objetivo.progreso) > 0:
+                ultimo_progreso = objetivo.progreso.sorted(key=lambda x: x.fecha, reverse=True)[-1]
 
                 if orden == "ascendente":
-                    nuevo_resultado =  (objetivo.piso_maximo * ultimo_progreso.progreso / 100)
+                    if ultimo_progreso.progreso <= 0:
+                        nuevo_porcentaje = 0
+                    else:
+                        nuevo_porcentaje =  (objetivo.piso_maximo / ultimo_progreso.progreso * 100)
                 else:
-                    nuevo_resultado = objetivo.piso_minimo - (objetivo.piso_minimo * ultimo_progreso.progreso / 100)
-                    if nuevo_resultado <= 0:
-                        nuevo_resultado = 0
-                
-                objetivo.resultado = nuevo_resultado
+                    nuevo_porcentaje = 100 - (ultimo_progreso.progreso * 100 / objetivo.piso_minimo )
+
+                objetivo.porcentaje = nuevo_porcentaje
+                objetivo.resultado = ultimo_progreso.progreso
 
             else:
                 avances = self.env["objetivo.avances"].search([("objetivo_id", "=", objetivo.id)])
