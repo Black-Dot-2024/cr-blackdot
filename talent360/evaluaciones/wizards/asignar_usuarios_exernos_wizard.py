@@ -32,6 +32,15 @@ class AsignarUsuariosExternosWizard(models.TransientModel):
             raise exceptions.ValidationError(
                 _("No se encontró la evaluación en el contexto.")
             )
+        
+        csv_data = base64.b64decode(self.archivo)
+        data = csv.DictReader(StringIO(csv_data.decode("utf-8")))
+
+        
+        header = data.fieldnames
+        if len(header) != len(set(header)):
+            raise exceptions.ValidationError(_("El archivo CSV contiene columnas duplicadas."))
+
 
         # Procesa el archivo CSV y crea los usuarios externos
         usuarios_db = self.env["usuario.externo"].cargar_csv(self.archivo)

@@ -49,6 +49,10 @@ class ImportarPreguntasWizard(models.TransientModel):
             archivo = StringIO(contenido.decode("utf-8"))
             csv_lector = csv.DictReader(archivo)
 
+            header = csv_lector.fieldnames
+            if len(header) != len(set(header)):
+                raise exceptions.ValidationError(_("El archivo CSV contiene columnas duplicadas."))
+
         except Exception as e:
             raise exceptions.ValidationError(
                 f"Error al procesar el archivo: {str(e)}. Verifica que el archivo sea un CSV válido."
